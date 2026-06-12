@@ -79,3 +79,19 @@ Four stacked layer rows below the timeline (not scroll-synced). Bold upward conn
 3. **Demand Sensing identity** — assumed the Aera Demand Sensing skill == the capability behind v2's `demand-sensing` + `signal-capture` workers. If they are meant to be distinct, the link should be removed.
 4. **Frozen-Period Cut placement** — mapped to steps 4 & 7. If it belongs to a supply/manufacturing step not yet on the 8-step flow, that step may need adding to `JOURNEY.phases` first.
 5. **"Skills" vs "agents" terminology** — kept deliberate: the band labels them Aera *skills*; the timeline labels its nodes *agents*. The band is the called-service substrate; the timeline is the orchestrated journey.
+
+---
+
+## 7. Revision (v2A iteration) — skills moved INTO the timeline + inline infra strip
+
+After review, the foundation **band-below** was replaced with a tighter design that puts the Aera skills *up with the agents* and shows data provenance on every card. The big 4-tier band is gone; an **inline compact infrastructure strip** sits under the timeline instead (user's chosen layout). What changed:
+
+- **Aera skills now render as cards in the timeline**, styled like agents but flagged `aeraSkill: true` with an **Aera Skill** badge + a deterministic/agentic `skillType` badge and a teal left-rail accent. No separate band.
+  - **Demand Sensing** = the existing `demand-sensing` agent, re-flagged as an Aera skill (still **not** duplicated; reconciliation from §2 holds). Status promoted to `deployed`.
+  - **On-Shelf Availability** → new skill card in **step 6** (Distribution & Fulfillment Execution) — fills that placeholder.
+  - **Manufacturing Frozen-Period Cut** → new skill card in **step 4** (Downstream Planning Systems) — fills that placeholder.
+- **Data-source provenance on every card.** New `DATA_SOURCES` taxonomy (8 sources, each with an inline-SVG icon): owned systems `s4 · kinaxis · lakehouse` and signals `pos · retailer · syndicated · likeproduct · digital`. Each agent/skill carries a `sources` list (inferred where the slide was silent — see `SOURCES_BY_AGENT`), rendered as a row of source icons on the card and a "Data sources" section in its drawer.
+- **Inline infrastructure strip** (`INFRA` + `DATA_SOURCES`) under the timeline: two groups (Owned systems / Signals & external data) of clickable chips; clicking a source opens a drawer listing which agents & skills draw on it. Slim, always visible, "↑ feeds the NPI journey above".
+- **Legend** extended with the data-source icons; skill-type legend retained. **No new filter** added (capability + AI-Refinery-class filters unchanged).
+
+**New assumption introduced:** the per-agent data provenance in `SOURCES_BY_AGENT` is *inferred* (the slide didn't state most sources). POS, Retailer EDI, Syndicated, Like-product library, and Digital signals were added as inferred infrastructure. Confirm/correct the mappings — they are all data-only edits.

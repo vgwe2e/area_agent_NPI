@@ -463,86 +463,70 @@
     .drawer .close { width: 44px; height: 44px; }
   }
 
-  /* ---------- Technology & Data Foundation band (v2A) ---------- */
-  .foundation {
-    margin: 8px 28px 28px; padding: 20px 22px 22px;
-    background: linear-gradient(180deg, #fbfaff, #f6f6fb);
-    border: 1px solid var(--hair); border-radius: var(--radius);
+  /* ---------- Aera-skill card treatment (skills live in the timeline) ---------- */
+  .card.aera-skill {
+    border-color: var(--aera-ink);
+    background: linear-gradient(180deg, #ffffff, #f1faf6);
   }
-  .foundation .fhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .foundation .ftitle { font-size: 13px; font-weight: 800; letter-spacing: .02em; color: var(--ink); }
-  .foundation .ftag {
-    font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line);
-    padding: 2px 7px; border-radius: 5px;
+  .card.aera-skill::before {
+    content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: 4px;
+    background: var(--aera-ink); border-radius: var(--radius) 0 0 var(--radius);
   }
-  .foundation .fcap { font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin: 6px 0 14px; max-width: 1000px; }
-
-  /* apex — feeds into the journey above */
-  .fdn-apex {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 10px;
-  }
-  .fdn-apex .arr { font-size: 14px; line-height: 1; }
-
-  /* a layer row */
-  .fdn-row { display: flex; gap: 16px; align-items: stretch; }
-  .fdn-row .fdn-label {
-    flex: 0 0 170px; display: flex; flex-direction: column; justify-content: center;
-    padding: 12px 14px; border-radius: 9px; background: #fff; border: 1px solid var(--hair);
-  }
-  .fdn-row .fdn-label .ll { font-size: 12.5px; font-weight: 800; color: var(--ink); }
-  .fdn-row .fdn-label .lk { font-size: 10.5px; color: var(--ink-faint); line-height: 1.35; margin-top: 3px; }
-  .fdn-row .fdn-nodes { flex: 1 1 auto; display: flex; gap: 12px; flex-wrap: wrap; }
-
-  /* a system / skill node */
-  .fdn-node {
-    flex: 1 1 200px; min-width: 190px; background: #fff; border: 1px solid var(--hair);
-    border-radius: 10px; padding: 12px 13px; box-shadow: var(--shadow);
-  }
-  .fdn-node.skill { border-color: var(--aera-line); background: var(--aera-bg); }
-  .fdn-node.clickable { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
-  .fdn-node.clickable:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(20,20,40,.10); }
-  .fdn-node.clickable:focus-visible { outline: 3px solid var(--accent-line); outline-offset: 2px; }
-  .fdn-node .nh { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .fdn-node .nname { font-size: 13px; font-weight: 800; color: var(--ink); }
-  .fdn-node .nsys {
-    font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-    color: var(--ink-faint); background: var(--neutral-100); border: 1px solid var(--hair);
-    padding: 2px 6px; border-radius: 4px;
-  }
-  .fdn-node .nnote {
-    font-size: 11px; color: var(--ink-soft); line-height: 1.45; margin-top: 6px;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
+  .badge.skill { background: var(--aera-ink); }
 
   /* deterministic / agentic skill badge */
   .skill-badge {
-    font-size: 9px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+    font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
     padding: 3px 7px; border-radius: 5px; color: #fff;
   }
 
-  /* data chips on a skill node */
-  .fdn-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
-  .fdn-chip {
-    font-size: 9.5px; font-weight: 700; padding: 3px 7px; border-radius: 999px;
-    border: 1px solid var(--hair); background: #fff; color: var(--ink-soft);
-    display: inline-flex; align-items: center; gap: 4px;
+  /* ---------- Data-source provenance on a card ---------- */
+  .card .srcs, .drawer .d-srcrow { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .card .srcs { margin-top: 10px; }
+  .card .srcs .slabel, .drawer .d-srcrow .slabel {
+    font-size: 8.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); margin-right: 2px;
   }
-  .fdn-chip.in  { color: var(--blue); border-color: rgba(0,97,194,.25); background: var(--blue-pale); }
-  .fdn-chip.out { color: var(--aera-ink); border-color: var(--aera-line); background: #fff; }
-  .fdn-chip.step { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); cursor: pointer; }
-  .fdn-chip.step:hover { background: #fff; }
-  .fdn-chip.step:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 2px; }
+  .src {
+    width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
+    background: #fff; border: 1px solid var(--hair);
+  }
+  .src svg { display: block; }
 
-  /* inter-layer flow connectors */
-  .fdn-flow { display: flex; align-items: center; justify-content: center; gap: 22px; padding: 7px 0; flex-wrap: wrap; }
-  .fdn-flow .up, .fdn-flow .wb { display: inline-flex; align-items: center; gap: 7px; font-size: 10.5px; }
-  .fdn-flow .up { color: var(--accent); font-weight: 700; }
-  .fdn-flow .up .gly { font-size: 15px; line-height: 1; }
-  .fdn-flow .wb { color: var(--ink-faint); font-weight: 600; }
-  .fdn-flow .wb .gly { font-size: 13px; line-height: 1; }
+  /* ---------- Slim infrastructure strip under the timeline ---------- */
+  .foundation {
+    margin: 4px 28px 30px; padding: 14px 18px 16px;
+    background: linear-gradient(180deg, #fbfaff, #f6f6fb);
+    border: 1px solid var(--hair); border-radius: var(--radius);
+  }
+  .infra-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .infra-head .ftitle { font-size: 12.5px; font-weight: 800; letter-spacing: .02em; color: var(--ink); }
+  .infra-head .feeds {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--accent); display: inline-flex; align-items: center; gap: 5px;
+  }
+  .infra-head .feeds .arr { font-size: 13px; line-height: 1; }
+  .infra-cap { font-size: 11.5px; color: var(--ink-soft); line-height: 1.45; margin: 5px 0 12px; max-width: 1040px; }
+
+  .infra-groups { display: flex; gap: 14px 26px; flex-wrap: wrap; }
+  .infra-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .infra-group .glab {
+    font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); border-right: 1px solid var(--hair); padding-right: 10px;
+  }
+  .infra-chip {
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    border: 1px solid var(--hair); background: #fff; border-radius: 999px;
+    padding: 5px 11px 5px 6px; font-size: 11.5px; font-weight: 600; color: var(--ink);
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+  }
+  .infra-chip:hover { border-color: var(--accent-line); box-shadow: var(--shadow); transform: translateY(-1px); }
+  .infra-chip:focus-visible { outline: 3px solid var(--accent-line); outline-offset: 2px; }
+  .infra-chip .ic { width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; background: #f5f5fa; border: 1px solid var(--hair); }
+  .infra-chip.signal { border-style: dashed; }
+
+  /* data-source legend swatches */
+  .legend .src { cursor: default; }
 
   /* Respect users who ask for reduced motion (WCAG 2.3.3) */
   @media (prefers-reduced-motion: reduce) {
@@ -606,6 +590,8 @@
   <div class="row" id="badgeLegend"></div>
   <div class="seg-title">Aera skill type</div>
   <div class="row" id="skillTypeLegend"></div>
+  <div class="seg-title">Data sources</div>
+  <div class="legend-grid" id="sourceLegend"></div>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -787,9 +773,10 @@ const JOURNEY = {
     },
     {
       id: "demand-sensing", phaseId: "demand-forecasting",
-      title: "Demand Sensing Agent", type: "agent", status: "planned",
-      description: "Detects live demand shifts vs. the launch forecast and continuously recalibrates the in-market forecast curve. Shared across steps 2 and 7.",
-      capabilities: ["predictive","ai-augment"], metric: "TBD", optional: false,
+      title: "Demand Sensing", type: "agent", status: "deployed",
+      aeraSkill: true, skillType: "deterministic",
+      description: "Aera skill (deterministic). Reads demand and builds the sell-through curves that show what is happening at the shelf — mapping point-of-sale scans up to cases — and continuously recalibrates the in-market forecast curve. Shared across steps 2 and 7. In the agentic vision this is wrapped as a CustomAgent worker.",
+      capabilities: ["predictive","ai-augment"], metric: "Shelf-level demand visibility", optional: false,
       refineryClass: "CustomAgent",
       orchestration: { role: "worker", parent: "DemandForecastPipeline", alsoParent: "InMarketMonitoringAdvisor", nodeName: "DemandSensing", shared: true },
       tooling: "ML time-series · real-time signal models",
@@ -921,6 +908,33 @@ const JOURNEY = {
       transformation: { badge: "TRANSFORMED·CONTINUOUS", note: "NPI actuals are written back into the like-product library and forecast models, closing the loop each cycle." },
       aera: "Placeholder",
     },
+
+    /* --- Aera skills placed UP in the timeline alongside the agents.
+           OSA and Frozen-Period Cut populate the two placeholder steps
+           (6 = shelf availability, 4 = production scheduling) with the
+           deterministic Aera skills that run there today. --- */
+    {
+      id: "osa", phaseId: "distribution-fulfillment",
+      title: "On-Shelf Availability", type: "service", status: "deployed",
+      aeraSkill: true, skillType: "deterministic",
+      description: "Aera skill (deterministic). Reaches into distributor and customer shelf and warehouse data to see what is on-shelf and in the warehouse; when service levels slip, pushes out corrective actions. Running today — fills this step's shelf-availability gap ahead of the future agentic version.",
+      capabilities: ["api","logic","ai-augment"], metric: "Protects launch-week service levels", optional: false,
+      refineryClass: "ToolUseAgent",
+      tooling: "Retailer/distributor data connectors · service-level rules · push alerts",
+      transformation: { badge: "ENABLED·AUTOMATED", note: "Shelf and warehouse positions are read continuously and service-level gaps trigger corrective pushes, instead of manual account-by-account checks." },
+      aera: null,
+    },
+    {
+      id: "frozen-period-cut", phaseId: "downstream-planning-systems",
+      title: "Manufacturing Frozen-Period Cut", type: "service", status: "deployed",
+      aeraSkill: true, skillType: "deterministic",
+      description: "Aera skill (deterministic). During the production frozen period, cuts production when demand is not manifesting — protecting against over-build and write-off. Drives supply planning and inventory pre-builds in Kinaxis. Running today within this otherwise-placeholder step.",
+      capabilities: ["logic","predictive"], metric: "Avoids frozen-period over-build", optional: false,
+      refineryClass: "CustomAgent",
+      tooling: "Frozen-period plan vs. live demand · production-cut decision logic",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Frozen-period production is cut when demand fails to manifest, instead of building to a stale plan." },
+      aera: null,
+    },
   ],
 
   /* The 3 planner governance gates — HumanAgent. Rendered as gate bands. */
@@ -939,67 +953,61 @@ const JOURNEY = {
 };
 
 /* =================================================================
-   EDIT THIS (v2A addition) — the technology & data foundation that
-   sits BELOW the timeline. The band engine renders 100% from this:
-   add a layer, node, or flow and it appears with no other change.
-   Design rationale: research/npi-foundation-layer-design.md
+   EDIT THIS (v2A) — Aera skill types + data-source infrastructure.
+   Aera skills now live UP in the timeline alongside agents (flagged
+   aeraSkill on the agent objects). Every card shows where it gets its
+   data via source icons; the slim infrastructure strip under the
+   timeline lists those sources. Add a source here + reference its id
+   in SOURCES_BY_AGENT (or a card's `sources`) and it renders — no
+   other change. Design rationale: research/npi-foundation-layer-design.md
    ================================================================= */
-const FOUNDATION = {
-  title: "Technology & Data Foundation",
-  caption: "What sits beneath the journey — data captured from SAP S4 and Kinaxis flows up through the data platform into the Aera skills that support NPI. Aera skills are a called-service layer (decision-intelligence skills), not orchestrators. Skills are flagged deterministic vs. agentic.",
 
-  /* Aera skill-type taxonomy — badge + legend only (NO filter control). */
-  skillTypes: {
-    deterministic: { label: "Deterministic", color: "#0F9D8C", meaning: "Rules- and model-driven skill with a fixed, repeatable computation — no autonomous planning. Built and running today." },
-    agentic:       { label: "Agentic",       color: "#A100FF", meaning: "Skill with autonomous, goal-seeking behavior — reasons over options and decides next actions. Shown for skills as they gain agentic capability." },
-  },
+/* Aera skill-type taxonomy — badge + legend only (NO filter control). */
+const SKILL_TYPES = {
+  deterministic: { label: "Deterministic", color: "#0F9D8C", meaning: "Rules- and model-driven skill with a fixed, repeatable computation — no autonomous planning. Built and running today." },
+  agentic:       { label: "Agentic",       color: "#A100FF", meaning: "Skill with autonomous, goal-seeking behavior — reasons over options and decides its own next actions. Shown for skills as they gain agentic capability." },
+};
 
-  /* Capability tiers, top (closest to the timeline it feeds) → bottom (data origin). */
-  layers: [
-    { id: "aera-skills",       label: "Aera Skills",       kind: "Decision-intelligence skills · called service" },
-    { id: "planning",          label: "Planning",          kind: "Demand & supply planning" },
-    { id: "data-platform",     label: "Data Platform",     kind: "Captured transactional data" },
-    { id: "systems-of-record", label: "Systems of Record", kind: "Master data & ERP planning" },
-  ],
+/* Data-source / infrastructure taxonomy. kind:"system" = owned systems of
+   record/planning/platform; kind:"signal" = external & market data feeds.
+   Each source gets an inline-SVG icon (SOURCE_GLYPHS, in the engine). */
+const DATA_SOURCES = {
+  s4:          { label: "SAP S/4HANA",                 short: "S4",          kind: "system", color: "#0061C2", note: "ERP system of record — finished-goods & raw-material planning, all master data." },
+  kinaxis:     { label: "Kinaxis",                     short: "Kinaxis",     kind: "system", color: "#0F9D8C", note: "Demand & supply planning; inventory pre-builds. Aera skills write optimized plans back here." },
+  lakehouse:   { label: "Snowflake / Databricks",      short: "Databricks",  kind: "system", color: "#7B2FF7", note: "Consolidated data platform — captures transactional data from S4 and Kinaxis; the single source skills & agents read." },
+  pos:         { label: "Point-of-Sale (POS) scans",   short: "POS",         kind: "signal", color: "#A100FF", note: "Retail scan data — mapped up from scans to cases for sell-through visibility at the shelf." },
+  retailer:    { label: "Retailer / customer EDI · shelf & warehouse", short: "Retailer EDI", kind: "signal", color: "#B26B00", note: "Distributor/customer orders, shelf and warehouse positions — drives on-shelf availability and service levels." },
+  syndicated:  { label: "Syndicated market data",      short: "Syndicated",  kind: "signal", color: "#0EA5E9", note: "External market/category data for like-product benchmarks and demand potential." },
+  likeproduct: { label: "Like-product library",        short: "Like-product", kind: "signal", color: "#00A3C4", note: "Internal historical analog library — powers NPI forecasting where the new product has no own history." },
+  digital:     { label: "Digital / unstructured signals", short: "Digital",  kind: "signal", color: "#2563EB", note: "Web, social and other unstructured early-demand signals, extracted via GenAI." },
+};
 
-  nodes: [
-    { id: "s4", layerId: "systems-of-record", label: "SAP S/4HANA", system: "SAP",
-      note: "System of record — finished-goods planning, raw-material planning, and all master data." },
-    { id: "databricks", layerId: "data-platform", label: "Snowflake / Databricks", system: "Lakehouse",
-      note: "Consolidated data platform. Captures transactional data from SAP S4 and Kinaxis — the single source the Aera skills read from." },
-    { id: "kinaxis", layerId: "planning", label: "Kinaxis", system: "Kinaxis",
-      note: "Demand planning (incl. new-product-launch inputs) and supply planning. Receives optimized supply plans and inventory pre-builds written back by the Aera skills." },
+/* Inferred data provenance per agent / skill (id → source ids).
+   These are inferred where the slide didn't state them — edit freely. */
+const SOURCES_BY_AGENT = {
+  "portfolio-optimization":           ["likeproduct", "syndicated", "s4"],
+  "market-segmentation":              ["syndicated", "pos", "s4"],
+  "npi-forecast":                     ["pos", "likeproduct", "kinaxis", "s4"],
+  "signal-capture":                   ["pos", "retailer", "digital"],
+  "demand-sensing":                   ["pos", "lakehouse", "retailer"],
+  "inventory-optimization-planning":  ["kinaxis", "s4"],
+  "inventory-deployment-replenishing":["kinaxis", "s4", "retailer"],
+  "lifecycle-management":             ["pos", "kinaxis", "syndicated"],
+  "exception-handler":                ["kinaxis", "s4", "retailer"],
+  "performance-monitoring":           ["lakehouse", "kinaxis", "pos"],
+  "scaling":                          ["pos", "lakehouse", "syndicated"],
+  "learning-loop":                    ["lakehouse", "likeproduct"],
+  "osa":                              ["retailer", "pos", "lakehouse"],
+  "frozen-period-cut":                ["kinaxis", "s4", "pos"],
+};
 
-    { id: "aera-demand-sensing", layerId: "aera-skills", label: "Demand Sensing", system: "Aera",
-      skillType: "deterministic", linkedAgentId: "demand-sensing",
-      consumes: ["POS scans → cases", "orders & shipments"], writesTo: ["recalibrated forecast signal"],
-      supportsPhases: ["demand-forecasting", "launch-execution-adjustments"],
-      note: "Reads demand and builds the sell-through curves that show what is happening at the shelf — handling the complexity of mapping point-of-sale scans up to cases — and gives planners visibility. Surfaces in the timeline as the Signal Capture + Demand Sensing worker agents (steps 2 & 7); shown here once as the underlying Aera skill." },
-
-    { id: "aera-osa", layerId: "aera-skills", label: "On-Shelf Availability", system: "Aera",
-      skillType: "deterministic", linkedAgentId: null,
-      consumes: ["distributor & customer shelf / warehouse data"], writesTo: ["service-level alerts → push actions"],
-      supportsPhases: ["distribution-fulfillment", "launch-execution-adjustments"],
-      note: "Reaches into distributor and customer shelf and warehouse data to see what is on-shelf and in the warehouse; when service levels slip, pushes out corrective actions. New skill — relates to the shelf-availability signal feeding step 7." },
-
-    { id: "aera-frozen-cut", layerId: "aera-skills", label: "Manufacturing Frozen-Period Cut", system: "Aera",
-      skillType: "deterministic", linkedAgentId: null,
-      consumes: ["demand vs. frozen-period plan"], writesTo: ["production cut → Kinaxis"],
-      supportsPhases: ["downstream-planning-systems", "launch-execution-adjustments"],
-      note: "During the production frozen period, cuts production when demand is not manifesting — protecting against over-build. New skill — drives supply planning and inventory pre-builds in Kinaxis." },
-  ],
-
-  /* Data movement. dir:"up" feeds toward skills/journey; dir:"writeback" returns into a planning system.
-     Endpoints may be a node id OR a layer id (a flow into/out of a whole tier). */
-  flows: [
-    { from: "s4",          to: "databricks",  dir: "up",        label: "master data · FG/RM plans · transactions" },
-    { from: "databricks",  to: "kinaxis",     dir: "up",        label: "data backbone feeds planning" },
-    { from: "kinaxis",     to: "aera-skills", dir: "up",        label: "plans + signals feed the skills" },
-    { from: "aera-skills", to: "kinaxis",     dir: "writeback", label: "supply plans · inventory pre-builds · production cuts" },
-  ],
-
-  /* The apex: skills feed up into the NPI journey (the timeline above). */
-  feedsJourney: { label: "Feeds the NPI journey above", note: "Aera skills are called by the timeline agents — a decision-intelligence service layer, not an orchestrator." },
+/* The slim infrastructure strip under the timeline. feedsUp = the
+   upward note; groups derive automatically from DATA_SOURCES.kind. */
+const INFRA = {
+  title: "Data & Systems Infrastructure",
+  caption: "Where the agents and Aera skills get their data — captured from owned systems (SAP S4, Kinaxis) into the Databricks platform, blended with external signals, feeding up into the journey above.",
+  feedsUp: "Feeds the NPI journey above",
+  groupLabels: { system: "Owned systems", signal: "Signals & external data" },
 };
 
 /* =================================================================
@@ -1020,6 +1028,25 @@ function glyph(capId, color) {
   return '<svg viewBox="0 0 24 24" aria-hidden="true">' +
     (GLYPHS[capId] || '').replace(/C/g, color) + '</svg>';
 }
+
+// ---- Data-source icons (inline SVG, recolored via the "C" token) ----
+const SOURCE_GLYPHS = {
+  s4:          '<path d="M4 6c0-1.6 3.6-3 8-3s8 1.4 8 3-3.6 3-8 3-8-1.4-8-3z" fill="none" stroke="C" stroke-width="1.8"/><path d="M4 6v12c0 1.6 3.6 3 8 3s8-1.4 8-3V6" fill="none" stroke="C" stroke-width="1.8"/><path d="M4 12c0 1.6 3.6 3 8 3s8-1.4 8-3" fill="none" stroke="C" stroke-width="1.6"/>',
+  kinaxis:     '<circle cx="6" cy="7" r="2" fill="none" stroke="C" stroke-width="1.8"/><circle cx="18" cy="7" r="2" fill="none" stroke="C" stroke-width="1.8"/><circle cx="12" cy="17" r="2" fill="none" stroke="C" stroke-width="1.8"/><path d="M7.6 8.4l3 7M16.4 8.4l-3 7M8 7h8" stroke="C" stroke-width="1.5" fill="none"/>',
+  lakehouse:   '<path d="M12 3l9 4-9 4-9-4 9-4z" fill="none" stroke="C" stroke-width="1.7" stroke-linejoin="round"/><path d="M3 12l9 4 9-4M3 16.5l9 4 9-4" fill="none" stroke="C" stroke-width="1.7" stroke-linejoin="round"/>',
+  pos:         '<g stroke="C"><path d="M4 5v14" stroke-width="1.4"/><path d="M6.6 5v14" stroke-width="2.6"/><path d="M9.2 5v14" stroke-width="1.2"/><path d="M11.6 5v14" stroke-width="2"/><path d="M14 5v14" stroke-width="1.2"/><path d="M16.6 5v14" stroke-width="2.6"/><path d="M19.6 5v14" stroke-width="1.4"/></g>',
+  retailer:    '<path d="M4 9l1.6-4h12.8L20 9" fill="none" stroke="C" stroke-width="1.7" stroke-linejoin="round"/><path d="M4.6 9h14.8v10H4.6z" fill="none" stroke="C" stroke-width="1.7"/><path d="M9 19v-5h6v5" fill="none" stroke="C" stroke-width="1.6"/>',
+  syndicated:  '<circle cx="12" cy="12" r="8.5" fill="none" stroke="C" stroke-width="1.7"/><path d="M3.5 12h17M12 3.5c2.6 2.3 2.6 14.7 0 17M12 3.5c-2.6 2.3-2.6 14.7 0 17" fill="none" stroke="C" stroke-width="1.4"/>',
+  likeproduct: '<path d="M5 4h11a2 2 0 012 2v14H7a2 2 0 01-2-2V4z" fill="none" stroke="C" stroke-width="1.7" stroke-linejoin="round"/><path d="M5 18a2 2 0 012-2h11" fill="none" stroke="C" stroke-width="1.5"/><path d="M9 8h6M9 11h5" stroke="C" stroke-width="1.4"/>',
+  digital:     '<circle cx="12" cy="17.5" r="1.3" fill="C"/><path d="M8.4 14a5 5 0 017.2 0M5.4 11a9 9 0 0113.2 0" fill="none" stroke="C" stroke-width="1.7" stroke-linecap="round"/>',
+};
+function sourceIcon(id, size) {
+  const c = DATA_SOURCES[id]; const col = (c && c.color) || "#6b7280";
+  return '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:' + (size || 14) + 'px;height:' + (size || 14) + 'px">' +
+    (SOURCE_GLYPHS[id] || '').replace(/C/g, col) + '</svg>';
+}
+// resolve a card's data sources (explicit `sources` wins, else the inferred map)
+function cardSources(a) { return (a && a.sources) || SOURCES_BY_AGENT[a && a.id] || []; }
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
@@ -1228,21 +1255,39 @@ function tBadge(badge) {
   return '<span class="tbadge ' + (enabled ? 'enabled' : 'transformed') + '">' + esc(badge) + '</span>';
 }
 
+function skillBadge(skillType) {
+  const st = (SKILL_TYPES || {})[skillType]; if (!st) return '';
+  return '<span class="skill-badge" style="background:' + st.color + '" title="' + esc(st.meaning) + '">' + esc(st.label) + '</span>';
+}
+
 function buildCard(a) {
   const t = NODE_TYPES[a.type] || { label: a.type, color: "#6b7280" };
   const orch = isOrchestrator(a);
-  const card = el("div", "card" + (orch ? " orch" : "") + (a.type === "service" ? " service" : ""));
+  const card = el("div", "card" + (orch ? " orch" : "") +
+    (a.aeraSkill ? " aera-skill" : (a.type === "service" ? " service" : "")));
   card.tabIndex = 0;
   card.dataset.id = a.id;
   card.dataset.caps = (a.capabilities || []).join(" ");
   card.dataset.class = a.refineryClass || "";
   card.setAttribute("role", "button");
-  card.setAttribute("aria-label", a.title + " — open detail");
+  card.setAttribute("aria-label", a.title + (a.aeraSkill ? " (Aera skill)" : "") + " — open detail");
 
   const caps = (a.capabilities || []).map(id => {
     const c = CAPABILITIES[id]; if (!c) return "";
     return '<span class="ic" title="' + esc(c.label) + '">' + glyph(id, c.color) + '</span>';
   }).join("");
+
+  // data-source provenance icons
+  const srcIds = cardSources(a);
+  const srcs = srcIds.map(id => {
+    const c = DATA_SOURCES[id]; if (!c) return "";
+    return '<span class="src" title="Data source: ' + esc(c.label) + '">' + sourceIcon(id) + '</span>';
+  }).join("");
+
+  // top-row badges: Aera skills lead with AERA SKILL + skill-type, others with node-type
+  const topBadges = a.aeraSkill
+    ? '<span class="badge skill">Aera Skill</span>' + skillBadge(a.skillType) + rfBadge(a.refineryClass)
+    : '<span class="badge" style="background:' + t.color + '">' + esc(t.label) + '</span>' + rfBadge(a.refineryClass);
 
   // orchestration hint on the compact card
   let orchHint = "";
@@ -1255,8 +1300,7 @@ function buildCard(a) {
 
   card.innerHTML =
     '<div class="toprow">' +
-      '<span class="badge" style="background:' + t.color + '">' + esc(t.label) + '</span>' +
-      rfBadge(a.refineryClass) +
+      topBadges +
       (a.optional ? '<span class="badge opt">Optional</span>' : '') +
     '</div>' +
     '<h3>' + esc(a.title) + '</h3>' +
@@ -1264,6 +1308,7 @@ function buildCard(a) {
     tBadge(a.transformation && a.transformation.badge) +
     (a.metric ? '<div class="metric">' + esc(a.metric) + '</div>' : '') +
     (caps ? '<div class="caps">' + caps + '</div>' : '') +
+    (srcs ? '<div class="srcs"><span class="slabel">Data</span>' + srcs + '</div>' : '') +
     orchHint;
 
   card.addEventListener("click", () => openDrawer(a));
@@ -1335,13 +1380,22 @@ function buildLegend() {
     tBadge("TRANSFORMED·AUGMENTED") + tBadge("TRANSFORMED·CONTINUOUS") + tBadge("ENABLED·AUTOMATED");
 
   const skillBox = $("#skillTypeLegend");
-  if (skillBox && typeof FOUNDATION !== "undefined" && FOUNDATION.skillTypes) {
+  if (skillBox && typeof SKILL_TYPES !== "undefined") {
     skillBox.innerHTML = "";
-    Object.values(FOUNDATION.skillTypes).forEach(st => {
+    Object.values(SKILL_TYPES).forEach(st => {
       const b = el("span", "skill-badge", esc(st.label));
       b.style.background = st.color;
       b.title = st.meaning || "";
       skillBox.appendChild(b);
+    });
+  }
+
+  const srcBox = $("#sourceLegend");
+  if (srcBox && typeof DATA_SOURCES !== "undefined") {
+    srcBox.innerHTML = "";
+    Object.entries(DATA_SOURCES).forEach(([id, s]) => {
+      srcBox.appendChild(el("div", "legend-item",
+        '<span class="ic">' + sourceIcon(id, 15) + '</span>' + esc(s.label)));
     });
   }
 }
@@ -1394,6 +1448,24 @@ function openDrawer(a) {
     const c = CAPABILITIES[id]; if (!c) return "";
     return '<div class="d-cap"><span class="ic">' + glyph(id, c.color) + '</span>' + esc(c.label) + '</div>';
   }).join("");
+
+  // Aera skill-type block
+  const st = a.aeraSkill ? (SKILL_TYPES || {})[a.skillType] : null;
+  const skillBlock = st ?
+    '<div class="d-section-title">Aera skill type</div>' +
+    '<div class="d-rfclass"><div class="rf-name" style="color:' + st.color + '">' + esc(st.label) + '</div>' +
+    '<div class="rf-mean">' + esc(st.meaning) + '</div></div>' : '';
+
+  // data-sources block
+  const srcIds = cardSources(a);
+  const srcBlock = srcIds.length ?
+    '<div class="d-section-title">Data sources</div>' +
+    srcIds.map(id => {
+      const c = DATA_SOURCES[id]; if (!c) return "";
+      return '<div class="d-cap"><span class="ic">' + sourceIcon(id, 17) + '</span>' +
+        '<div><div style="font-weight:700">' + esc(c.label) + '</div>' +
+        '<div style="font-size:11.5px;color:var(--ink-soft);line-height:1.4">' + esc(c.note || "") + '</div></div></div>';
+    }).join("") : '';
 
   // refinery class block
   const rfBlock = rf ?
@@ -1464,17 +1536,20 @@ function openDrawer(a) {
     '<div class="d-phase">' + (phase ? "Step " + phase.step + " · " + esc(phase.label) : "") + '</div>' +
     '<h2 id="drawerTitle">' + esc(a.title) + '</h2>' +
     '<div class="d-badges">' +
-      '<span class="badge" style="background:' + t.color + '">' + esc(t.label) + '</span>' +
-      rfBadge(a.refineryClass) +
+      (a.aeraSkill
+        ? '<span class="badge skill">Aera Skill</span>' + skillBadge(a.skillType) + rfBadge(a.refineryClass)
+        : '<span class="badge" style="background:' + t.color + '">' + esc(t.label) + '</span>' + rfBadge(a.refineryClass)) +
       (a.optional ? '<span class="badge opt">Optional</span>' : '') +
     '</div>' +
     (a.metric ? '<div class="d-metric">' + esc(a.metric) + '</div>' : '') +
     '<p class="d-desc">' + esc(a.description || "") + '</p>' +
+    skillBlock +
     rfBlock +
     orchBlock +
     toolBlock +
     transBlock +
     aeraBlock +
+    srcBlock +
     (capsFull ? '<div class="d-section-title">Capabilities</div>' + capsFull : '');
 
   const drawer = $("#drawer");
@@ -1561,174 +1636,66 @@ function wirePan() {
   }, { passive: true });
 }
 
-/* ---- Technology & Data Foundation band (v2A) ----
-   Renders 100% from the FOUNDATION object. Layers stack top→bottom;
-   flows crossing each adjacent boundary render as connectors. ---- */
-function fdnLayerIndex(endpointId) {
-  const byLayer = FOUNDATION.layers.findIndex(l => l.id === endpointId);
-  if (byLayer >= 0) return byLayer;
-  const n = FOUNDATION.nodes.find(x => x.id === endpointId);
-  return n ? FOUNDATION.layers.findIndex(l => l.id === n.layerId) : -1;
-}
-function fdnLabelOf(endpointId) {
-  const n = FOUNDATION.nodes.find(x => x.id === endpointId);
-  if (n) return n.label;
-  const l = FOUNDATION.layers.find(x => x.id === endpointId);
-  return l ? l.label : endpointId;
-}
-
+/* ---- Slim data & systems infrastructure strip (v2A) ----
+   Renders from DATA_SOURCES (grouped by kind) + INFRA. Each chip opens a
+   source drawer listing which agents/skills draw on that source. ---- */
 function buildFoundation() {
   const root = $("#foundation");
-  if (!root || typeof FOUNDATION === "undefined") return;
+  if (!root || typeof DATA_SOURCES === "undefined") return;
   root.innerHTML = "";
 
-  const head = el("div", "fhead",
-    '<span class="ftitle" id="fdnTitle">' + esc(FOUNDATION.title || "") + '</span>' +
-    '<span class="ftag">Foundation · v2A</span>');
+  const head = el("div", "infra-head",
+    '<span class="ftitle" id="fdnTitle">' + esc(INFRA.title || "Infrastructure") + '</span>' +
+    (INFRA.feedsUp ? '<span class="feeds"><span class="arr">↑</span>' + esc(INFRA.feedsUp) + '</span>' : ''));
   root.appendChild(head);
-  if (FOUNDATION.caption) root.appendChild(el("div", "fcap", esc(FOUNDATION.caption)));
+  if (INFRA.caption) root.appendChild(el("div", "infra-cap", esc(INFRA.caption)));
 
-  if (FOUNDATION.feedsJourney) {
-    const apex = el("div", "fdn-apex",
-      '<span class="arr">↑</span>' + esc(FOUNDATION.feedsJourney.label) + '<span class="arr">↑</span>');
-    apex.title = FOUNDATION.feedsJourney.note || "";
-    root.appendChild(apex);
-  }
-
-  FOUNDATION.layers.forEach((layer, i) => {
-    root.appendChild(buildFdnRow(layer));
-    if (i < FOUNDATION.layers.length - 1) {
-      const conn = buildFdnFlow(i, i + 1);
-      if (conn) root.appendChild(conn);
-    }
+  const groups = el("div", "infra-groups");
+  // preserve declaration order of kinds as first seen in DATA_SOURCES
+  const kinds = [];
+  Object.values(DATA_SOURCES).forEach(s => { if (!kinds.includes(s.kind)) kinds.push(s.kind); });
+  kinds.forEach(kind => {
+    const g = el("div", "infra-group");
+    const lbl = (INFRA.groupLabels || {})[kind] || kind;
+    g.appendChild(el("span", "glab", esc(lbl)));
+    Object.entries(DATA_SOURCES).filter(([, s]) => s.kind === kind).forEach(([id, s]) => {
+      const chip = el("button", "infra-chip" + (kind === "signal" ? " signal" : ""));
+      chip.type = "button";
+      chip.dataset.source = id;
+      chip.title = s.note || s.label;
+      chip.innerHTML = '<span class="ic">' + sourceIcon(id, 15) + '</span>' + esc(s.label);
+      chip.addEventListener("click", () => openSourceDrawer(id));
+      g.appendChild(chip);
+    });
+    groups.appendChild(g);
   });
+  root.appendChild(groups);
 }
 
-function buildFdnRow(layer) {
-  const row = el("div", "fdn-row");
-  row.dataset.layer = layer.id;
-  row.appendChild(el("div", "fdn-label",
-    '<span class="ll">' + esc(layer.label) + '</span>' +
-    (layer.kind ? '<span class="lk">' + esc(layer.kind) + '</span>' : '')));
-  const nodes = el("div", "fdn-nodes");
-  FOUNDATION.nodes.filter(n => n.layerId === layer.id).forEach(n => nodes.appendChild(buildFdnNode(n)));
-  row.appendChild(nodes);
-  return row;
+// which agents/skills draw on a given source
+function consumersOfSource(sourceId) {
+  return JOURNEY.agents.filter(a => cardSources(a).includes(sourceId));
 }
 
-function buildFdnNode(n) {
-  const isSkill = n.layerId === "aera-skills" || !!n.skillType;
-  const node = el("div", "fdn-node clickable" + (isSkill ? " skill" : ""));
-  node.tabIndex = 0;
-  node.dataset.id = n.id;
-  node.setAttribute("role", "button");
-  node.setAttribute("aria-label", n.label + " — open detail");
-
-  let head = '<span class="nname">' + esc(n.label) + '</span>';
-  if (n.system) head += '<span class="nsys">' + esc(n.system) + '</span>';
-  if (n.skillType) {
-    const st = (FOUNDATION.skillTypes || {})[n.skillType] || { label: n.skillType, color: "#6b7280", meaning: "" };
-    head += '<span class="skill-badge" style="background:' + st.color + '" title="' + esc(st.meaning) + '">' + esc(st.label) + '</span>';
-  }
-
-  let chips = "";
-  (n.consumes || []).forEach(c => chips += '<span class="fdn-chip in" title="reads">↓ ' + esc(c) + '</span>');
-  (n.writesTo || []).forEach(c => chips += '<span class="fdn-chip out" title="writes">↑ ' + esc(c) + '</span>');
-  (n.supportsPhases || []).forEach(pid => {
-    const p = JOURNEY.phases.find(x => x.id === pid);
-    if (p) chips += '<button type="button" class="fdn-chip step" data-phase="' + esc(pid) + '" title="' + esc(p.label) + ' — jump">→ Step ' + p.step + '</button>';
-  });
-
-  node.innerHTML =
-    '<div class="nh">' + head + '</div>' +
-    (n.note ? '<div class="nnote">' + esc(n.note) + '</div>' : '') +
-    (chips ? '<div class="fdn-chips">' + chips + '</div>' : '');
-
-  node.addEventListener("click", e => {
-    const stepChip = e.target.closest(".fdn-chip.step");
-    if (stepChip) {
-      e.stopPropagation();
-      const col = document.getElementById("col-" + stepChip.dataset.phase);
-      if (col) col.scrollIntoView({ behavior: prefersReduced() ? "auto" : "smooth", inline: "start", block: "nearest" });
-      return;
-    }
-    openFoundationDrawer(n);
-  });
-  node.addEventListener("keydown", e => {
-    if ((e.key === "Enter" || e.key === " ") && !e.target.closest(".fdn-chip.step")) {
-      e.preventDefault(); openFoundationDrawer(n);
-    }
-  });
-  return node;
-}
-
-function buildFdnFlow(upperIdx, lowerIdx) {
-  const ups = [], wbs = [];
-  (FOUNDATION.flows || []).forEach(f => {
-    const a = fdnLayerIndex(f.from), b = fdnLayerIndex(f.to);
-    if (a < 0 || b < 0) return;
-    if (Math.min(a, b) !== upperIdx || Math.max(a, b) !== lowerIdx) return;
-    (f.dir === "writeback" ? wbs : ups).push(f);
-  });
-  if (!ups.length && !wbs.length) return null;
-  const flow = el("div", "fdn-flow");
-  let html = "";
-  ups.forEach(f => html += '<span class="up"><span class="gly">↑</span><span>' + esc(f.label || "feeds up") + '</span></span>');
-  wbs.forEach(f => html += '<span class="wb"><span class="gly">↩</span><span>writeback · ' + esc(f.label || "") + '</span></span>');
-  flow.innerHTML = html;
-  return flow;
-}
-
-function openFoundationDrawer(n) {
+function openSourceDrawer(sourceId) {
   lastFocused = document.activeElement;
-  const layer = FOUNDATION.layers.find(l => l.id === n.layerId) || {};
-  const st = n.skillType ? (FOUNDATION.skillTypes || {})[n.skillType] : null;
+  const s = DATA_SOURCES[sourceId]; if (!s) return;
   const body = $("#drawerBody");
-
-  const rel = (FOUNDATION.flows || []).filter(f =>
-    f.from === n.id || f.to === n.id ||
-    ((f.from === n.layerId || f.to === n.layerId) && n.layerId === "aera-skills"));
-  const flowRows = rel.map(f => {
-    const dirLbl = f.dir === "writeback" ? "↩ writes back" : "↑ feeds up";
-    return '<div class="d-worker">' + dirLbl + ' · <b>' + esc(fdnLabelOf(f.from)) + '</b> → <b>' + esc(fdnLabelOf(f.to)) + '</b>' +
-      (f.label ? '<br><span style="color:var(--ink-soft)">' + esc(f.label) + '</span>' : '') + '</div>';
+  const users = consumersOfSource(sourceId);
+  const userRows = users.map(a => {
+    const p = JOURNEY.phases.find(x => x.id === a.phaseId);
+    const tag = a.aeraSkill ? "Aera skill" : ((NODE_TYPES[a.type] || {}).label || "agent");
+    return '<div class="d-worker"><b>' + esc(a.title) + '</b> · ' + esc(tag) +
+      (p ? ' · Step ' + p.step : '') + '</div>';
   }).join("");
 
-  const steps = (n.supportsPhases || []).map(pid => {
-    const p = JOURNEY.phases.find(x => x.id === pid);
-    return p ? "Step " + p.step + " · " + p.label : pid;
-  });
-
-  let linked = "";
-  if (n.linkedAgentId) {
-    const ag = JOURNEY.agents.find(a => a.id === n.linkedAgentId);
-    if (ag) linked =
-      '<div class="d-section-title">Appears in the timeline as</div>' +
-      '<div class="d-worker"><b>' + esc(ag.title) + '</b> — ' +
-        esc((REFINERY_CLASSES[ag.refineryClass] || {}).label || ag.refineryClass || "") +
-        ' worker. Shown here once as the underlying Aera skill, not duplicated as a separate timeline agent.</div>';
-  }
-
   body.innerHTML =
-    '<div class="d-phase">' + esc(layer.label || "") + (layer.kind ? ' · ' + esc(layer.kind) : '') + '</div>' +
-    '<h2 id="drawerTitle">' + esc(n.label) + '</h2>' +
-    '<div class="d-badges">' +
-      (n.system ? '<span class="badge" style="background:#6b7280">' + esc(n.system) + '</span>' : '') +
-      (st ? '<span class="skill-badge" style="background:' + st.color + '">' + esc(st.label) + '</span>' : '') +
-    '</div>' +
-    (n.note ? '<p class="d-desc">' + esc(n.note) + '</p>' : '') +
-    (st ? '<div class="d-section-title">Skill type</div>' +
-      '<div class="d-rfclass"><div class="rf-name" style="color:' + st.color + '">' + esc(st.label) + '</div>' +
-      '<div class="rf-mean">' + esc(st.meaning) + '</div></div>' : '') +
-    (n.consumes && n.consumes.length ?
-      '<div class="d-section-title">Consumes</div><div class="d-tooling">' +
-      n.consumes.map(c => '<span class="d-tool">↓ ' + esc(c) + '</span>').join("") + '</div>' : '') +
-    (n.writesTo && n.writesTo.length ?
-      '<div class="d-section-title">Writes</div><div class="d-tooling">' +
-      n.writesTo.map(c => '<span class="d-tool">↑ ' + esc(c) + '</span>').join("") + '</div>' : '') +
-    (flowRows ? '<div class="d-section-title">Data flows</div>' + flowRows : '') +
-    (steps.length ? '<div class="d-section-title">Supports NPI steps</div><div class="d-worker">' + steps.map(esc).join("<br>") + '</div>' : '') +
-    linked;
+    '<div class="d-phase">' + esc((INFRA.groupLabels || {})[s.kind] || s.kind) + ' · data source</div>' +
+    '<h2 id="drawerTitle">' + esc(s.label) + '</h2>' +
+    '<div class="d-badges"><span class="badge" style="background:' + s.color + '">' + esc(s.short || s.label) + '</span></div>' +
+    (s.note ? '<p class="d-desc">' + esc(s.note) + '</p>' : '') +
+    '<div class="d-section-title">Feeds these agents & skills (' + users.length + ')</div>' +
+    (userRows || '<div class="d-worker">No agents currently mapped to this source.</div>');
 
   const drawer = $("#drawer");
   drawer.classList.add("open");
