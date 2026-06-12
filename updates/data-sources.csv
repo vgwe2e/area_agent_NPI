@@ -1,0 +1,10 @@
+id,label,short,kind,color,note
+s4,SAP S/4HANA,S4,system,#0061C2,"ERP system of record — finished-goods & raw-material planning, all master data."
+kinaxis,Kinaxis,Kinaxis,system,#0F9D8C,"Demand & supply planning; inventory pre-builds. Aera skills write optimized plans back here."
+planx,PlanX,PlanX,system,#B45309,"Commercial / operations planning system — carries the commercial demand signal that is reconciled against Kinaxis supply planning."
+lakehouse,Snowflake / Databricks,Databricks,system,#7B2FF7,"Consolidated data platform — captures transactional data from S4 and Kinaxis; the single source skills & agents read."
+pos,Point-of-Sale (POS) scans,POS,signal,#A100FF,"Retail scan data — mapped up from scans to cases for sell-through visibility at the shelf."
+retailer,Retailer / customer EDI · shelf & warehouse,Retailer EDI,signal,#B26B00,"Distributor/customer orders, shelf and warehouse positions — drives on-shelf availability and service levels."
+syndicated,Syndicated market data,Syndicated,signal,#0EA5E9,"External market/category data for like-product benchmarks and demand potential."
+likeproduct,Like-product library,Like-product,signal,#00A3C4,"Internal historical analog library — powers NPI forecasting where the new product has no own history."
+digital,Digital / unstructured signals,Digital,signal,#2563EB,"Web, social and other unstructured early-demand signals, extracted via GenAI."
