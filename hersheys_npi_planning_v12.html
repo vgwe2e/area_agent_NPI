@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hershey's NPI Planning Reinvention — v9</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --red:#3D1309;--red2:#2E0D05;--red-pale:#FDF4EC;--red-mid:#C4896B;
+  --purple:#7500C0;--purple-light:#9B30E8;--purple-pale:#F3E8FF;
+  --blue:#0070C0;--blue-pale:rgba(0,112,192,.07);
+  --gray:#F7F7F9;--gray2:#E8E8EE;--gray3:#C0C0CE;--gray4:#6B6B80;--gray5:#3A3A50;
+  --green:#006614;--green-pale:#EDFFF3;
+  --amber:#92520A;--amber-pale:#FFF4E5;--amber-mid:#FDDCAA;
+  --text:#1A1A2A;--white:#FFFFFF;
+  --nav-h:52px;
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:#fff;font-size:16px;}
+#progress{position:fixed;top:0;left:0;height:3px;background:var(--red);transition:width .35s;z-index:300;}
+#deck{position:absolute;top:3px;left:0;right:0;bottom:var(--nav-h);overflow:hidden;z-index:1;}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .4s ease,transform .45s cubic-bezier(.4,0,.2,1);transform:translateX(36px);}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.slide.exit{opacity:0;transform:translateX(-36px);}
+#nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);display:flex;align-items:center;justify-content:center;gap:10px;z-index:200;background:rgba(255,255,255,.9);border-top:1px solid var(--gray2);box-shadow:0 -2px 12px rgba(0,0,0,.06);backdrop-filter:blur(8px);}
+#nav button{background:none;border:none;color:var(--gray4);cursor:pointer;font-size:18px;padding:2px 8px;transition:color .2s;}
+#nav button:hover{color:var(--red);}
+#slide-counter{font-size:13px;color:var(--gray4);min-width:50px;text-align:center;font-weight:500;}
+.dot-nav{display:flex;gap:5px;align-items:center;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gray3);cursor:pointer;transition:all .3s;}
+.dot.active{background:var(--red);width:18px;border-radius:3px;}
+.lbar{display:flex;align-items:center;justify-content:space-between;padding:11px 36px;border-bottom:1px solid var(--gray2);flex-shrink:0;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);}
+.lbar-l{display:flex;align-items:center;gap:14px;}
+.ldiv{width:1px;height:18px;background:var(--gray2);}
+.acc{font-size:14px;font-weight:700;color:var(--purple);}
+.stag{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray4);}
+.body{flex:1;overflow:hidden;padding:14px 36px;display:flex;flex-direction:column;background:rgba(255,255,255,.88);}
+.h2{font-size:clamp(17px,1.9vw,24px);font-weight:700;line-height:1.2;color:var(--text);}
+.sm{font-size:13px;color:var(--gray4);line-height:1.6;}
+.red{color:var(--red);}
+.abar{height:3px;background:linear-gradient(90deg,var(--red),#C4896B,var(--purple),var(--red));background-size:300% 100%;animation:barSweep 5s linear infinite;flex-shrink:0;}
+@keyframes barSweep{from{background-position:0% 50%;}to{background-position:200% 50%;}}
+@keyframes fup{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.fu{animation:fup .4s ease forwards;}
+.d1{animation-delay:.06s;opacity:0;}.d2{animation-delay:.13s;opacity:0;}.d3{animation-delay:.2s;opacity:0;}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;}
+.pr{background:var(--red-pale);color:var(--red);}
+.pp{background:var(--purple-pale);color:var(--purple);}
+.pg{background:var(--gray);color:var(--gray4);}
+.pgreen{background:#EDFFF3;color:#006614;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.step-node{transition:opacity .2s ease,transform .2s ease;}
+.asis-card{background:#fff;border:1px solid var(--gray2);border-radius:6px;padding:5px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;}
+#npi-tip{display:none;position:fixed;z-index:99999;pointer-events:none;background:#1A1A2A;border-radius:7px;padding:9px 12px;max-width:240px;box-shadow:0 4px 16px rgba(0,0,0,.35);}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="npi-tip"><div id="npi-tip-hdr" style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.8px;margin-bottom:5px;"></div><div id="npi-tip-body"></div></div>
+<div id="deck">
+
+<!-- ══ S1: NPI DECISION FLOW (like page 2) ══ -->
+<div class="slide" id="s1">
+  <div class="abar"></div>
+  <div class="lbar">
+    <div class="lbar-l">
+      <div style="font-weight:900;font-size:15px;color:var(--red);letter-spacing:.5px;">HSY</div>
+      <div class="ldiv"></div>
+      <div class="acc">accenture</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;">03</span>
+      <span class="stag">NPI Decision Flow</span>
+    </div>
+  </div>
+  <div class="body" style="padding-bottom:8px;">
+    <div style="flex-shrink:0;margin-bottom:8px;">
+      <div class="h2 fu d1">New product success isn't decided at launch.<br/><span class="red">It's built across 8 decisions — from portfolio to shelf.</span></div>
+    </div>
+    <div style="display:flex;gap:16px;flex:1;min-height:0;overflow:hidden;">
+
+      <!-- LEFT: Vertical step timeline -->
+      <div style="width:220px;flex-shrink:0;position:relative;overflow-y:auto;padding-right:6px;">
+        <div style="position:absolute;left:18px;top:32px;width:2px;bottom:8px;background:linear-gradient(180deg,#3D1309 0%,#3D1309 50%,#7500C0 50%,#7500C0 87%,#006614 87%,#006614 100%);opacity:.2;z-index:0;pointer-events:none;"></div>
+
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--red);margin-bottom:5px;padding-left:48px;">Pre-Launch</div>
+        <div id="tl-1" class="step-node" onclick="npiStep(1)" style="display:flex;align-items:center;gap:9px;margin-bottom:7px;cursor:pointer;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1;font-size:12px;font-weight:800;color:#fff;">1</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);line-height:1.3;">Portfolio &amp; Launch Planning</div>
+        </div>
+        <div id="tl-2" class="step-node" onclick="npiStep(2)" style="display:flex;align-items:center;gap:9px;margin-bottom:7px;cursor:pointer;opacity:.45;">
+          <div style="position:relative;flex-shrink:0;">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;">2</div>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);line-height:1.3;">Demand Forecasting &amp; Signal Conversion<br/><span style="font-size:9px;color:var(--green);font-weight:700;">✓ Accenture asset</span></div>
+        </div>
+        <div id="tl-3" class="step-node" onclick="npiStep(3)" style="display:flex;align-items:center;gap:9px;margin-bottom:7px;cursor:pointer;opacity:.45;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:#fff;">3</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);line-height:1.3;">Inventory Planning<br/><span style="font-size:9px;color:var(--green);font-weight:700;">✓ Accenture asset</span></div>
+        </div>
+        <div id="tl-4" class="step-node" onclick="npiStep(4)" style="display:flex;align-items:center;gap:9px;margin-bottom:12px;cursor:pointer;opacity:.3;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:#fff;">4</div>
+          <div style="font-size:11px;font-weight:600;color:var(--gray4);line-height:1.3;">Downstream Planning Systems</div>
+        </div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--purple);margin-bottom:5px;padding-left:48px;">Launch</div>
+        <div id="tl-5" class="step-node" onclick="npiStep(5)" style="display:flex;align-items:center;gap:9px;margin-bottom:7px;cursor:pointer;opacity:.45;">
+          <div style="position:relative;flex-shrink:0;">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;">5</div>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);line-height:1.3;">Inventory Positioning &amp; Deployment<br/><span style="font-size:9px;color:var(--green);font-weight:700;">✓ Accenture asset</span></div>
+        </div>
+        <div id="tl-6" class="step-node" onclick="npiStep(6)" style="display:flex;align-items:center;gap:9px;margin-bottom:7px;cursor:pointer;opacity:.3;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:#fff;">6</div>
+          <div style="font-size:11px;font-weight:600;color:var(--gray4);line-height:1.3;">Distribution &amp; Fulfillment Execution</div>
+        </div>
+        <div id="tl-7" class="step-node" onclick="npiStep(7)" style="display:flex;align-items:flex-start;gap:9px;margin-bottom:12px;cursor:pointer;opacity:.45;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:#fff;">7</div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text);line-height:1.3;">Launch Execution &amp; In-Market Adjustments</div>
+            <div style="font-size:9px;color:var(--green);font-weight:700;margin-top:2px;">↺ refines and adjusts</div>
+            <div style="font-size:9px;color:var(--green);font-weight:700;margin-top:2px;">✓ Accenture asset</div>
+          </div>
+        </div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--green);margin-bottom:5px;padding-left:48px;">Post-Launch</div>
+        <div id="tl-8" class="step-node" onclick="npiStep(8)" style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;opacity:.45;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:#fff;">8</div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text);line-height:1.3;">Post-Launch Optimization &amp; Scaling</div>
+            <div style="font-size:9px;color:var(--green);font-weight:700;margin-top:2px;">↺ refines and adjusts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Content panels -->
+      <div style="flex:1;overflow-y:auto;min-width:0;">
+
+        <!-- Step 1 -->
+        <div id="pn-1">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:2px;">Pre-Launch · Step 1 of 8</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:5px;">Portfolio &amp; Launch Planning</div>
+          <div style="font-size:12px;color:var(--gray4);line-height:1.6;margin-bottom:7px;">Hershey's decides which SKUs to bring to market, selects channels and target customers, sets the launch window, and establishes an expected demand range — the foundation all downstream decisions build on.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px;">
+            <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gray4);margin-bottom:3px;">FROM</div><div style="font-size:11px;color:var(--gray4);">Manual SKU selection by brand teams; launch windows set by marketing calendar with no demand signal input</div></div>
+            <div style="background:var(--red-pale);border:1px solid var(--red-mid);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:3px;">TO</div><div style="font-size:11px;color:var(--text);">AI-driven portfolio scoring using like-product performance, channel demand signals, and capacity feasibility</div></div>
+          </div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray4);margin-bottom:4px;">Key Decisions → the agents that drive them</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
+            <span style="font-size:10px;color:var(--gray4);"><span style="color:var(--red);font-weight:700;">◆</span> Decision</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">🤖 now driven by</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">what changes</span>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--red);font-weight:700;">◆</span> Which SKUs to launch and in which markets/channels</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Portfolio Optimization Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 MILP · weighted scoring · like-product regression · Monte Carlo</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--amber-pale);color:var(--amber);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · augmented</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">Brand-team picks become AI scores across like products performance and shelf velocity, which the planner approves.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--red);font-weight:700;">◆</span> Launch timing and sequencing by customer/region</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Market Segmentation Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 ML clustering · segmentation models</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--amber-pale);color:var(--amber);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · augmented</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">Marketing-calendar dates give way to channels and customers ranked by launch readiness and demand potential.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--red);font-weight:700;">◆</span> Expected demand range and initial confidence interval</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Portfolio Optimization Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 MILP · weighted scoring · like-product regression · Monte Carlo</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:rgba(0,112,192,.12);color:var(--blue);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Enabled · automated</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">An evidence-based, high level range estimate is generated from like products instead of a single top-down guess.</div>
+            </div>
+          </div>
+          <div style="background:var(--purple-pale);border:1px solid rgba(117,0,192,.2);border-radius:7px;padding:7px 10px;display:flex;align-items:flex-start;gap:7px;margin-top:1px;">
+            <span style="font-size:13px;line-height:1.2;">👤</span>
+            <span style="font-size:11px;color:var(--purple);line-height:1.45;">Planner touchpoint &mdash; review the agent-scored portfolio and approve the launch shortlist, instead of screening SKUs by hand.</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:7px;">
+            <div style="background:#E1F5EE;border:1px solid #9FE1CB;border-radius:7px;padding:6px 9px;">
+              <div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#0F6E56;text-transform:uppercase;margin-bottom:2px;">Aera</div>
+              <div style="font-size:10px;color:var(--text);line-height:1.4;">Placeholder</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div id="pn-2" style="display:none;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:2px;">Pre-Launch · Step 2 of 8</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:5px;">Demand Forecasting &amp; Signal Conversion</div>
+          <div style="font-size:12px;color:var(--gray4);line-height:1.6;margin-bottom:7px;">Translates portfolio decisions into demand curves at brand, SKU, and customer levels. The hardest forecasting problem in CPG: no history, uncertain like products, volatile early signals. Accuracy at this step sets the risk exposure for every step that follows.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px;">
+            <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gray4);margin-bottom:3px;">FROM</div><div style="font-size:11px;color:var(--gray4);">Manual like-product selection, static 12-week baseline built once and never recalibrated until launch review</div></div>
+            <div style="background:var(--red-pale);border:1px solid var(--red-mid);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:3px;">TO</div><div style="font-size:11px;color:var(--text);">AI like-product matching with continuous forecast recalibration from Day 1 of in-market signals</div></div>
+          </div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray4);margin-bottom:4px;">Key Decisions → the agents that drive them</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
+            <span style="font-size:10px;color:var(--gray4);"><span style="color:var(--red);font-weight:700;">◆</span> Decision</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">🤖 now driven by</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">what changes</span>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--red);font-weight:700;">◆</span> Forecast at multiple levels: brand &rarr; SKU &rarr; customer</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">NPI Forecast Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 Statistical models (ARIMA, time series) · ML (XGBoost, prophet) · like-product analogy</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--green-pale);color:var(--green);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · continuous</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">One static 12-week baseline becomes a live multi-level sales curve that captures product life cycle sales forecast.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--red);font-weight:700;">◆</span> Capture early demand signals and measure feature predictability power</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Signal Capture Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 Data engineering tools · GenAI for unstructured signal extraction</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:rgba(0,112,192,.12);color:var(--blue);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Enabled · automated</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">POS, retailer orders and digital signals are ingested and weighted in near real time, not pulled weekly by hand.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--red);font-weight:700;">◆</span> Leverage demand signals and features to refine forecast sales curve</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Demand Sensing Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 ML time-series · real-time signal models</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--amber-pale);color:var(--amber);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · augmented</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">Recalibrate sales curve with detected demand signals</div>
+            </div>
+          </div>
+          <div style="background:var(--purple-pale);border:1px solid rgba(117,0,192,.2);border-radius:7px;padding:7px 10px;display:flex;align-items:flex-start;gap:7px;margin-top:1px;">
+            <span style="font-size:13px;line-height:1.2;">👤</span>
+            <span style="font-size:11px;color:var(--purple);line-height:1.45;">Planner touchpoint &mdash; review the three agent-built forecast decisions and approve or override, instead of building the baseline manually.</span>
+          </div>
+          <div style="background:var(--green-pale);border:1px solid #99DDB0;border-radius:7px;padding:8px 10px;margin-top:7px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:5px;">⭐ ACCENTURE ASSETS — READY TO DEPLOY</div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>ISCP / Demand Planning APP (NPI)</strong> — pre-built NPI forecasting accelerator, configurable to Hershey's hierarchy</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>GenAI NPI Forecast Solution</strong> — live demo available; like-product matching and demand curve generation</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>NPI Forecast Tool</strong> — validated in CPG / confectionery; covers brand → SKU → customer decomposition</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div id="pn-3" style="display:none;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:2px;">Pre-Launch · Step 3 of 8</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:5px;">Inventory Planning</div>
+          <div style="font-size:12px;color:var(--gray4);line-height:1.6;margin-bottom:7px;">Sets the optimal launch inventory quantity — the trade-off between underage (lost sales) and overage (write-off) cost. Its output becomes the target quantity that every downstream planning system builds against.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px;">
+            <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gray4);margin-bottom:3px;">FROM</div><div style="font-size:11px;color:var(--gray4);">Launch quantity set by a single planner judgment call; under- and over-stock risk weighed informally</div></div>
+            <div style="background:var(--red-pale);border:1px solid var(--red-mid);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:3px;">TO</div><div style="font-size:11px;color:var(--text);">Optimal launch quantity computed from the underage/overage trade-off, then fed to downstream planning</div></div>
+          </div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray4);margin-bottom:4px;">Key Decisions → the agents that drive them</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
+            <span style="font-size:10px;color:var(--gray4);"><span style="color:var(--red);font-weight:700;">◆</span> Decision</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">🤖 now driven by</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">what changes</span>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--red);font-weight:700;">◆</span> Optimal inventory launch quantity — trading off underage and overage cost</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Inventory Optimization and Planning Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 Newsvendor type of one-time buy model</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--amber-pale);color:var(--amber);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · augmented</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">Launch quantity becomes an optimized recommendation that balances stockout and write-off cost for planner sign-off.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--red);font-weight:700;">◆</span> Optimal quantity published as inputs to downstream planning systems</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Inventory Optimization and Planning Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 Newsvendor type of one-time buy model</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:rgba(0,112,192,.12);color:var(--blue);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Enabled · automated</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">The optimized launch quantity flows automatically as the target that supply, production and deployment plans build against.</div>
+            </div>
+          </div>
+          <div style="background:var(--purple-pale);border:1px solid rgba(117,0,192,.2);border-radius:7px;padding:7px 10px;display:flex;align-items:flex-start;gap:7px;margin-top:1px;">
+            <span style="font-size:13px;line-height:1.2;">👤</span>
+            <span style="font-size:11px;color:var(--purple);line-height:1.45;">Planner touchpoint &mdash; approve the optimized launch quantity; it then flows as the target into every downstream planning system.</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:7px;">
+            <div style="background:#E1F5EE;border:1px solid #9FE1CB;border-radius:7px;padding:6px 9px;">
+              <div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#0F6E56;text-transform:uppercase;margin-bottom:2px;">Aera</div>
+              <div style="font-size:10px;color:var(--text);line-height:1.4;">Placeholder</div>
+            </div>
+          </div>
+          <div style="background:var(--green-pale);border:1px solid #99DDB0;border-radius:7px;padding:8px 10px;margin-top:7px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:5px;">⭐ ACCENTURE ASSETS — READY TO DEPLOY</div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>Inventory Planning Optimization Tool (IPOT)</strong> — inventory positioning and optimization tool with NPI-specific pre-build logic</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>ISCP Inventory Analytics &amp; Monitoring Tool</strong> — DC-level positioning with service level target optimization</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>Multi-echelon allocation accelerator</strong> — accounts for channel/customer commitments and safety stock buffers</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div id="pn-4" style="display:none;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray4);margin-bottom:2px;">Pre-Launch · Step 4 of 8</div>
+          <div style="font-size:15px;font-weight:800;color:var(--gray4);margin-bottom:5px;">Downstream Planning Systems</div>
+          <div style="font-size:12px;color:var(--gray4);line-height:1.6;margin-bottom:7px;">Translates the demand and inventory plan into supplier commitments and production schedules — sourcing, co-manufacturer capacity, plant allocation, and run sequencing. NPI adds new ingredients, untested co-manufacturers, compressed lead times, and changeover complexity.</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray4);margin-bottom:4px;">Key Decisions</div>
+          <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:7px;">
+            <div style="font-size:12px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Raw material sourcing strategy and supplier selection</div>
+            <div style="font-size:12px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Supplier allocation, commitments, and lead-time locks</div>
+            <div style="font-size:12px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Co-manufacturer engagement and capacity reservation</div>
+            <div style="font-size:12px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Plant allocation across Hershey&#39;s manufacturing network</div>
+            <div style="font-size:12px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Production schedule, sequencing, and batch sizing</div>
+            <div style="font-size:12px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Changeover planning and capacity buffer allocation</div>
+          </div>
+          <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gray4);margin-bottom:5px;">CLIENT CREDENTIAL</div>
+            <div style="font-size:11px;color:var(--gray4);font-style:italic;">Placeholder — to be populated with Hershey&#39;s supply and production planning context and relevant client examples.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:7px;">
+            <div style="background:#E1F5EE;border:1px solid #9FE1CB;border-radius:7px;padding:6px 9px;">
+              <div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#0F6E56;text-transform:uppercase;margin-bottom:2px;">Aera</div>
+              <div style="font-size:10px;color:var(--text);line-height:1.4;">Placeholder</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div id="pn-5" style="display:none;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--purple);margin-bottom:2px;">Launch · Step 5 of 8</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:5px;">Inventory Positioning &amp; Deployment</div>
+          <div style="font-size:12px;color:var(--gray4);line-height:1.6;margin-bottom:7px;">Pre-build inventory, position stock across the DC network, and allocate to customers/channels before launch day. Buffer strategy is critical: too little risks stockouts on day one; too much creates write-off exposure if velocity disappoints.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px;">
+            <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gray4);margin-bottom:3px;">FROM</div><div style="font-size:11px;color:var(--gray4);">Static pre-build plan; DC allocation based on last-year regional patterns or commercial commitments</div></div>
+            <div style="background:var(--purple-pale);border:1px solid rgba(117,0,192,.2);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--purple);margin-bottom:3px;">TO</div><div style="font-size:11px;color:var(--text);">Dynamic pre-build and DC positioning driven by live demand signals and retailer readiness scores</div></div>
+          </div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray4);margin-bottom:4px;">Key Decisions → the agents that drive them</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
+            <span style="font-size:10px;color:var(--gray4);"><span style="color:var(--purple);font-weight:700;">◆</span> Decision</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">🤖 now driven by</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">what changes</span>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--purple);font-weight:700;">◆</span> Pre-build inventory levels and timing ahead of launch</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Inventory deployment and replenishing agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 Multi-echelon inventory optimization and replenishment models</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--amber-pale);color:var(--amber);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · augmented</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">A static pre-build plan becomes an agent recommendation sized to demand confidence intervals for planner sign-off.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--purple);font-weight:700;">◆</span> Inventory positioning across DCs and regional markets</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Inventory deployment and replenishing agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 Multi-echelon inventory optimization and replenishment models</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--green-pale);color:var(--green);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · continuous</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">DC positioning shifts from last-year patterns to live signals, with replenishment triggered automatically.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--purple);font-weight:700;">◆</span> Customer and channel allocation with risk buffers</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Inventory deployment and replenishing agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 Multi-echelon inventory optimization and replenishment models</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:rgba(0,112,192,.12);color:var(--blue);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Enabled · automated</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">Stock is distributed across customers and channels while respecting commitment, priority, and safety-stock constraints.</div>
+            </div>
+          </div>
+          <div style="background:var(--purple-pale);border:1px solid rgba(117,0,192,.2);border-radius:7px;padding:7px 10px;display:flex;align-items:flex-start;gap:7px;margin-top:1px;">
+            <span style="font-size:13px;line-height:1.2;">👤</span>
+            <span style="font-size:11px;color:var(--purple);line-height:1.45;">Planner touchpoint &mdash; approve the agent-proposed pre-build and DC plan; agents then replenish within that approved envelope.</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:7px;">
+            <div style="background:#E1F5EE;border:1px solid #9FE1CB;border-radius:7px;padding:6px 9px;">
+              <div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#0F6E56;text-transform:uppercase;margin-bottom:2px;">Aera</div>
+              <div style="font-size:10px;color:var(--text);line-height:1.4;">Placeholder</div>
+            </div>
+          </div>
+          <div style="background:var(--green-pale);border:1px solid #99DDB0;border-radius:7px;padding:8px 10px;margin-top:7px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:5px;">⭐ ACCENTURE ASSETS — READY TO DEPLOY</div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>Inventory Planning Optimization Tool (IPOT)</strong> — inventory positioning and optimization tool with NPI-specific pre-build logic</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>ISCP Inventory Analytics &amp; Monitoring Tool</strong> — DC-level positioning with service level target optimization</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>Multi-echelon allocation accelerator</strong> — accounts for channel/customer commitments and safety stock buffers</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div id="pn-6" style="display:none;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray4);margin-bottom:2px;">Launch · Step 6 of 8</div>
+          <div style="font-size:15px;font-weight:800;color:var(--gray4);margin-bottom:5px;">Distribution &amp; Fulfillment Execution</div>
+          <div style="font-size:12px;color:var(--gray4);line-height:1.6;margin-bottom:7px;">Executes the distribution plan — moving product from DCs to retailers on schedule. Order fulfillment rules and service-level commitments are applied, with real-time tracking of shelf availability at each account.</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray4);margin-bottom:4px;">Key Decisions</div>
+          <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:7px;">
+            <div style="font-size:12px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Distribution plan and carrier/mode selection</div>
+            <div style="font-size:12px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Transportation routing and delivery scheduling</div>
+            <div style="font-size:12px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Order fulfillment rules and service-level enforcement</div>
+          </div>
+          <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gray4);margin-bottom:5px;">CLIENT CREDENTIAL</div>
+            <div style="font-size:11px;color:var(--gray4);font-style:italic;">Placeholder — to be populated with Hershey's distribution and fulfillment context.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:7px;">
+            <div style="background:#E1F5EE;border:1px solid #9FE1CB;border-radius:7px;padding:6px 9px;">
+              <div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#0F6E56;text-transform:uppercase;margin-bottom:2px;">Aera</div>
+              <div style="font-size:10px;color:var(--text);line-height:1.4;">Placeholder</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 7 -->
+        <div id="pn-7" style="display:none;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--purple);margin-bottom:2px;">Launch · Step 7 of 8</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:5px;">Launch Execution &amp; In-Market Adjustments</div>
+          <div style="background:var(--green-pale);border:1px solid #99DDB0;border-radius:7px;padding:7px 10px;margin-bottom:7px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:3px;">↺ CLOSES THE LOOP BACK INTO STEPS 2 &amp; 4</div>
+            <div style="font-size:11px;color:var(--text);line-height:1.5;">Early sell-through signals from the first weeks in-market directly trigger <strong>demand forecast recalibration</strong> and <strong>inventory repositioning</strong>. This is the most value-dense feedback point in the NPI cycle — Accenture's assets cover both sides of this loop.</div>
+          </div>
+          <div style="font-size:12px;color:var(--gray4);line-height:1.6;margin-bottom:7px;">The most dynamic step — early sell-through data drives rapid decisions. Agents surface deviations within hours, and the planner decides whether to trigger forecast recalibration, inventory redeployment, or both.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px;">
+            <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gray4);margin-bottom:3px;">FROM</div><div style="font-size:11px;color:var(--gray4);">Teams scrambling to gather early signals; adjustments made days or weeks after the signal first appeared</div></div>
+            <div style="background:var(--purple-pale);border:1px solid rgba(117,0,192,.2);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--purple);margin-bottom:3px;">TO</div><div style="font-size:11px;color:var(--text);">Continuous signal agents surfacing deviations within hours; planner reviews agent-recommended adjustments</div></div>
+          </div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray4);margin-bottom:4px;">Key Decisions → the agents that drive them</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
+            <span style="font-size:10px;color:var(--gray4);"><span style="color:var(--purple);font-weight:700;">◆</span> Decision</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">🤖 now driven by</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">what changes</span>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--purple);font-weight:700;">◆</span> Capture and weight early in-market signals — POS, retailer orders, shelf availability</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Signal Capture Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 Data engineering tools · GenAI for unstructured signal extraction</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:rgba(0,112,192,.12);color:var(--blue);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Enabled · automated</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">Raw launch-week signals are ingested and weighted in near real time, ready for the sensing and forecast agents to act on.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--purple);font-weight:700;">◆</span> Respond to early sell-through signals and revise forecasts</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Demand Sensing Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 ML time-series · real-time signal models</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--green-pale);color:var(--green);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · continuous</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">Deviations vs. the launch forecast are detected continuously and trigger recalibration within hours.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--purple);font-weight:700;">◆</span> Adjust production, inventory, or distribution in near real-time</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Lifecycle Management Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 LLM · statistical &amp; ML lifecycle forecast models (phase-in / phase-out)</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--amber-pale);color:var(--amber);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · augmented</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">The demand curve updates and required supply and distribution actions are flagged for the planner to act on.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--purple);font-weight:700;">◆</span> Manage exceptions: shortages, delays, demand spikes</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Exception Handler Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 LLM · exception alerting tools · next-best-action generation</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:rgba(0,112,192,.12);color:var(--blue);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Enabled · automated</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">Exceptions are scored and routed by severity with a proposed resolution, instead of manual firefighting.</div>
+            </div>
+          </div>
+          <div style="background:var(--purple-pale);border:1px solid rgba(117,0,192,.2);border-radius:7px;padding:7px 10px;display:flex;align-items:flex-start;gap:7px;margin-top:1px;">
+            <span style="font-size:13px;line-height:1.2;">👤</span>
+            <span style="font-size:11px;color:var(--purple);line-height:1.45;">Planner touchpoint &mdash; work the scored exception queue and accept or override agent recommendations, surfaced in hours not weeks.</span>
+          </div>
+          <div style="background:var(--green-pale);border:1px solid #99DDB0;border-radius:7px;padding:8px 10px;margin-top:7px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:5px;">⭐ ACCENTURE ASSETS — READY TO DEPLOY</div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>Inventory Planning Optimization Tool (IPOT)</strong> — inventory positioning and optimization with NPI-specific pre-build logic</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>ISCP Inventory Analytics &amp; Monitoring Tool</strong> — DC-level positioning with service-level target optimization</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>Multi-echelon allocation accelerator</strong> — channel/customer commitments and safety-stock buffers</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>ISCP / Demand Planning APP (NPI)</strong> — pre-built NPI forecasting accelerator, configurable to Hershey's hierarchy</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>GenAI NPI Forecast Solution</strong> — live demo available; like-product matching and demand curve generation</div>
+              <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span><strong>NPI Forecast Tool</strong> — validated in CPG / confectionery; covers brand → SKU → customer decomposition</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 8 -->
+        <div id="pn-8" style="display:none;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:2px;">Post-Launch · Step 8 of 8</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:5px;">Post-Launch Optimization &amp; Scaling</div>
+          <div style="background:var(--green-pale);border:1px solid #99DDB0;border-radius:7px;padding:7px 10px;margin-bottom:7px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:3px;">↺ CONTINUOUS REFINEMENT</div>
+            <div style="font-size:11px;color:var(--text);line-height:1.5;">Sustained sell-through and performance data continues to refine the <strong>demand forecast model</strong> — improving like-product library accuracy — and the <strong>inventory positioning logic</strong> — improving pre-build decisions for the next launch. The learning compounds across each NPI cycle.</div>
+          </div>
+          <div style="font-size:12px;color:var(--gray4);line-height:1.6;margin-bottom:7px;">Once launch stabilizes, performance data drives scaling and wind-down decisions — and feeds directly back into the like-product library and forecast models that power the next NPI plan.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px;">
+            <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gray4);margin-bottom:3px;">FROM</div><div style="font-size:11px;color:var(--gray4);">Post-launch reviews done quarterly; learnings captured in slide decks rarely referenced in future launches</div></div>
+            <div style="background:var(--green-pale);border:1px solid #99DDB0;border-radius:7px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:3px;">TO</div><div style="font-size:11px;color:var(--text);">Automated performance loop that feeds learnings back into like-product library and forecast models in real-time</div></div>
+          </div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray4);margin-bottom:4px;">Key Decisions → the agents that drive them</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
+            <span style="font-size:10px;color:var(--gray4);"><span style="color:var(--green);font-weight:700;">◆</span> Decision</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">🤖 now driven by</span>
+            <span style="color:var(--gray3);font-size:11px;">→</span>
+            <span style="font-size:10px;color:var(--gray4);">what changes</span>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--green);font-weight:700;">◆</span> Adjust inventory and production based on actual performance vs. plan</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Performance Monitoring Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 KPI metrics · accuracy &amp; bias formulas (MAPE, WMAPE, Bias)</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:rgba(0,112,192,.12);color:var(--blue);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Enabled · automated</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">MAPE, sell-through and margin are tracked against plan automatically, with model degradation auto-flagged.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--green);font-weight:700;">◆</span> Scale to new regions or channels where sell-through exceeded expectations</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Scaling Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 Scenario simulator · forecasting models on simulated parameters</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--amber-pale);color:var(--amber);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · augmented</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">Expansion opportunities are identified and replenishment triggered in high-velocity markets for planner approval.</div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--gray2);border-radius:7px;padding:8px 10px;display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:start;margin-bottom:6px;">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.4;"><span style="color:var(--green);font-weight:700;">◆</span> Capture and encode learnings to improve the next NPI plan</div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-pale);border-radius:5px;padding:3px 8px;"><span style="font-size:11px;">🤖</span><span style="font-size:10.5px;font-weight:700;color:var(--purple);">Learning Loop Agent</span></span></div>
+              <div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:5px;padding:3px 8px;font-size:10.5px;color:var(--blue);font-weight:600;">🔧 ML · feedback loop models · like-product library updates</div>
+            </div>
+            <div style="background:var(--gray2);width:1px;height:100%;"></div>
+            <div>
+              <span style="display:inline-block;background:var(--green-pale);color:var(--green);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;">Transformed · continuous</span>
+              <div style="font-size:11px;color:var(--gray4);line-height:1.45;margin-top:5px;">NPI actuals are written back into the like-product library and forecast models, closing the loop each cycle.</div>
+            </div>
+          </div>
+          <div style="background:var(--purple-pale);border:1px solid rgba(117,0,192,.2);border-radius:7px;padding:7px 10px;display:flex;align-items:flex-start;gap:7px;margin-top:1px;">
+            <span style="font-size:13px;line-height:1.2;">👤</span>
+            <span style="font-size:11px;color:var(--purple);line-height:1.45;">Planner touchpoint &mdash; review sell-through vs. plan and approve scale-up or wind-down; learnings feed the next launch automatically.</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:7px;">
+            <div style="background:#E1F5EE;border:1px solid #9FE1CB;border-radius:7px;padding:6px 9px;">
+              <div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#0F6E56;text-transform:uppercase;margin-bottom:2px;">Aera</div>
+              <div style="font-size:10px;color:var(--text);line-height:1.4;">Placeholder</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /right panel -->
+    </div><!-- /flex row -->
+
+    <!-- Bottom phase summary -->
+    <div style="flex-shrink:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
+      <div style="border-radius:10px;padding:8px 12px;border:1px solid var(--gray2);display:flex;flex-direction:column;gap:3px;">
+        <div style="font-size:16px;">🍫</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);">Pre-Launch · Steps 1–4</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);">Build the Plan</div>
+        <div style="font-size:10.5px;color:var(--gray4);line-height:1.5;">Portfolio, forecast, supply, and production decisions made 3–12 months before launch.</div>
+      </div>
+      <div style="border-radius:10px;padding:8px 12px;border:1px solid rgba(117,0,192,.2);display:flex;flex-direction:column;gap:3px;">
+        <div style="font-size:16px;">🚀</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--purple);">Launch · Steps 5–7</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);">Execute &amp; Adjust</div>
+        <div style="font-size:10.5px;color:var(--gray4);line-height:1.5;">Inventory positioning, distribution, and real-time in-market adjustments.</div>
+      </div>
+      <div style="border-radius:10px;padding:8px 12px;border:1px solid #99DDB0;display:flex;flex-direction:column;gap:3px;">
+        <div style="font-size:16px;">📈</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);">Post-Launch · Step 8</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);">Learn &amp; Scale</div>
+        <div style="font-size:10.5px;color:var(--gray4);line-height:1.5;">Performance analysis, scaling decisions, and feedback to improve every future launch.</div>
+      </div>
+    </div>
+  </div><!-- /body -->
+</div>
+<script>
+function npiStep(k){
+  for(var i=1;i<=8;i++){
+    var tl=document.getElementById('tl-'+i);
+    var pn=document.getElementById('pn-'+i);
+    if(tl)tl.style.opacity=(i===k)?'1':'0.45';
+    if(pn){
+      if(i===k){
+        pn.style.display='block';
+        pn.style.opacity='0';pn.style.transform='translateY(8px)';
+        (function(p){setTimeout(function(){p.style.transition='opacity .28s ease,transform .28s ease';p.style.opacity='1';p.style.transform='translateY(0)';},10);})(pn);
+      } else {
+        pn.style.display='none';
+      }
+    }
+  }
+}
+npiStep(1);
+</script>
+
+<!-- ══ S2: INDUSTRY CONTEXT (like page 3) ══ -->
+<div class="slide active" id="s2">
+  <div class="abar"></div>
+  <div class="lbar">
+    <div class="lbar-l">
+      <div style="font-weight:900;font-size:15px;color:var(--red);letter-spacing:.5px;">HSY</div>
+      <div class="ldiv"></div>
+      <div class="acc">accenture</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;">01</span>
+      <span class="stag">Future Agentic NPI</span>
+    </div>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:14px 36px;display:flex;flex-direction:column;gap:12px;background:rgba(255,255,255,.88);">
+    <h2 class="h2 fu d1">Most NPI failures are <span class="red">planning failures — not product failures</span></h2>
+
+    <!-- Stat cards -->
+    <div class="g4 fu d2" style="flex-shrink:0;">
+      <div style="background:#fff;border:1px solid var(--gray2);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="flex-shrink:0;text-align:center;min-width:52px;"><div style="font-size:26px;font-weight:800;color:var(--red);line-height:1;">~80%</div><div style="font-size:10px;color:var(--gray3);margin-top:2px;">Nielsen / HBS</div></div>
+        <div style="font-size:12px;color:var(--gray4);line-height:1.4;">of new CPG products fail to meet year-1 sales targets — most failures trace back to poor pre-launch planning</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--gray2);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="flex-shrink:0;text-align:center;min-width:52px;"><div style="font-size:26px;font-weight:800;color:var(--red);line-height:1;">18mo<span style="font-size:14px;color:var(--amber);vertical-align:super;">?</span></div><div style="font-size:10px;color:var(--gray3);margin-top:2px;">Gartner, 2025</div></div>
+        <div style="font-size:12px;color:var(--gray4);line-height:1.4;">average NPI cycle time — largely unchanged despite years of digital investment in planning tools</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--gray2);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="flex-shrink:0;text-align:center;min-width:52px;"><div style="font-size:26px;font-weight:800;color:var(--red);line-height:1;">60%<span style="font-size:14px;color:var(--amber);vertical-align:super;">?</span></div><div style="font-size:10px;color:var(--gray3);margin-top:2px;">McKinsey, 2024</div></div>
+        <div style="font-size:12px;color:var(--gray4);line-height:1.4;">of NPI supply failures stem from forecast error — not from supply disruptions or manufacturing issues</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--gray2);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="flex-shrink:0;text-align:center;min-width:52px;"><div style="font-size:26px;font-weight:800;color:var(--red);line-height:1;">3×<span style="font-size:14px;color:var(--amber);vertical-align:super;">?</span></div><div style="font-size:10px;color:var(--gray3);margin-top:2px;">APICS, 2025</div></div>
+        <div style="font-size:12px;color:var(--gray4);line-height:1.4;">higher demand forecast error for new products vs. established SKUs — the core unsolved problem in NPI planning</div>
+      </div>
+    </div>
+
+    <!-- From/To table -->
+    <div style="border:1px solid var(--gray2);border-radius:10px;overflow:hidden;flex-shrink:0;" class="fu d2">
+      <div style="display:grid;grid-template-columns:28px 1fr 28px 1fr;background:var(--gray);border-bottom:1px solid var(--gray2);padding:5px 10px 5px 14px;gap:8px;align-items:center;">
+        <div></div><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray4);">From — Today's NPI Planning</div>
+        <div></div><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);">To — Agentic NPI · tower orchestrates, Aera answers</div>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr 28px 1fr;padding:7px 10px 7px 14px;gap:8px;align-items:center;border-bottom:1px solid var(--gray2);"><div style="font-size:16px;text-align:center;">📅</div><div style="font-size:12px;color:var(--gray4);">Demand forecast built 12+ weeks before launch; never recalibrated until the post-launch review</div><div style="font-size:13px;color:var(--red);text-align:center;font-weight:700;">→</div><div style="font-size:12px;color:var(--text);font-weight:500;">Continuous AI forecast recalibration from like-product signals to first in-market sell-through data</div></div>
+      <div style="display:grid;grid-template-columns:28px 1fr 28px 1fr;padding:7px 10px 7px 14px;gap:8px;align-items:center;border-bottom:1px solid var(--gray2);"><div style="font-size:16px;text-align:center;">🔒</div><div style="font-size:12px;color:var(--gray4);">Supply commitments locked months before launch — too early to reflect real demand signals</div><div style="font-size:13px;color:var(--red);text-align:center;font-weight:700;">→</div><div style="font-size:12px;color:var(--text);font-weight:500;">Dynamic supply adjustments triggered by early sell-through, updated at each planning horizon</div></div>
+      <div style="display:grid;grid-template-columns:28px 1fr 28px 1fr;padding:7px 10px 7px 14px;gap:8px;align-items:center;border-bottom:1px solid var(--gray2);"><div style="font-size:16px;text-align:center;">👥</div><div style="font-size:12px;color:var(--gray4);">Siloed decisions across brand, supply chain, and commercial — no single view of the 8-step flow</div><div style="font-size:13px;color:var(--red);text-align:center;font-weight:700;">→</div><div style="font-size:12px;color:var(--text);font-weight:500;">Agentic orchestration connecting all 8 NPI decision points in a single governed loop</div></div>
+      <div style="display:grid;grid-template-columns:28px 1fr 28px 1fr;padding:7px 10px 7px 14px;gap:8px;align-items:center;border-bottom:1px solid var(--gray2);"><div style="font-size:16px;text-align:center;">🚒</div><div style="font-size:12px;color:var(--gray4);">Reactive exception management — teams firefighting during launch week when it's too late to fix</div><div style="font-size:13px;color:var(--red);text-align:center;font-weight:700;">→</div><div style="font-size:12px;color:var(--text);font-weight:500;">Proactive exception agents flagging supply, demand, and distribution risks weeks before launch</div></div>
+      <div style="display:grid;grid-template-columns:28px 1fr 28px 1fr;padding:7px 10px 7px 14px;gap:8px;align-items:center;"><div style="font-size:16px;text-align:center;">📊</div><div style="font-size:12px;color:var(--gray4);">Learnings captured in post-launch decks; rarely applied to the next launch in a structured way</div><div style="font-size:13px;color:var(--red);text-align:center;font-weight:700;">→</div><div style="font-size:12px;color:var(--text);font-weight:500;">Automated learning loop — actuals feed back into like-product library and forecast models in real-time</div></div>
+    </div>
+
+    <!-- Who is doing it -->
+    <div style="border:1px solid var(--gray2);border-radius:10px;overflow:hidden;flex-shrink:0;" class="fu d3">
+      <div style="background:var(--red);padding:8px 16px;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;">Leading CPG Companies Already Acting</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;">
+        <div style="padding:10px 14px;border-right:1px solid var(--gray2);border-bottom:1px solid var(--gray2);"><div style="font-size:14px;font-weight:900;color:#E31837;margin-bottom:4px;letter-spacing:-.5px;">Unilever</div><div style="font-size:12px;color:var(--text);line-height:1.45;">AI demand sensing across portfolio — reduced forecast error 30%, cut safety stock 15%, delivering ~$300M in annual holding cost savings</div></div>
+        <div style="padding:10px 14px;border-bottom:1px solid var(--gray2);"><div style="font-size:14px;font-weight:900;color:#CC0000;margin-bottom:4px;letter-spacing:-.5px;">US Pharmacy Retailer</div><div style="font-size:12px;color:var(--text);line-height:1.45;">Delivered day-one forecasts for every new SKU-store combination — including zero-history scenarios — eliminating the cold-start gap that previously left new product launches without a demand signal</div></div>
+        <div style="padding:10px 14px;border-right:1px solid var(--gray2);"><div style="font-size:14px;font-weight:900;color:#009FDF;margin-bottom:4px;letter-spacing:-.5px;">Nestlé</div><div style="font-size:12px;color:var(--text);line-height:1.45;">OMP Unison Planning for end-to-end NPI supply alignment — improved plan adherence, reduced planning bias, and faster launch response</div></div>
+        <div style="padding:10px 14px;"><div style="font-size:14px;font-weight:900;color:#8B1A1A;margin-bottom:4px;letter-spacing:-.5px;">Mondelēz</div><div style="font-size:12px;color:var(--text);line-height:1.45;">AI Product Development (AIPD) tool — created 70 new SKUs with product development 2–5× faster vs. traditional process</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S3: AS-IS vs TO-BE NPI PROCESS (like page 6) ══ -->
+<div class="slide" id="s3">
+  <div class="abar"></div>
+  <div class="lbar">
+    <div class="lbar-l">
+      <div style="font-weight:900;font-size:15px;color:var(--red);letter-spacing:.5px;">HSY</div>
+      <div class="ldiv"></div>
+      <div class="acc">accenture</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;">02</span>
+      <span class="stag">Reinvented NPI Process</span>
+    </div>
+  </div>
+  <style>
+  #s3 .asis-step-wrap{cursor:default;}
+  </style>
+  <div class="body" style="padding-bottom:6px;overflow-y:auto;gap:0;">
+    <div style="flex-shrink:0;margin-bottom:10px;"><h2 class="h2 fu d1">Example of Reinvented Process <span class="red">— New Product Introduction</span></h2></div>
+
+    <!-- AS-IS -->
+    <div style="border:1px solid var(--gray2);border-radius:8px;overflow:hidden;flex-shrink:0;" class="fu d2">
+      <div style="background:var(--gray);padding:6px 14px;border-bottom:1px solid var(--gray2);display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;font-weight:700;color:var(--red);">AS-IS</span><span style="font-size:13px;color:var(--text);font-weight:500;">Linear, siloed — typically requires 25+ human touchpoints across 8 decision steps</span></div>
+        <span style="font-size:12px;color:var(--gray4);">👤 Human &nbsp;·&nbsp; 🔧 Tool</span>
+      </div>
+      <div style="padding:8px 14px 10px;">
+        <div style="display:grid;grid-template-columns:44px repeat(8,1fr);gap:3px;align-items:start;">
+          <div style="font-size:10px;font-weight:700;color:var(--gray4);text-align:center;padding-top:9px;">Touch</div>
+          <div class="asis-step-wrap" data-tip-hdr="3 TOUCHPOINTS" data-tip="1. Review brand brief & score SKU/market options|2. Align on launch window with marketing & sales|3. Sign off on go-to-market scope">
+            <div class="asis-card"><div style="font-size:10px;font-weight:600;color:var(--text);text-align:center;line-height:1.3;">Portfolio &amp; Launch Planning</div><div style="display:flex;gap:3px;align-items:center;"><span style="font-size:11px;">👤</span><div style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;">3</div></div></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:1px;"><div style="color:var(--gray3);font-size:12px;flex-shrink:0;padding-top:9px;">→</div><div class="asis-step-wrap" style="flex:1;" data-tip-hdr="4 TOUCHPOINTS" data-tip="1. Pull like products manually & build demand curve|2. Build multi-level forecast in planning system|3. Review outliers & apply overrides in Excel|4. Rerun & validate final baseline">
+            <div class="asis-card"><div style="font-size:10px;font-weight:600;color:var(--text);text-align:center;line-height:1.3;">Demand Forecasting</div><div style="display:flex;gap:3px;align-items:center;"><span style="font-size:11px;">👤</span><div style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;">4</div></div></div>
+          </div></div>
+          <div style="display:flex;align-items:flex-start;gap:1px;"><div style="color:var(--gray3);font-size:12px;flex-shrink:0;padding-top:9px;">→</div><div class="asis-step-wrap" style="flex:1;" data-tip-hdr="3 TOUCHPOINTS" data-tip="1. Set launch quantity by calculating underage/overage trade-off|2. Build launch inventory plan manually in planning system|3. Publish inventory targets to downstream planning systems">
+            <div class="asis-card"><div style="font-size:10px;font-weight:600;color:var(--text);text-align:center;line-height:1.3;">Inventory Planning</div><div style="display:flex;gap:3px;align-items:center;"><span style="font-size:11px;">👤</span><div style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;">3</div></div></div>
+          </div></div>
+          <div style="display:flex;align-items:flex-start;gap:1px;"><div style="color:var(--gray3);font-size:12px;flex-shrink:0;padding-top:9px;">→</div><div class="asis-step-wrap" style="flex:1;" data-tip-hdr="3 TOUCHPOINTS" data-tip="1. Manually allocate plant capacity for NPI run|2. Build production schedule in system|3. Review changeover requirements & approve sequence">
+            <div class="asis-card"><div style="font-size:10px;font-weight:600;color:var(--text);text-align:center;line-height:1.3;">Downstream Planning</div><div style="display:flex;gap:3px;align-items:center;"><span style="font-size:11px;">👤</span><div style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;">3</div></div></div>
+          </div></div>
+          <div style="display:flex;align-items:flex-start;gap:1px;"><div style="color:var(--gray3);font-size:12px;flex-shrink:0;padding-top:9px;">→</div><div class="asis-step-wrap" style="flex:1;" data-tip-hdr="3 TOUCHPOINTS" data-tip="1. Set pre-build targets manually against static plan|2. Allocate inventory to DCs based on last-year patterns|3. Issue customer allocations & confirm with commercial">
+            <div class="asis-card"><div style="font-size:10px;font-weight:600;color:var(--text);text-align:center;line-height:1.3;">Inventory Positioning</div><div style="display:flex;gap:3px;align-items:center;"><span style="font-size:11px;">👤</span><div style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;">3</div></div></div>
+          </div></div>
+          <div style="display:flex;align-items:flex-start;gap:1px;"><div style="color:var(--gray3);font-size:12px;flex-shrink:0;padding-top:9px;">→</div><div class="asis-step-wrap" style="flex:1;" data-tip-hdr="2 TOUCHPOINTS" data-tip="1. Submit distribution orders per the plan|2. Monitor carrier performance & escalate delays manually">
+            <div class="asis-card"><div style="font-size:10px;font-weight:600;color:var(--text);text-align:center;line-height:1.3;">Distribution &amp; Fulfillment</div><div style="display:flex;gap:3px;align-items:center;"><span style="font-size:11px;">👤</span><div style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;">2</div></div></div>
+          </div></div>
+          <div style="display:flex;align-items:flex-start;gap:1px;"><div style="color:var(--gray3);font-size:12px;flex-shrink:0;padding-top:9px;">→</div><div class="asis-step-wrap" style="flex:1;" data-tip-hdr="4 TOUCHPOINTS" data-tip="1. Pull early POS data manually each week|2. Flag deviations in spreadsheet & circulate to team|3. Agree on corrective action across brand, SC, and commercial|4. Update orders & re-run supply plan">
+            <div class="asis-card"><div style="font-size:10px;font-weight:600;color:var(--text);text-align:center;line-height:1.3;">Launch Execution</div><div style="display:flex;gap:3px;align-items:center;"><span style="font-size:11px;">👤</span><div style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;">4</div></div></div>
+          </div></div>
+          <div style="display:flex;align-items:flex-start;gap:1px;"><div style="color:var(--gray3);font-size:12px;flex-shrink:0;padding-top:9px;">→</div><div class="asis-step-wrap" style="flex:1;" data-tip-hdr="3 TOUCHPOINTS" data-tip="1. Pull actuals & compare to launch plan|2. Decide on scale-up or wind-down by region|3. Write post-launch review deck for leadership">
+            <div class="asis-card"><div style="font-size:10px;font-weight:700;color:var(--text);text-align:center;line-height:1.3;">Post-Launch Optimization</div><div style="display:flex;gap:3px;align-items:center;"><span style="font-size:11px;">👤</span><div style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;">3</div></div></div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TO-BE -->
+    <div style="border:1px solid var(--red-mid);border-radius:9px;overflow:hidden;flex-shrink:0;display:flex;flex-direction:column;margin-top:7px;" class="fu d3">
+      <div style="background:var(--red);padding:7px 14px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:13px;font-weight:700;color:#fff;">TO-BE · Agentic NPI Orchestration — Planner as Launch Control Tower</span>
+        <div style="display:flex;gap:14px;align-items:center;flex-shrink:0;"><span style="font-size:12px;color:rgba(255,255,255,.85);">👤 Human</span><span style="font-size:12px;color:rgba(255,255,255,.85);">🔧 Tool</span><span style="font-size:12px;color:rgba(255,255,255,.85);">🤖 Agent</span></div>
+      </div>
+      <div style="padding:10px 13px;display:flex;flex-direction:column;gap:0;">
+
+        <!-- Pipeline row -->
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:stretch;flex-shrink:0;">
+          <div style="border:1.5px solid var(--purple);border-radius:9px;padding:7px 8px 4px;background:rgba(117,0,192,.03);display:flex;flex-direction:column;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--purple);margin-bottom:5px;">① PRE-LAUNCH PIPELINE · Batch-triggered (weeks before launch)</div>
+            <div style="display:flex;align-items:stretch;gap:0;flex:1;"><div style="flex:1;background:var(--purple-pale);border:1.5px solid var(--purple);border-radius:6px;padding:5px 4px;display:flex;flex-direction:column;align-items:center;text-align:center;"><div style="font-size:13px;margin-bottom:1px;">🎯</div><div style="font-size:8.5px;font-weight:700;color:var(--purple);line-height:1.2;">1 &middot; Portfolio &amp; Launch Planning</div><div style="margin-top:3px;display:flex;flex-direction:column;gap:1px;width:100%;"><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>Portfolio Optimization Agent</div><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>Market Segmentation Agent</div></div></div><div style="display:flex;align-items:center;padding:0 2px;color:var(--purple);font-size:12px;">→</div><div style="flex:1;background:var(--purple-pale);border:1.5px solid var(--purple);border-radius:6px;padding:5px 4px;display:flex;flex-direction:column;align-items:center;text-align:center;"><div style="font-size:13px;margin-bottom:1px;">📈</div><div style="font-size:8.5px;font-weight:700;color:var(--purple);line-height:1.2;">2 &middot; Demand Forecasting</div><div style="margin-top:3px;display:flex;flex-direction:column;gap:1px;width:100%;"><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>NPI Forecast Agent</div><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>Signal Capture Agent</div><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>Demand Sensing Agent</div></div></div><div style="display:flex;align-items:center;padding:0 2px;color:var(--purple);font-size:12px;">→</div><div style="flex:1;background:var(--purple-pale);border:1.5px solid var(--purple);border-radius:6px;padding:5px 4px;display:flex;flex-direction:column;align-items:center;text-align:center;"><div style="font-size:13px;margin-bottom:1px;">📦</div><div style="font-size:8.5px;font-weight:700;color:var(--purple);line-height:1.2;">3 &middot; Inventory Planning</div><div style="margin-top:3px;display:flex;flex-direction:column;gap:1px;width:100%;"><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>Inventory Optimization &amp; Planning Agent</div><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>Inventory deployment and replenishing agent</div></div></div><div style="display:flex;align-items:center;padding:0 2px;color:var(--purple);font-size:12px;">→</div><div style="flex:1;background:var(--gray);border:1.5px solid var(--gray2);border-radius:6px;padding:5px 4px;display:flex;flex-direction:column;align-items:center;text-align:center;"><div style="font-size:13px;margin-bottom:1px;">🏭</div><div style="font-size:8.5px;font-weight:700;color:var(--gray4);line-height:1.2;">4 &middot; Downstream Planning Systems</div><div style="margin-top:3px;display:flex;flex-direction:column;gap:1px;width:100%;"></div></div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;padding:0 3px;"><div style="font-size:10px;color:var(--red);font-weight:600;">outputs</div><div style="font-size:18px;color:var(--red);">→</div></div>
+          <div style="display:flex;align-items:stretch;gap:5px;flex-shrink:0;">
+            <div style="background:var(--red-pale);border:2px solid var(--red);border-radius:9px;padding:8px;text-align:center;width:108px;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div style="font-size:16px;margin-bottom:2px;">⚑</div><div style="font-size:9px;font-weight:700;color:var(--red);line-height:1.3;">NPI Monitoring &amp; Exception Agents</div><div style="margin-top:3px;font-size:11px;">🤖</div></div>
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;padding:0 2px;"><div style="font-size:9px;color:var(--gray4);font-weight:600;">sell-thru</div><div style="font-size:18px;color:var(--gray4);">←</div></div>
+            <div style="background:#fff;border:1.5px solid var(--gray2);border-radius:9px;padding:8px;text-align:center;width:108px;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div style="font-size:9px;font-weight:700;color:var(--gray4);margin-bottom:2px;">② LAUNCH AND POST-LAUNCH</div><div style="font-size:16px;margin-bottom:2px;">📡</div><div style="font-size:9px;font-weight:700;color:var(--gray4);line-height:1.3;">In-Market Signal Monitoring</div><div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;width:100%;"><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>Performance Monitoring Agent</div><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>Scaling Agent</div><div style="font-size:8px;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:2px;justify-content:center;"><span style="font-size:8px;">🤖</span>Learning Loop Agent</div></div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;flex-shrink:0;height:20px;margin-top:3px;"><div style="flex:1;display:flex;align-items:center;padding-left:36px;font-size:10px;color:var(--purple);font-weight:600;">↑ re-trigger / adjustments</div><div style="width:252px;flex-shrink:0;display:flex;align-items:center;padding-left:16px;font-size:10px;color:var(--red);font-weight:600;">↓ exceptions &amp; recommendations</div></div>
+
+        <!-- NPI Planner Workbench -->
+        <div id="ct-npi" style="flex-shrink:0;">
+          <div id="ct-collapsed-npi" onmouseenter="document.getElementById('ct-collapsed-npi').style.display='none';document.getElementById('ct-expanded-npi').style.display='grid';" style="border:2px solid var(--red);border-radius:9px;background:var(--red-pale);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+            <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">🗼</span><div><div style="font-size:13px;font-weight:700;color:var(--red);">NPI Planner Workbench 👤 🔧</div><div style="font-size:11px;color:var(--gray4);">Reviews exceptions · Approves launch plan · Triggers post-launch scaling</div><div style="font-size:10px;color:var(--purple);font-weight:700;margin-top:2px;">Docks on the control tower — the 3 touchpoints are the tower’s governance surface; <span style="color:#0F6E56;">Aera’s answers arrive as inputs to these approvals</span>.</div></div></div>
+            <div style="display:flex;gap:8px;align-items:center;"><span style="background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;">25+ → 3 touchpoints</span><span style="font-size:11px;color:var(--gray4);padding:3px 10px;border:1px solid var(--red-mid);border-radius:4px;">hover →</span></div>
+          </div>
+          <div id="ct-expanded-npi" onmouseleave="document.getElementById('ct-expanded-npi').style.display='none';document.getElementById('ct-collapsed-npi').style.display='flex';" style="display:none;border:2px solid var(--red);border-radius:9px;background:var(--red-pale);padding:9px 11px;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div style="background:#fff;border:1px solid var(--red-mid);border-radius:7px;padding:9px 11px;"><div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:5px;">TOUCHPOINT 1 · LAUNCH PLAN APPROVAL</div><div style="display:flex;flex-direction:column;gap:4px;"><div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--red);">✓</span>Review agent-generated launch scenarios and confidence bands</div><div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--red);">✓</span>Approve initial supply, inventory, and distribution plan</div></div></div>
+            <div style="background:#fff;border:1px solid var(--red-mid);border-radius:7px;padding:9px 11px;"><div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:5px;">TOUCHPOINT 2 · EXCEPTION REVIEW</div><div style="display:flex;flex-direction:column;gap:4px;"><div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--red);">✓</span>Review scored and ranked NPI exception queue</div><div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--red);">✓</span>Decide: accept agent recommendation or override with judgment</div></div></div>
+            <div style="background:#fff;border:1px solid var(--red-mid);border-radius:7px;padding:9px 11px;"><div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:5px;">TOUCHPOINT 3 · POST-LAUNCH RECALIBRATION</div><div style="display:flex;flex-direction:column;gap:4px;"><div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--red);">✓</span>Review sell-through vs. forecast; approve scaling or wind-down</div><div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--red);">✓</span>Confirm updated supply plan for next launch window</div></div></div>
+          </div>
+        </div>
+
+        <!-- Sense agents row -->
+        <div style="border:1.5px dashed var(--gray3);border-radius:9px;padding:8px 14px;background:#fff;display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:7px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--gray4);flex-shrink:0;">③ LAUNCH SENSE AGENTS · Event-driven 🤖</div>
+          <span style="font-size:16px;">👁️</span>
+          <div style="flex:1;font-size:11px;color:var(--gray4);">Monitor POS, shelf availability, retailer orders &amp; distribution gaps · Apply materiality threshold · If immaterial → next batch · If material → alert Workbench</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skill impact -->
+    <div class="fu d3" style="border:1px solid var(--gray2);border-radius:10px;overflow:hidden;flex-shrink:0;margin-top:7px;">
+      <div style="background:var(--red);color:#fff;padding:7px 16px;font-size:11px;font-weight:700;letter-spacing:1.5px;">SKILL IMPACT — MOVING FROM 25+ TO 3 TOUCHPOINTS ACROSS THE NPI CYCLE</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:10px 14px;gap:12px;">
+        <div style="border-right:1px solid var(--gray2);padding-right:12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--green);text-transform:uppercase;margin-bottom:5px;">✅ Skills That Grow in Value</div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span>Strategic NPI launch judgment &amp; exception resolution</div>
+            <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span>Cross-functional orchestration across brand, SC &amp; commercial</div>
+            <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span>AI forecast output validation &amp; model governance</div>
+            <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--green);font-weight:700;">›</span>Scenario interpretation in commercial language</div>
+          </div>
+        </div>
+        <div style="border-right:1px solid var(--gray2);padding-right:12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase;margin-bottom:5px;">📈 New Skills Planners Must Build</div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--blue);font-weight:700;">›</span>Agent configuration &amp; NPI parameter setting</div>
+            <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--blue);font-weight:700;">›</span>Launch signal interpretation &amp; materiality judgment</div>
+            <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--blue);font-weight:700;">›</span>Agentic workflow monitoring &amp; escalation design</div>
+            <div style="font-size:11px;color:var(--text);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--blue);font-weight:700;">›</span>Like-product library curation &amp; model drift detection</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--gray4);text-transform:uppercase;margin-bottom:5px;">🗑️ Tasks Agents Now Handle</div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="font-size:11px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Manual like-product selection &amp; baseline forecast build</div>
+            <div style="font-size:11px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Weekly POS extraction &amp; exception queue building</div>
+            <div style="font-size:11px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Supplier risk tracking in spreadsheets</div>
+            <div style="font-size:11px;color:var(--gray4);padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gray3);font-weight:700;">›</span>Manual supply plan re-runs after signal changes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /body -->
+</div>
+
+
+<!-- ══ S4: AGENT ARCHITECTURE (PPT Slide 3) ══ -->
+<div class="slide" id="s4">
+  <div class="abar"></div>
+  <div class="lbar">
+    <div class="lbar-l">
+      <div style="font-weight:900;font-size:15px;color:var(--red);letter-spacing:.5px;">HSY</div>
+      <div class="ldiv"></div>
+      <div class="acc">accenture</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;">05</span>
+      <span class="stag">Agentic Demand Planning</span>
+    </div>
+  </div>
+  <div class="body" style="gap:7px;padding-bottom:4px;overflow-y:auto;">
+    <!-- Badge + Title -->
+    <div style="flex-shrink:0;">
+      <div style="display:inline-block;background:var(--red);color:#fff;padding:3px 10px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:1.5px;margin-bottom:6px;">OUR POINT OF VIEW &nbsp;·&nbsp; ARCHITECTURE WIRED INTO HSY</div>
+      <div class="h2">Agent-led demand planning, <span class="red">on the HSY stack</span></div>
+      <div style="font-size:12px;color:var(--gray4);margin-top:3px;">The orchestrator and its agents form the <strong style="color:var(--purple);">Agentic Demand Planning Flows</strong> — it decides what to plan, when, and who approves. <strong style="color:#0F6E56;">Aera</strong> answers the planning question when asked.</div>
+    </div>
+
+    <div style="flex-shrink:0;display:flex;align-items:center;gap:10px;background:#E1F5EE;border:2px solid #9FE1CB;border-radius:9px;padding:18px 14px;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:#0F6E56;white-space:nowrap;">AERA DECISION CLOUD</span>
+      <span style="font-size:11px;color:#0F6E56;">A called decision-intelligence service — returns forecast, inventory &amp; optimization answers on request &nbsp;·&nbsp; <strong>Skills · Cortex</strong></span>
+    </div>
+    <div style="flex-shrink:0;display:flex;align-items:flex-start;color:#0F6E56;font-weight:700;text-align:center;">
+      <div style="width:18%;flex-shrink:0;"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;line-height:1.15;">
+        <span style="font-size:17px;">↕</span>
+      </div>
+      <div style="width:18%;flex-shrink:0;display:flex;flex-direction:column;align-items:center;line-height:1.15;">
+        <span style="font-size:17px;">↕</span>
+      </div>
+    </div>
+    <div style="flex-shrink:0;border:1.5px dashed var(--purple);border-radius:10px;padding:10px;position:relative;display:flex;flex-direction:column;gap:7px;">
+      <div style="position:absolute;top:-8px;left:14px;background:#fff;padding:0 6px;font-size:9px;font-weight:800;letter-spacing:1.5px;color:var(--purple);">Agentic Demand Planning Flows</div>
+    <!-- Top row: Inputs | Orchestrator | Planner -->
+    <div style="flex-shrink:0;display:flex;align-items:stretch;gap:0;">
+      <!-- Left: Inputs (~18%) -->
+      <div style="width:18%;flex-shrink:0;display:flex;flex-direction:column;gap:6px;justify-content:center;">
+        <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:7px 10px;font-size:11px;font-weight:600;color:var(--text);text-align:center;">External events</div>
+        <div style="background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:7px 10px;font-size:11px;font-weight:600;color:var(--text);text-align:center;">BU demand signals &amp; inputs</div>
+      </div>
+      <!-- Arrow → -->
+      <div style="display:flex;align-items:center;justify-content:center;padding:0 8px;color:var(--gray3);font-size:20px;">→</div>
+      <!-- Center: Orchestrator (~34%) -->
+      <div style="flex:1;background:var(--purple-pale);border:2px solid var(--purple);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--purple);">DP ORCHESTRATOR AGENT</div>
+        <div style="font-size:10px;color:var(--gray4);margin-top:4px;max-width:260px;">Routes signals, sequences sub-agents, surfaces what needs human review</div>
+      </div>
+      <!-- Arrow ↔ -->
+      <div style="display:flex;align-items:center;justify-content:center;padding:0 8px;color:var(--gray3);font-size:20px;">↔</div>
+      <!-- Right: Demand Planner (~18%) -->
+      <div style="width:18%;flex-shrink:0;background:var(--red);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:#fff;">DEMAND PLANNER</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.75);margin-top:4px;">Reviews, approves, overrides, teaches</div>
+      </div>
+    </div>
+
+    <!-- Arrow down -->
+    <div style="text-align:center;color:var(--gray3);font-size:18px;line-height:1;flex-shrink:0;">↑↓</div>
+
+    <!-- 5 Agents row -->
+    <div style="flex-shrink:0;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;">
+      <div style="background:#fff;border:1.5px solid var(--purple);border-radius:8px;padding:8px 9px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:10px;font-weight:700;color:var(--purple);line-height:1.3;">Signal Capture<br/>Agent</div>
+        <div style="font-size:10px;color:var(--gray4);line-height:1.4;flex:1;">Harmonizes &amp; validates the demand dataset</div>
+        <div style="background:var(--blue-pale);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;color:var(--blue);align-self:flex-start;">ERP / GCP<span style="color:var(--amber);margin-left:1px;">?</span></div>
+        <div style="background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:8.5px;font-weight:600;color:var(--blue);align-self:flex-start;">🔧 Data engineering · GenAI for unstructured signals</div>
+      </div>
+      <div style="background:#fff;border:1.5px solid var(--purple);border-radius:8px;padding:8px 9px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:10px;font-weight:700;color:var(--purple);line-height:1.3;">NPI Forecast<br/>Agent</div>
+        <div style="font-size:10px;color:var(--gray4);line-height:1.4;flex:1;">Runs forecast, flags model drift</div>
+        <div style="background:var(--blue-pale);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;color:var(--blue);align-self:flex-start;">AI/ML Modeling Platform<span style="color:var(--amber);margin-left:1px;">?</span></div>
+        <div style="background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:8.5px;font-weight:600;color:var(--blue);align-self:flex-start;">🔧 ARIMA · ML (XGBoost, prophet) · like-product analogy</div>
+      </div>
+      <div style="background:#fff;border:1.5px solid var(--purple);border-radius:8px;padding:8px 9px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:10px;font-weight:700;color:var(--purple);line-height:1.3;">Demand Sensing<br/>Agent</div>
+        <div style="font-size:10px;color:var(--gray4);line-height:1.4;flex:1;">Senses live demand shifts and refines the in-market forecast curve</div>
+        <div style="background:var(--blue-pale);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;color:var(--blue);align-self:flex-start;">AI/ML Modeling Platform<span style="color:var(--amber);margin-left:1px;">?</span></div>
+        <div style="background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:8.5px;font-weight:600;color:var(--blue);align-self:flex-start;">🔧 ML time-series · real-time signal models</div>
+      </div>
+      <div style="background:#fff;border:1.5px solid var(--purple);border-radius:8px;padding:8px 9px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:10px;font-weight:700;color:var(--purple);line-height:1.3;">Performance<br/>Monitoring Agent</div>
+        <div style="font-size:10px;color:var(--gray4);line-height:1.4;flex:1;">Tracks KPIs, performs root-cause analysis</div>
+        <div style="background:var(--blue-pale);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;color:var(--blue);align-self:flex-start;">AI/ML Modeling Platform<span style="color:var(--amber);margin-left:1px;">?</span></div>
+        <div style="background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:8.5px;font-weight:600;color:var(--blue);align-self:flex-start;">🔧 KPI metrics · MAPE · WMAPE · Bias formulas</div>
+      </div>
+      <div style="background:#fff;border:1.5px solid var(--purple);border-radius:8px;padding:8px 9px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:10px;font-weight:700;color:var(--purple);line-height:1.3;">Exception Handler<br/>Agent</div>
+        <div style="font-size:10px;color:var(--gray4);line-height:1.4;flex:1;">Routes deviations needing corrective action</div>
+        <div style="background:var(--blue-pale);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;color:var(--blue);align-self:flex-start;">AI/ML Modeling Platform<span style="color:var(--amber);margin-left:1px;">?</span></div>
+        <div style="background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:8.5px;font-weight:600;color:var(--blue);align-self:flex-start;">🔧 LLM · exception alerting · next-best-action</div>
+      </div>
+      <div style="background:#fff;border:1.5px solid var(--purple);border-radius:8px;padding:8px 9px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:10px;font-weight:700;color:var(--purple);line-height:1.3;">Lifecycle<br/>Management Agent</div>
+        <div style="font-size:10px;color:var(--gray4);line-height:1.4;flex:1;">New SKU intro, EOL, history adjustments</div>
+        <div style="background:var(--blue-pale);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;color:var(--blue);align-self:flex-start;">Product Master / MDM<span style="color:var(--amber);margin-left:1px;">?</span></div>
+        <div style="background:rgba(0,112,192,.08);border:1px solid rgba(0,112,192,.25);border-radius:4px;padding:2px 6px;font-size:8.5px;font-weight:600;color:var(--blue);align-self:flex-start;">🔧 LLM · lifecycle forecast models (phase-in/out)</div>
+      </div>
+    </div>
+
+    </div>
+
+    <!-- Knowledge Layer -->
+    <div style="flex-shrink:0;background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:6px 14px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--gray5);white-space:nowrap;">KNOWLEDGE LAYER</span>
+      <span style="font-size:11px;color:var(--gray4);">Supply chain ontology + tribal knowledge — the semantic layer agents reason over</span>
+    </div>
+
+    <!-- Data Sources -->
+    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;background:var(--gray);border:1px solid var(--gray2);border-radius:7px;padding:6px 14px;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--gray5);white-space:nowrap;">DATA SOURCES</span>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <span style="background:#fff;border:1px solid var(--gray2);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--gray5);">External Data</span>
+        <span style="background:#fff;border:1px solid var(--gray2);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--gray5);">ERP Systems</span>
+        <span style="background:#fff;border:1px solid var(--gray2);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--gray5);">GCP Database</span>
+        <span style="background:#fff;border:1px solid var(--gray2);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--gray5);">AI/ML Modeling Platform</span>
+        <span style="background:#fff;border:1px solid var(--gray2);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--gray5);">Product Master / MDM</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ S5: DEMAND PLANNING MEGA-PROCESS (PPT Slide 4) ══ -->
+<div class="slide" id="s5">
+  <div class="abar"></div>
+  <div class="lbar">
+    <div class="lbar-l">
+      <div style="font-weight:900;font-size:15px;color:var(--red);letter-spacing:.5px;">HSY</div>
+      <div class="ldiv"></div>
+      <div class="acc">accenture</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;">04</span>
+      <span class="stag">Agentic DP Architecture</span>
+    </div>
+  </div>
+  <div class="body" style="gap:7px;padding-bottom:8px;overflow-y:auto;">
+    <!-- Title -->
+    <div style="flex-shrink:0;">
+      <h2 class="h2">New Product Launch <span class="red">— Transformed by Agents</span></h2>
+      <div style="font-size:13px;color:var(--gray4);margin-top:3px;">Composable Components (KG, Agents, Tools) driving greater orchestration and re-use</div>
+    </div>
+
+    <!-- SECTION 1: Current State process flow -->
+    <div style="flex-shrink:0;border:1px solid var(--gray2);border-radius:8px;overflow:hidden;">
+      <div style="background:var(--gray5);padding:5px 12px;"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:#fff;">NPI DECISION FLOW &middot; 8 STEPS</span></div>
+      <div style="display:flex;align-items:stretch;padding:10px 10px;gap:0;"><div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:0 2px;"><span style="width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">1</span><span style="font-size:8.5px;font-weight:600;color:var(--text);line-height:1.2;">Portfolio &amp; Launch Planning</span></div><div style="display:flex;align-items:flex-start;color:var(--gray3);font-size:12px;padding-top:5px;">→</div><div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:0 2px;"><span style="width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">2</span><span style="font-size:8.5px;font-weight:600;color:var(--text);line-height:1.2;">Demand Forecasting &amp; Signal Conversion</span></div><div style="display:flex;align-items:flex-start;color:var(--gray3);font-size:12px;padding-top:5px;">→</div><div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:0 2px;"><span style="width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">3</span><span style="font-size:8.5px;font-weight:600;color:var(--text);line-height:1.2;">Inventory Planning</span></div><div style="display:flex;align-items:flex-start;color:var(--gray3);font-size:12px;padding-top:5px;">→</div><div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:0 2px;"><span style="width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">4</span><span style="font-size:8.5px;font-weight:600;color:var(--text);line-height:1.2;">Downstream Planning Systems</span></div><div style="display:flex;align-items:flex-start;color:var(--gray3);font-size:12px;padding-top:5px;">→</div><div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:0 2px;"><span style="width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">5</span><span style="font-size:8.5px;font-weight:600;color:var(--text);line-height:1.2;">Inventory Positioning &amp; Deployment</span></div><div style="display:flex;align-items:flex-start;color:var(--gray3);font-size:12px;padding-top:5px;">→</div><div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:0 2px;"><span style="width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">6</span><span style="font-size:8.5px;font-weight:600;color:var(--text);line-height:1.2;">Distribution &amp; Fulfillment Execution</span></div><div style="display:flex;align-items:flex-start;color:var(--gray3);font-size:12px;padding-top:5px;">→</div><div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:0 2px;"><span style="width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">7</span><span style="font-size:8.5px;font-weight:600;color:var(--text);line-height:1.2;">Launch Execution &amp; In-Market Adjustments</span></div><div style="display:flex;align-items:flex-start;color:var(--gray3);font-size:12px;padding-top:5px;">→</div><div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:0 2px;"><span style="width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">8</span><span style="font-size:8.5px;font-weight:600;color:var(--text);line-height:1.2;">Post-Launch Optimization &amp; Scaling</span></div></div>
+    </div>
+
+    <!-- SECTION 2: Super Agents -->
+    <div style="flex-shrink:0;border:1px solid var(--gray2);border-radius:8px;overflow:hidden;">
+      <div style="background:var(--gray5);padding:5px 12px;"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:#fff;">SUPER AGENTS</span><span style="font-size:9px;font-weight:700;color:#C9B8F0;margin-left:8px;letter-spacing:.5px;">&middot; orchestrated by the control tower</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;"><div style="border-right:1px solid var(--gray2);padding:8px 10px;background:var(--red-pale);"><div style="font-size:10px;font-weight:800;color:var(--red);margin-bottom:5px;">Pre-Launch</div><div style="display:flex;flex-direction:column;gap:4px;"><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">1</span><span style="font-size:10px;color:var(--text);">Portfolio Optimization Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">2</span><span style="font-size:10px;color:var(--text);">Market Segmentation Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">3</span><span style="font-size:10px;color:var(--text);">NPI Forecast Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">4</span><span style="font-size:10px;color:var(--text);">Signal Capture Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">5</span><span style="font-size:10px;color:var(--text);">Demand Sensing Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">6</span><span style="font-size:10px;color:var(--text);">Inventory Optimization &amp; Planning Agent</span></div></div></div><div style="border-right:1px solid var(--gray2);padding:8px 10px;background:var(--purple-pale);"><div style="font-size:10px;font-weight:800;color:var(--purple);margin-bottom:5px;">Launch</div><div style="display:flex;flex-direction:column;gap:4px;"><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--purple);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">4</span><span style="font-size:10px;color:var(--text);">Signal Capture Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--purple);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">5</span><span style="font-size:10px;color:var(--text);">Demand Sensing Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--purple);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">7</span><span style="font-size:10px;color:var(--text);">Inventory deployment and replenishing agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--purple);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">8</span><span style="font-size:10px;color:var(--text);">Lifecycle Management Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--purple);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">9</span><span style="font-size:10px;color:var(--text);">Exception Handler Agent</span></div></div></div><div style="padding:8px 10px;background:var(--green-pale);"><div style="font-size:10px;font-weight:800;color:var(--green);margin-bottom:5px;">Post-Launch</div><div style="display:flex;flex-direction:column;gap:4px;"><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">12</span><span style="font-size:10px;color:var(--text);">Performance Monitoring Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">13</span><span style="font-size:10px;color:var(--text);">Scaling Agent</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">14</span><span style="font-size:10px;color:var(--text);">Learning Loop Agent</span></div></div></div></div>
+    </div>
+
+    <!-- SECTION 3: Tools / Utilities -->
+    <div style="flex-shrink:0;border:1px solid var(--gray2);border-radius:8px;overflow:hidden;">
+      <div style="background:var(--gray);padding:5px 12px;border-bottom:1px solid var(--gray2);"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--gray5);">TOOLS / UTILITIES</span><span style="font-size:9px;font-weight:700;color:var(--green);margin-left:8px;letter-spacing:.5px;">· Accenture assets — ready to deploy</span></div>
+      <div style="padding:8px 10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;"><div style="display:flex;align-items:flex-start;gap:5px;"><span style="width:15px;height:15px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">★</span><span style="font-size:9.5px;color:var(--text);line-height:1.3;"><strong>ISCP / Demand Planning APP (NPI)</strong> — pre-built NPI forecasting accelerator</span></div><div style="display:flex;align-items:flex-start;gap:5px;"><span style="width:15px;height:15px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">★</span><span style="font-size:9.5px;color:var(--text);line-height:1.3;"><strong>GenAI NPI Forecast Solution</strong> — like-product matching &amp; demand-curve generation</span></div><div style="display:flex;align-items:flex-start;gap:5px;"><span style="width:15px;height:15px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">★</span><span style="font-size:9.5px;color:var(--text);line-height:1.3;"><strong>NPI Forecast Tool</strong> — validated in CPG / confectionery</span></div><div style="display:flex;align-items:flex-start;gap:5px;"><span style="width:15px;height:15px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">★</span><span style="font-size:9.5px;color:var(--text);line-height:1.3;"><strong>Inventory Planning Optimization Tool (IPOT)</strong> — positioning &amp; optimization with NPI pre-build logic</span></div><div style="display:flex;align-items:flex-start;gap:5px;"><span style="width:15px;height:15px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">★</span><span style="font-size:9.5px;color:var(--text);line-height:1.3;"><strong>ISCP Inventory Analytics &amp; Monitoring Tool</strong> — DC-level positioning &amp; service-level targets</span></div><div style="display:flex;align-items:flex-start;gap:5px;"><span style="width:15px;height:15px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">★</span><span style="font-size:9.5px;color:var(--text);line-height:1.3;"><strong>Multi-echelon allocation accelerator</strong> — channel/customer commitments &amp; safety-stock buffers</span></div><div style="display:flex;align-items:flex-start;gap:5px;"><span style="width:15px;height:15px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">★</span><span style="font-size:9.5px;color:var(--text);line-height:1.3;"><strong>Supply &amp; production planning credential</strong> — placeholder — downstream sourcing &amp; manufacturing</span></div></div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: Semantic Layer -->
+    <div style="flex-shrink:0;background:var(--purple-pale);border:1px solid rgba(117,0,192,.2);border-radius:8px;padding:6px 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--purple);white-space:nowrap;">SEMANTIC LAYER</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--purple);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">K</span><span style="font-size:10px;color:var(--purple);font-weight:600;">Adjacent Domains</span></div>
+        <div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--purple);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">K</span><span style="font-size:10px;color:var(--purple);font-weight:600;">Planning Domain Knowledge Graph</span></div>
+        <div style="display:flex;align-items:center;gap:5px;"><span style="width:17px;height:17px;border-radius:50%;background:var(--purple);color:#fff;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">K</span><span style="font-size:10px;color:var(--purple);font-weight:600;">Adjacent Domains</span></div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: Data Products -->
+    <div style="flex-shrink:0;border:1px solid var(--gray2);border-radius:8px;overflow:hidden;">
+      <div style="background:var(--gray);padding:5px 12px;border-bottom:1px solid var(--gray2);"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--gray5);">DATA PRODUCTS</span></div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;">
+        <div style="padding:7px 8px;border-right:1px solid var(--gray2);"><div style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px;">Quarterly Demand Planning</div><div style="font-size:9px;color:var(--gray4);line-height:1.4;">Quarterly forecast data by region and product</div></div>
+        <div style="padding:7px 8px;border-right:1px solid var(--gray2);"><div style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px;">Material Resource Planning</div><div style="font-size:9px;color:var(--gray4);line-height:1.4;">Material requirements and supply chain details</div></div>
+        <div style="padding:7px 8px;border-right:1px solid var(--gray2);"><div style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px;">Product Data</div><div style="font-size:9px;color:var(--gray4);line-height:1.4;">Product hierarchy and lifecycle reference</div></div>
+        <div style="padding:7px 8px;border-right:1px solid var(--gray2);"><div style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px;">Fiscal Calendar Data</div><div style="font-size:9px;color:var(--gray4);line-height:1.4;">Business calendar aligning periods and quarters</div></div>
+        <div style="padding:7px 8px;border-right:1px solid var(--gray2);"><div style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px;">Shipment Header</div><div style="font-size:9px;color:var(--gray4);line-height:1.4;">Shipment details including origin, carrier, and status</div></div>
+        <div style="padding:7px 8px;border-right:1px solid var(--gray2);"><div style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px;">SKU Data</div><div style="font-size:9px;color:var(--gray4);line-height:1.4;">Master list of SKUs with classifications</div></div>
+        <div style="padding:7px 8px;"><div style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px;">Lead Time Master Outbound</div><div style="font-size:9px;color:var(--gray4);line-height:1.4;">Transit durations between supply and demand nodes</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- Navigation -->
+<div id="nav">
+  <button onclick="prevSlide()" title="Previous">&#8592;</button>
+  <div class="dot-nav" id="dot-nav"></div>
+  <span id="slide-counter">1 / 3</span>
+  <button onclick="nextSlide()" title="Next">&#8594;</button>
+</div>
+
+<script>
+var slides=['s2','s3','s1','s5','s4'];
+var cur=0;
+function buildDots(){
+  var dn=document.getElementById('dot-nav');
+  dn.innerHTML='';
+  slides.forEach(function(_,i){
+    var d=document.createElement('div');
+    d.className='dot'+(i===0?' active':'');
+    d.onclick=(function(ii){return function(){goTo(ii);};})(i);
+    dn.appendChild(d);
+  });
+}
+function updateNav(){
+  document.getElementById('slide-counter').textContent=(cur+1)+' / '+slides.length;
+  document.getElementById('progress').style.width=((cur+1)/slides.length*100)+'%';
+  document.querySelectorAll('.dot').forEach(function(d,i){d.className='dot'+(i===cur?' active':'');});
+}
+function goTo(n){
+  if(n<0||n>=slides.length)return;
+  var prev=document.getElementById(slides[cur]);
+  prev.classList.remove('active');
+  prev.classList.add('exit');
+  setTimeout(function(){prev.classList.remove('exit');},450);
+  cur=n;
+  var next=document.getElementById(slides[cur]);
+  next.classList.add('active');
+  updateNav();
+}
+function nextSlide(){goTo(cur+1);}
+function prevSlide(){goTo(cur-1);}
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')nextSlide();
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')prevSlide();
+});
+
+// AS-IS tooltip
+(function(){
+  var tip=document.getElementById('npi-tip'),tipHdr=document.getElementById('npi-tip-hdr'),tipBody=document.getElementById('npi-tip-body');
+  document.querySelectorAll('#s3 .asis-step-wrap').forEach(function(step){
+    step.style.cursor='pointer';
+    step.addEventListener('mouseenter',function(){
+      tipHdr.textContent=step.getAttribute('data-tip-hdr')||'';
+      tipBody.innerHTML='';
+      (step.getAttribute('data-tip')||'').split('|').forEach(function(l){
+        if(!l)return;
+        var d=document.createElement('div');
+        d.style.cssText='font-size:11px;color:rgba(255,255,255,.75);padding:1px 0 1px 12px;position:relative;line-height:1.5;';
+        d.innerHTML='<span style="position:absolute;left:0;color:#C4896B;">›</span>'+l;
+        tipBody.appendChild(d);
+      });
+      tip.style.display='block';
+    });
+    step.addEventListener('mousemove',function(e){
+      var x=e.clientX+14,y=e.clientY-tip.offsetHeight/2;
+      if(x+250>window.innerWidth-14)x=e.clientX-250-14;
+      if(y<14)y=14;
+      tip.style.left=x+'px';tip.style.top=y+'px';
+    });
+    step.addEventListener('mouseleave',function(){tip.style.display='none';});
+  });
+})();
+
+buildDots();
+updateNav();
+</script>
+</body>
+</html>

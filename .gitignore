@@ -1,0 +1,5 @@
+# Transient Playwright CLI snapshots / console logs
+.playwright-cli/
+
+# OS cruft
+.DS_Store
