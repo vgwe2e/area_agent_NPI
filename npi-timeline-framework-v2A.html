@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPI Decision Flow + Technology Foundation — v2A</title>
+<style>
+  /* ============================================================
+     THEME TOKENS  — tweak the brand here
+     ============================================================ */
+  :root {
+    --accent: #A100FF;            /* Accenture purple */
+    --accent-soft: #f3e6ff;
+    --accent-line: #d9b8ff;
+    --teal: #0F9D8C;              /* shared teal/green primitive */
+    --planned: var(--teal);       /* planned status */
+    --planned-soft: #e6f6f3;
+    --ink: #1c1c28;
+    --ink-soft: #5b5b6b;
+    --ink-faint: #6b6b7a;         /* darkened to ~5:1 on white for legibility (was #9494a3) */
+    --bar: #e9e9ef;
+    --bar-ink: #3a3a47;
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --hair: #e6e6ee;
+    --shadow: 0 1px 2px rgba(20,20,40,.06), 0 6px 20px rgba(20,20,40,.06);
+    --col-w: 360px;
+    --radius: 12px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    /* v12 encoding cues */
+    --hsy-red: #E2231A;           /* PRE-LAUNCH / orchestrator */
+    --launch-purple: #7500C0;     /* LAUNCH group */
+    --post-green: var(--teal);    /* POST-LAUNCH group */
+    --human: #2563EB;             /* HumanAgent / gate accent */
+    --asset-ink: #0b6b54;         /* "Accenture asset" tag — ~5:1 on the gray bar */
+    --aera-bg: #E1F5EE;
+    --aera-line: #9FE1CB;
+    --aera-ink: #0F6E56;
+    --amber: #B26B00;             /* TRANSFORMED badge ink */
+    --amber-pale: #FBF0DC;
+    --blue: #0061C2;              /* ENABLED badge ink */
+    --blue-pale: #E3F0FC;
+    --from-bg: #f4f4f8;
+    --to-bg: #f6ecff;
+    --neutral-100: #f3f3f8;       /* subtle fills */
+    --neutral-200: #ececf3;       /* subtle fill, hover */
+    --neutral-300: #d9d9e3;       /* scrollbar thumb */
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  body {
+    font-family: var(--font);
+    color: var(--ink);
+    background: #fafafd;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Header ---------- */
+  header.app {
+    display: flex; align-items: center; gap: 20px;
+    padding: 16px 28px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--hair);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo {
+    font-weight: 800; letter-spacing: -.02em; font-size: 19px;
+    display: flex; align-items: center; gap: 6px; color: var(--ink);
+  }
+  .brand .logo .chev { color: var(--accent); font-size: 22px; line-height: 0; }
+  .brand .hsy {
+    font-weight: 900; font-size: 15px; color: var(--hsy-red); letter-spacing: .5px;
+    padding-left: 12px; border-left: 1px solid var(--hair);
+  }
+  .brand .client {
+    font-size: 12px; color: var(--ink-soft); padding-left: 12px;
+    border-left: 1px solid var(--hair);
+  }
+  .titles { margin-left: auto; text-align: right; }
+  .titles h1 { font-size: 16px; margin: 0; font-weight: 700; letter-spacing: -.01em; }
+  .titles p { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+
+  /* ---------- Toolbar / filters ---------- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px;
+    padding: 12px 28px;
+    background: rgba(255,255,255,.97);
+    border-bottom: 1px solid var(--hair);
+  }
+  .tgroup { display: flex; align-items: center; gap: 8px; }
+  .tgroup > .glabel {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--ink-faint); font-weight: 700;
+  }
+
+  /* segmented status control */
+  .seg { display: inline-flex; border: 1px solid var(--hair); border-radius: 999px; overflow: hidden; background: #fff; }
+  .seg button {
+    border: 0; background: transparent; cursor: pointer;
+    font: inherit; font-size: 12.5px; padding: 6px 14px; color: var(--ink-soft);
+  }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; font-weight: 600; }
+
+  /* capability + class filter chips */
+  .capfilters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .capchip {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    border: 1px solid var(--hair); border-radius: 999px;
+    padding: 5px 10px 5px 6px; font-size: 12px; background: #fff; color: var(--ink-soft);
+    transition: all .15s ease; user-select: none;
+  }
+  .capchip .ic { width: 18px; height: 18px; display: inline-flex; }
+  .capchip[aria-pressed="false"] { opacity: .4; filter: grayscale(1); }
+  .capchip:hover { border-color: var(--accent-line); }
+
+  .classchip {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    border: 1px solid var(--hair); border-radius: 999px;
+    padding: 5px 11px; font-size: 12px; background: #fff; color: var(--ink-soft);
+    transition: all .15s ease; user-select: none; font-weight: 600;
+  }
+  .classchip .swatch { width: 9px; height: 9px; border-radius: 50%; }
+  .classchip[aria-pressed="false"] { opacity: .4; filter: grayscale(1); }
+  .classchip:hover { border-color: var(--accent-line); }
+
+  .clearbtn {
+    margin-left: auto; border: 1px solid var(--hair); background: #fff; cursor: pointer;
+    font: inherit; font-size: 12.5px; color: var(--ink-soft); padding: 6px 12px; border-radius: 8px;
+  }
+  .clearbtn:hover { border-color: var(--accent-line); color: var(--accent); }
+  .filterstat { font-size: 12px; color: var(--ink-faint); }
+  /* consistent, on-brand keyboard focus for all toolbar / ruler controls */
+  .seg button:focus-visible, .capchip:focus-visible, .classchip:focus-visible,
+  .clearbtn:focus-visible, .ruler .pill:focus-visible, .drawer .close:focus-visible {
+    outline: 3px solid var(--accent-line); outline-offset: 2px;
+  }
+
+  /* ---------- Phase ruler (mini overview) ---------- */
+  .ruler {
+    position: sticky; top: 57px; z-index: 35;
+    display: flex; gap: 6px; overflow-x: auto; padding: 10px 28px;
+    background: #fff; border-bottom: 1px solid var(--hair); scrollbar-width: thin;
+  }
+  .ruler .pill {
+    flex: 0 0 auto; cursor: pointer; border: 1px solid var(--hair); background: #fff;
+    font: inherit; font-size: 11.5px; color: var(--ink-soft); padding: 4px 11px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .ruler .pill .n {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: #fff;
+    font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .ruler .pill[data-group="PRE-LAUNCH"] .n { background: var(--hsy-red); }
+  .ruler .pill[data-group="LAUNCH"] .n { background: var(--launch-purple); }
+  .ruler .pill[data-group="POST-LAUNCH"] .n { background: var(--post-green); }
+  .ruler .pill:hover { border-color: var(--accent-line); color: var(--accent); }
+  .ruler .pill.placeholder { opacity: .7; }
+
+  /* ---------- Timeline ---------- */
+  .scrollhint { padding: 8px 28px 0; font-size: 11.5px; color: var(--ink-faint); }
+  .timeline-wrap { padding: 6px 28px 40px; }
+
+  /* group band row above the stage bars.
+     No own horizontal padding — it lives inside .timeline-wrap (padding: 0 28px),
+     so the group bars stay column-aligned with the timeline below. */
+  .groupband { display: flex; gap: 0; padding: 0; }
+  .groupseg {
+    padding: 0 8px; display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .groupseg .gbar {
+    border-radius: 8px 8px 0 0; padding: 7px 12px 8px; color: #fff;
+    font-size: 12px; font-weight: 800; letter-spacing: .04em; line-height: 1.2;
+  }
+  .groupseg .gbar .gsub {
+    display: block; font-size: 10px; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; opacity: .82; margin-bottom: 2px;
+  }
+  .groupseg[data-group="PRE-LAUNCH"] .gbar { background: var(--hsy-red); }
+  .groupseg[data-group="LAUNCH"] .gbar { background: var(--launch-purple); }
+  .groupseg[data-group="POST-LAUNCH"] .gbar { background: var(--post-green); }
+
+  .timeline {
+    display: flex; gap: 0; overflow-x: auto; padding-bottom: 18px;
+    cursor: grab; scroll-behavior: smooth;
+  }
+  .timeline.grabbing { cursor: grabbing; scroll-behavior: auto; }
+  .timeline::-webkit-scrollbar { height: 10px; }
+  .timeline::-webkit-scrollbar-thumb { background: var(--neutral-300); border-radius: 999px; }
+
+  .col { flex: 0 0 var(--col-w); display: flex; flex-direction: column; padding: 0 8px; }
+
+  /* phase bar */
+  /* Fixed height so every column's header block is the same depth and the
+     numbered nodes below line up on a single horizontal row (no stair-step). */
+  .bar {
+    height: 80px; background: var(--bar); color: var(--bar-ink);
+    border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; font-weight: 700; font-size: 13.5px; padding: 8px 14px; line-height: 1.25; gap: 4px;
+    overflow: hidden;
+  }
+  .bar .blabel { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .bar .steptag { font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .bar .asset { font-size: 9.5px; font-weight: 800; color: var(--asset-ink); letter-spacing: .02em; }
+  .bar .loop { font-size: 9.5px; font-weight: 800; color: var(--launch-purple); letter-spacing: .02em; }
+  .col[data-placeholder="true"] .bar { background: #f1f1f6; color: var(--ink-faint); border: 1px solid var(--hair); }
+
+  /* FROM -> TO band under the stage bar. Equal min-height + clamped text keeps
+     every column's header the same depth across the row. */
+  .fromto { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; margin-top: 8px; align-items: stretch; }
+  .fromto .ft {
+    border-radius: 7px; padding: 7px 9px; font-size: 10.5px; line-height: 1.4; min-height: 96px;
+  }
+  .fromto .ftt { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .fromto .ft .lbl { font-size: 8.5px; font-weight: 800; letter-spacing: .12em; margin-bottom: 3px; }
+  .fromto .from { background: var(--from-bg); color: var(--ink-soft); border: 1px solid var(--hair); }
+  .fromto .from .lbl { color: var(--ink-faint); }
+  .fromto .to { background: var(--to-bg); color: var(--ink); border: 1px solid var(--accent-line); }
+  .fromto .to .lbl { color: var(--accent); }
+  .fromto .ftarrow { display: flex; align-items: center; color: var(--accent); font-weight: 800; font-size: 15px; }
+  .fromto.placeholder {
+    grid-template-columns: 1fr; margin-top: 8px;
+  }
+  .fromto.placeholder .ph {
+    border: 1px solid var(--hair); border-radius: 7px; padding: 7px 9px; min-height: 96px;
+    font-size: 10.5px; color: var(--ink-faint); line-height: 1.45; background: #fbfbfd;
+  }
+  .fromto.placeholder .ph .lbl { font-size: 8.5px; font-weight: 800; letter-spacing: .12em; margin-bottom: 3px; color: var(--ink-faint); }
+
+  /* numbered node row with continuous arrow */
+  .node-wrap { position: relative; height: 46px; display: flex; align-items: center; justify-content: center; margin-top: 4px; }
+  .node-wrap::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 3px;
+    background: linear-gradient(90deg, var(--accent-line), var(--accent)); transform: translateY(-50%);
+  }
+  .col:first-child .node-wrap::before { left: 50%; }
+  .col:last-child  .node-wrap::after {
+    content: ""; position: absolute; right: -2px; top: 50%; transform: translateY(-50%);
+    border-left: 9px solid var(--accent); border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+  }
+  .node {
+    position: relative; z-index: 2; width: 26px; height: 26px; border-radius: 50%;
+    background: #fff; border: 3px solid var(--accent); color: var(--accent);
+    font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 4px #fff;
+  }
+  .col[data-group="PRE-LAUNCH"] .node { border-color: var(--hsy-red); color: var(--hsy-red); }
+  .col[data-group="LAUNCH"] .node { border-color: var(--launch-purple); color: var(--launch-purple); }
+  .col[data-group="POST-LAUNCH"] .node { border-color: var(--post-green); color: var(--post-green); }
+
+  .lane { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; }
+  .lane.empty::after {
+    content: "No agents in this step yet"; color: var(--ink-faint); text-align: center;
+    font-size: 12px; padding: 14px 8px; border: 1px solid var(--hair); border-radius: var(--radius);
+    background: #fbfbfd; line-height: 1.4;
+  }
+  /* placeholder steps already list their decisions in the FROM→TO note above —
+     point there instead of repeating "no named agents on slide". */
+  .col[data-placeholder="true"] .lane.empty::after { content: "Agents to be defined — see decisions above"; }
+
+  /* ---------- Agent card ---------- */
+  .card {
+    position: relative; background: var(--panel); border-radius: var(--radius);
+    border: 2px solid var(--accent); box-shadow: var(--shadow); padding: 13px 14px 14px;
+    cursor: pointer; transition: opacity .2s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(20,20,40,.12); }
+  .card:focus-visible { outline: 3px solid var(--accent-line); outline-offset: 2px; }
+  .card.dimmed { opacity: .12; pointer-events: none; filter: grayscale(.6); }
+
+  /* orchestrator (FlowSuperAgent / SuperAgent) treatment — subtle ring, no left bar */
+  .card.orch { border-width: 2px; box-shadow: 0 0 0 3px rgba(161,0,255,.07), var(--shadow); }
+  /* AERA service card treatment */
+  .card.service { border-color: var(--aera-ink); border-style: solid; background: var(--aera-bg); }
+
+  .card .toprow { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; flex-wrap: wrap; }
+  .badge {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 5px; color: #fff;
+  }
+  .badge.opt {
+    color: var(--ink-soft); background: #f0f0f5; border: 1px solid var(--hair); letter-spacing: .03em;
+  }
+  /* AI Refinery class badge */
+  .rfbadge {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .03em;
+    padding: 3px 7px 3px 6px; border-radius: 5px; color: #fff;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .rfbadge .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.85); }
+
+  .card h3 { margin: 0 0 5px; font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+  .card .desc {
+    margin: 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  /* transformation badge on the card */
+  .tbadge {
+    display: inline-block; margin-top: 9px; font-size: 9px; font-weight: 800;
+    letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 5px;
+  }
+  .tbadge.transformed { background: var(--amber-pale); color: var(--amber); }
+  .tbadge.enabled { background: var(--blue-pale); color: var(--blue); }
+  .card .metric {
+    margin-top: 9px; font-size: 12px; font-weight: 700; color: var(--accent);
+  }
+  .card .caps { display: flex; gap: 4px; margin-top: 10px; flex-wrap: wrap; }
+  .card .caps .ic {
+    width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
+    background: #f5f5fa; border: 1px solid var(--hair);
+  }
+  .card .caps .ic svg { width: 14px; height: 14px; }
+  .card .orchhint {
+    margin-top: 10px; font-size: 10px; color: var(--accent); font-weight: 700;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .card .workerhint {
+    margin-top: 10px; font-size: 10px; color: var(--ink-faint); font-weight: 600;
+  }
+
+  /* planner touchpoint band (under a phase lane) */
+  .touchband {
+    margin-top: 4px; background: var(--accent-soft); border: 1px solid rgba(161,0,255,.22);
+    border-radius: 8px; padding: 8px 10px; cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .touchband:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .touchband:focus-visible { outline: 3px solid var(--accent-line); outline-offset: 2px; }
+  .touchband .th { display: flex; align-items: center; gap: 7px; }
+  .touchband .gicon { font-size: 13px; }
+  .touchband .gtitle { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: .01em; }
+  .touchband .gclass {
+    margin-left: auto; font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+    color: #fff; background: var(--human); padding: 2px 6px; border-radius: 4px;
+  }
+  .touchband .gdesc { font-size: 10.5px; color: var(--accent); opacity: .85; line-height: 1.4; margin-top: 4px; }
+
+  /* AERA service band (under a phase lane) */
+  .aeraband {
+    margin-top: 4px; background: var(--aera-bg); border: 1px solid var(--aera-line);
+    border-radius: 8px; padding: 8px 10px;
+  }
+  .aeraband .ah { display: flex; align-items: center; gap: 7px; }
+  .aeraband .alabel { font-size: 8.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--aera-ink); }
+  .aeraband .aclass {
+    margin-left: auto; font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em;
+    color: #fff; background: var(--aera-ink); padding: 2px 6px; border-radius: 4px;
+  }
+  .aeraband .adesc { font-size: 10.5px; color: var(--aera-ink); line-height: 1.4; margin-top: 4px; }
+  .aeraband.placeholder .adesc { font-style: italic; opacity: .8; }
+
+  /* ---------- Legend ---------- */
+  .legend {
+    margin: 6px 28px 50px; padding: 16px 18px; background: #fff; border: 1px solid var(--hair);
+    border-radius: var(--radius);
+  }
+  .legend h2 { margin: 0 0 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); }
+  .legend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px 22px; }
+  .legend-item { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: var(--ink-soft); }
+  .legend-item .ic { width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; background: #f5f5fa; border: 1px solid var(--hair); flex: 0 0 auto; }
+  .legend-item .ic svg { width: 15px; height: 15px; }
+  .legend .seg-title { margin: 16px 0 10px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); padding-top: 14px; border-top: 1px solid var(--hair); }
+  .legend .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .legend .row .badge, .legend .row .rfbadge { cursor: default; }
+  .legend .tbadge { cursor: default; margin-top: 0; }
+
+  /* ---------- Drawer ---------- */
+  .scrim {
+    position: fixed; inset: 0; background: rgba(20,20,40,.42); opacity: 0; pointer-events: none;
+    transition: opacity .2s ease; z-index: 90;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100%; width: 480px; max-width: 94vw;
+    background: #fff; box-shadow: -10px 0 40px rgba(20,20,40,.18); z-index: 100;
+    transform: translateX(100%); transition: transform .22s ease; overflow-y: auto; padding: 26px 28px 40px;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer .close {
+    position: absolute; top: 16px; right: 18px; border: 0; background: var(--neutral-100); cursor: pointer;
+    width: 32px; height: 32px; border-radius: 8px; font-size: 18px; color: var(--ink-soft);
+  }
+  .drawer .close:hover { background: var(--neutral-200); color: var(--ink); }
+  .drawer .d-badges { display: flex; gap: 8px; align-items: center; margin: 4px 0 14px; flex-wrap: wrap; }
+  .drawer h2 { margin: 0 0 4px; font-size: 22px; letter-spacing: -.02em; }
+  .drawer .d-phase { font-size: 12px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+  .drawer .d-desc { font-size: 14px; line-height: 1.6; color: var(--ink-soft); margin: 18px 0; }
+  .drawer .d-section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint);
+    margin: 22px 0 10px; font-weight: 700; padding-top: 16px; border-top: 1px solid var(--hair);
+  }
+  .drawer .d-rfclass {
+    background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 4px;
+  }
+  .drawer .d-rfclass .rf-name { font-size: 14px; font-weight: 800; color: var(--accent); }
+  .drawer .d-rfclass .rf-mean { font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; margin-top: 5px; }
+  .drawer .d-tooling { display: flex; flex-wrap: wrap; gap: 6px; }
+  .drawer .d-tool {
+    font-size: 11px; font-weight: 600; color: var(--blue); background: var(--blue-pale);
+    border: 1px solid rgba(0,97,194,.2); border-radius: 5px; padding: 4px 9px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .drawer .d-transform { border-radius: 10px; padding: 12px 14px; }
+  .drawer .d-transform.transformed { background: var(--amber-pale); }
+  .drawer .d-transform.enabled { background: var(--blue-pale); }
+  .drawer .d-transform .tbadge { margin-top: 0; }
+  .drawer .d-transform .t-note { font-size: 13px; line-height: 1.55; color: var(--ink); margin-top: 8px; }
+  .drawer .d-aera {
+    background: var(--aera-bg); border: 1px solid var(--aera-line); border-radius: 10px; padding: 12px 14px;
+    font-size: 13px; line-height: 1.5; color: var(--aera-ink);
+  }
+  .drawer .d-aera .a-lbl { font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 5px; }
+  .drawer .d-pipeline { display: flex; flex-direction: column; gap: 6px; }
+  .drawer .d-pnode {
+    display: flex; align-items: flex-start; gap: 10px; padding: 9px 11px; border-radius: 9px;
+    background: #f7f7fb; border: 1px solid var(--hair);
+  }
+  .drawer .d-pnode .pn-rf {
+    flex: 0 0 auto; font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em;
+    color: #fff; padding: 3px 6px; border-radius: 4px; margin-top: 1px; white-space: nowrap;
+  }
+  .drawer .d-pnode .pn-body .pn-name { font-size: 12.5px; font-weight: 700; }
+  .drawer .d-pnode .pn-body .pn-desc { font-size: 11.5px; color: var(--ink-soft); line-height: 1.45; margin-top: 2px; }
+  .drawer .d-pnode .pn-arrow { color: var(--ink-faint); }
+  .drawer .d-worker {
+    font-size: 12.5px; line-height: 1.5; color: var(--ink-soft);
+    background: #f7f7fb; border: 1px solid var(--hair); border-radius: 9px; padding: 11px 13px;
+  }
+  .drawer .d-worker b { color: var(--ink); }
+  .drawer .d-metric {
+    font-size: 15px; font-weight: 800; padding: 12px 14px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent); margin-bottom: 4px;
+  }
+  .drawer .d-cap { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 13.5px; color: var(--ink); }
+  .drawer .d-cap:first-of-type { border-top: 0; }
+  .drawer .d-cap .ic { width: 28px; height: 28px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; background: #f5f5fa; border: 1px solid var(--hair); flex: 0 0 auto; }
+  .drawer .d-cap .ic svg { width: 17px; height: 17px; }
+
+  @media (max-width: 720px) {
+    header.app { flex-wrap: wrap; gap: 10px; }
+    .titles { margin-left: 0; text-align: left; }
+    .fdn-row { flex-wrap: wrap; }
+    .fdn-row .fdn-label { flex-basis: 100%; }
+  }
+
+  /* Touch / coarse-pointer devices: enlarge tap targets toward 44px (WCAG 2.5.5)
+     without bloating the dense desktop toolbar — fine-pointer keeps compact sizes. */
+  @media (pointer: coarse) {
+    .seg, .capchip, .classchip, .clearbtn, .ruler .pill { min-height: 44px; }
+    .seg button { padding: 11px 16px; }
+    .capchip { padding: 10px 12px 10px 10px; }
+    .classchip { padding: 10px 13px; }
+    .clearbtn { padding: 11px 14px; }
+    .ruler .pill { padding: 10px 14px; }
+    .ruler { padding-top: 12px; padding-bottom: 12px; }
+    .drawer .close { width: 44px; height: 44px; }
+  }
+
+  /* ---------- Technology & Data Foundation band (v2A) ---------- */
+  .foundation {
+    margin: 8px 28px 28px; padding: 20px 22px 22px;
+    background: linear-gradient(180deg, #fbfaff, #f6f6fb);
+    border: 1px solid var(--hair); border-radius: var(--radius);
+  }
+  .foundation .fhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .foundation .ftitle { font-size: 13px; font-weight: 800; letter-spacing: .02em; color: var(--ink); }
+  .foundation .ftag {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line);
+    padding: 2px 7px; border-radius: 5px;
+  }
+  .foundation .fcap { font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin: 6px 0 14px; max-width: 1000px; }
+
+  /* apex — feeds into the journey above */
+  .fdn-apex {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 10px;
+  }
+  .fdn-apex .arr { font-size: 14px; line-height: 1; }
+
+  /* a layer row */
+  .fdn-row { display: flex; gap: 16px; align-items: stretch; }
+  .fdn-row .fdn-label {
+    flex: 0 0 170px; display: flex; flex-direction: column; justify-content: center;
+    padding: 12px 14px; border-radius: 9px; background: #fff; border: 1px solid var(--hair);
+  }
+  .fdn-row .fdn-label .ll { font-size: 12.5px; font-weight: 800; color: var(--ink); }
+  .fdn-row .fdn-label .lk { font-size: 10.5px; color: var(--ink-faint); line-height: 1.35; margin-top: 3px; }
+  .fdn-row .fdn-nodes { flex: 1 1 auto; display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* a system / skill node */
+  .fdn-node {
+    flex: 1 1 200px; min-width: 190px; background: #fff; border: 1px solid var(--hair);
+    border-radius: 10px; padding: 12px 13px; box-shadow: var(--shadow);
+  }
+  .fdn-node.skill { border-color: var(--aera-line); background: var(--aera-bg); }
+  .fdn-node.clickable { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+  .fdn-node.clickable:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(20,20,40,.10); }
+  .fdn-node.clickable:focus-visible { outline: 3px solid var(--accent-line); outline-offset: 2px; }
+  .fdn-node .nh { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .fdn-node .nname { font-size: 13px; font-weight: 800; color: var(--ink); }
+  .fdn-node .nsys {
+    font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--ink-faint); background: var(--neutral-100); border: 1px solid var(--hair);
+    padding: 2px 6px; border-radius: 4px;
+  }
+  .fdn-node .nnote {
+    font-size: 11px; color: var(--ink-soft); line-height: 1.45; margin-top: 6px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* deterministic / agentic skill badge */
+  .skill-badge {
+    font-size: 9px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 5px; color: #fff;
+  }
+
+  /* data chips on a skill node */
+  .fdn-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+  .fdn-chip {
+    font-size: 9.5px; font-weight: 700; padding: 3px 7px; border-radius: 999px;
+    border: 1px solid var(--hair); background: #fff; color: var(--ink-soft);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .fdn-chip.in  { color: var(--blue); border-color: rgba(0,97,194,.25); background: var(--blue-pale); }
+  .fdn-chip.out { color: var(--aera-ink); border-color: var(--aera-line); background: #fff; }
+  .fdn-chip.step { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); cursor: pointer; }
+  .fdn-chip.step:hover { background: #fff; }
+  .fdn-chip.step:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 2px; }
+
+  /* inter-layer flow connectors */
+  .fdn-flow { display: flex; align-items: center; justify-content: center; gap: 22px; padding: 7px 0; flex-wrap: wrap; }
+  .fdn-flow .up, .fdn-flow .wb { display: inline-flex; align-items: center; gap: 7px; font-size: 10.5px; }
+  .fdn-flow .up { color: var(--accent); font-weight: 700; }
+  .fdn-flow .up .gly { font-size: 15px; line-height: 1; }
+  .fdn-flow .wb { color: var(--ink-faint); font-weight: 600; }
+  .fdn-flow .wb .gly { font-size: 13px; line-height: 1; }
+
+  /* Respect users who ask for reduced motion (WCAG 2.3.3) */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+    html { scroll-behavior: auto; }
+    .timeline { scroll-behavior: auto; }
+    .card:hover, .touchband:hover, .fdn-node.clickable:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="brand">
+    <span class="logo"><span class="chev">&gt;</span> accenture</span>
+    <span class="hsy" id="hsyName">HSY</span>
+    <span class="client" id="clientName">Client · New Product Introduction</span>
+  </div>
+  <div class="titles">
+    <h1 id="jTitle"></h1>
+    <p id="jSub"></p>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="tgroup">
+    <span class="glabel">AI Refinery class</span>
+    <div class="capfilters" id="classFilters"></div>
+  </div>
+  <div class="tgroup" style="flex:1 1 auto;">
+    <span class="glabel">Capability</span>
+    <div class="capfilters" id="capFilters"></div>
+  </div>
+  <span class="filterstat" id="filterStat"></span>
+  <button class="clearbtn" id="clearBtn">Clear filters</button>
+</div>
+
+<div class="ruler" id="ruler" aria-label="Jump to phase"></div>
+
+<p class="scrollhint">Drag, or hold <strong>Shift</strong> + scroll, to pan the timeline →</p>
+<div class="timeline-wrap">
+  <h2 class="sr-only">NPI decision-flow timeline</h2>
+  <div class="groupband" id="groupband"></div>
+  <div class="timeline" id="timeline"></div>
+</div>
+
+<section class="foundation" id="foundation" aria-labelledby="fdnTitle"></section>
+
+<div class="legend">
+  <h2>Capability legend</h2>
+  <div class="legend-grid" id="legendGrid"></div>
+  <div class="seg-title">AI Refinery agent classes</div>
+  <div class="row" id="classLegend"></div>
+  <div class="seg-title">Node types</div>
+  <div class="row" id="typeLegend"></div>
+  <div class="seg-title">Transformation badges</div>
+  <div class="row" id="badgeLegend"></div>
+  <div class="seg-title">Aera skill type</div>
+  <div class="row" id="skillTypeLegend"></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" tabindex="-1">
+  <button class="close" id="drawerClose" aria-label="Close">&times;</button>
+  <div id="drawerBody"></div>
+</aside>
+
+<script>
+/* =================================================================
+   EDIT THIS — all content lives here. The engine below renders
+   100% from these objects. Add a phase, agent, or touchpoint and it
+   appears on the page with no other change. Nothing is hardcoded in
+   markup. Source of truth: research/npi-refinery-crosswalk.md §5.
+   ================================================================= */
+
+/* --- Capability taxonomy (the legend). Each: id, label, color, svg glyph. --- */
+const CAPABILITIES = {
+  predictive:     { label: "Predictive & Prescriptive Analytics",            color: "#7B61FF" },
+  "ai-augment":   { label: "AI Augmentation for Knowledge-Intensive Process", color: "#00A3C4" },
+  logic:          { label: "Deterministic Logic & Optimization",             color: "#0F9D8C" },
+  api:            { label: "API / System Integration",                       color: "#6B7280" },
+  "virtual-agent":{ label: "Virtual Agent",                                   color: "#2563EB" },
+  genai:          { label: "Generative AI",                                   color: "#A100FF" },
+};
+
+/* --- Node-type taxonomy. Drives the card badge label + accent.
+       crosswalk §4 proposed `orchestrator` and `service` — added here. --- */
+const NODE_TYPES = {
+  trigger:      { label: "Trigger",                  color: "#A100FF" },
+  human:        { label: "Human",                    color: "#2563EB" },
+  agent:        { label: "Agent",                    color: "#7B2FF7" },
+  gate:         { label: "Gate",                     color: "#0F9D8C" },
+  orchestrator: { label: "Orchestrator / Super-Agent", color: "#E2231A" },
+  service:      { label: "Called Service",           color: "#0F9D8C" },
+};
+
+/* --- AI Refinery agent-class taxonomy (the recharacterization vocabulary).
+       Each: label, plain-English meaning, color (drives the class badge + filter). --- */
+const REFINERY_CLASSES = {
+  FlowSuperAgent: { label: "FlowSuperAgent", color: "#A100FF", meaning: "Orchestrates an ordered, deterministic pipeline of worker agents (a DAG) ending in a human gate — fetch → model → score → write → approve." },
+  SuperAgent:     { label: "SuperAgent",     color: "#7B2FF7", meaning: "Routes a dynamic pool of worker agents against unpredictable, compound queries (decide which workers to run, in what combination)." },
+  CustomAgent:    { label: "CustomAgent",    color: "#0061C2", meaning: "User-defined Python wrapping a deterministic data-science model (optimization, simulation, time-series, scoring)." },
+  AnalyticsAgent: { label: "AnalyticsAgent", color: "#0EA5E9", meaning: "Structured-data analysis over CSV/DB — KPI, accuracy, and root-cause computation against plan." },
+  ResearchAgent:  { label: "ResearchAgent",  color: "#00A3C4", meaning: "Retrieval-augmented (RAG) lookup over a knowledge base — here, the like-product library." },
+  ToolUseAgent:   { label: "ToolUseAgent",   color: "#6B7280", meaning: "Calls external systems/APIs via custom tools — connectors that read or write business/planning systems." },
+  UtilityAgent:   { label: "UtilityAgent",   color: "#B26B00", meaning: "Magic-prompt narrator — writes the evidence-grounded, anti-hallucination recommendation a human reviews." },
+  HumanAgent:     { label: "HumanAgent",     color: "#2563EB", meaning: "A human-in-the-loop gate — the planner reviews, approves, or overrides agent output (a governance touchpoint)." },
+  A2AClientAgent: { label: "A2AClientAgent", color: "#0F9D8C", meaning: "Agent-to-agent client to an external agent platform — calls a service that itself runs agents." },
+  orchestrator:   { label: "Orchestrator",   color: "#E2231A", meaning: "Top-level router over the per-step super-agents — the 'Planner as Launch Control Tower' governance surface." },
+};
+
+/* --- The journey. phases = the stage bars across the top (continuous 1..N,
+       banded into the 3 groups). agents = cards under a phase via phaseId.
+       touchpoints = HumanAgent gates rendered as bands. --- */
+const JOURNEY = {
+  client: "Hershey's (HSY) × Accenture · New Product Introduction",
+  hsy: "HSY",
+  title: "NPI Decision Flow — recharacterized to the AI Refinery agent library",
+  subtitle: "8 decisions, portfolio to shelf · every agent shown as its business name + standard AI Refinery agent_class · orchestrator → super-agent → utility/tool/human worker",
+
+  /* Top-level orchestrator + AERA called-service (crosswalk §5 meta). */
+  orchestrator: {
+    name: "NPIControlTowerOrchestrator",
+    refineryClass: "orchestrator",
+    description: "Planner-as-Launch-Control-Tower router over the 8-step NPI super-agents; governs the 25+ → 3 touchpoints surface.",
+    agentList: ["PortfolioPlanningPipeline","DemandForecastPipeline","InventoryPlanningPipeline","InventoryDeploymentPipeline","InMarketMonitoringAdvisor","PostLaunchScalingAdvisor"],
+    memory: { module: "MemTree", note: "Persists approved decisions, sell-through outcomes, and like-product precedents across NPI cycles." },
+  },
+  aera: {
+    id: "aera-decision-cloud",
+    title: "AERA Decision Cloud",
+    refineryClass: "ToolUseAgent",
+    altRefineryClass: "A2AClientAgent",
+    role: "called-service",
+    description: "Called decision-intelligence service — returns forecast, inventory & optimization answers on request · Skills · Cortex. Invoked as a node inside pipelines; NOT an orchestrator.",
+    calledBy: ["portfolio-optimization","npi-forecast","inventory-optimization-planning","inventory-deployment-replenishing"],
+  },
+
+  /* The 3 group bands above the timeline. */
+  groups: [
+    { id: "PRE-LAUNCH",  label: "Build the Plan",   sub: "Pre-Launch" },
+    { id: "LAUNCH",      label: "Execute & Adjust", sub: "Launch" },
+    { id: "POST-LAUNCH", label: "Learn & Scale",    sub: "Post-Launch" },
+  ],
+
+  /* Ordered left → right — the 8 v12 steps. */
+  phases: [
+    { id: "portfolio-launch-planning",       label: "Portfolio & Launch Planning",             step: 1, group: "PRE-LAUNCH",  groupLabel: "Build the Plan",   fromTo: { from: "Manual SKU selection by brand teams; launch windows set by marketing calendar with no demand signal input.", to: "AI-driven portfolio scoring using like-product performance, channel demand signals, and capacity feasibility." }, trigger: "batch", placeholder: false, loop: false, accentureAsset: false, aera: "Placeholder" },
+    { id: "demand-forecasting",              label: "Demand Forecasting & Signal Conversion",  step: 2, group: "PRE-LAUNCH",  groupLabel: "Build the Plan",   fromTo: { from: "Manual like-product selection, static 12-week baseline built once and never recalibrated until launch review.", to: "AI like-product matching with continuous forecast recalibration from Day 1 of in-market signals." }, trigger: "batch", placeholder: false, loop: false, accentureAsset: true, aera: null },
+    { id: "inventory-planning",              label: "Inventory Planning",                       step: 3, group: "PRE-LAUNCH",  groupLabel: "Build the Plan",   fromTo: { from: "Launch quantity set by a single planner judgment call; under- and over-stock risk weighed informally.", to: "Optimal launch quantity computed from the underage/overage trade-off, then fed to downstream planning." }, trigger: "batch", placeholder: false, loop: false, accentureAsset: true, aera: "Placeholder" },
+    { id: "downstream-planning-systems",     label: "Downstream Planning Systems",              step: 4, group: "PRE-LAUNCH",  groupLabel: "Build the Plan",   fromTo: null, trigger: "batch", placeholder: true, loop: false, accentureAsset: false, aera: "Placeholder", placeholderNote: "No named agents on slide. Decisions: sourcing strategy & supplier selection; supplier allocation/commitments/lead-time locks; co-manufacturer engagement & capacity reservation; plant allocation; production schedule/sequencing/batch sizing; changeover planning & capacity buffer. Client Credential = Placeholder." },
+    { id: "inventory-positioning-deployment", label: "Inventory Positioning & Deployment",     step: 5, group: "LAUNCH",      groupLabel: "Execute & Adjust", fromTo: { from: "Static pre-build plan; DC allocation based on last-year regional patterns or commercial commitments.", to: "Dynamic pre-build and DC positioning driven by live demand signals and retailer readiness scores." }, trigger: "batch", placeholder: false, loop: false, accentureAsset: true, aera: "Placeholder" },
+    { id: "distribution-fulfillment",        label: "Distribution & Fulfillment Execution",    step: 6, group: "LAUNCH",      groupLabel: "Execute & Adjust", fromTo: null, trigger: "event", placeholder: true, loop: false, accentureAsset: false, aera: "Placeholder", placeholderNote: "No named agents on slide. Decisions: distribution plan & carrier/mode selection; transportation routing & delivery scheduling; order fulfillment rules & service-level enforcement. Client Credential = Placeholder." },
+    { id: "launch-execution-adjustments",    label: "Launch Execution & In-Market Adjustments", step: 7, group: "LAUNCH",     groupLabel: "Execute & Adjust", fromTo: { from: "Teams scrambling to gather early signals; adjustments made days or weeks after the signal first appeared.", to: "Continuous signal agents surfacing deviations within hours; planner reviews agent-recommended adjustments." }, trigger: "event", placeholder: false, loop: true, loopNote: "Closes the loop back into steps 2 & 4 — sell-through triggers forecast recalibration and inventory repositioning.", accentureAsset: true, aera: null },
+    { id: "post-launch-optimization",        label: "Post-Launch Optimization & Scaling",      step: 8, group: "POST-LAUNCH", groupLabel: "Learn & Scale",    fromTo: { from: "Post-launch reviews done quarterly; learnings captured in slide decks rarely referenced in future launches.", to: "Automated performance loop that feeds learnings back into like-product library and forecast models in real-time." }, trigger: "event", placeholder: false, loop: true, loopNote: "Continuous refinement — refines forecast model (like-product library accuracy) and inventory positioning logic for the next launch.", accentureAsset: false, aera: "Placeholder" },
+  ],
+
+  agents: [
+    {
+      id: "portfolio-optimization", phaseId: "portfolio-launch-planning",
+      title: "Portfolio Optimization Agent", type: "agent", status: "planned",
+      description: "Scores and ranks the SKU launch shortlist and generates an evidence-based demand range. Two decisions: which SKUs/channels to launch, and the expected demand range + initial confidence interval.",
+      capabilities: ["predictive","ai-augment","logic"], metric: "TBD", optional: false,
+      refineryClass: "FlowSuperAgent",
+      orchestration: {
+        role: "flow-super-agent",
+        nodes: ["LikeProductResearcher","PortfolioOptimizer","MarketSegmenter","DemandRangeSimulator","PortfolioScoreWriter","LaunchPlanGate"],
+        edges: [
+          { from: "LikeProductResearcher", to: "PortfolioOptimizer" },
+          { from: "PortfolioOptimizer", to: "MarketSegmenter" },
+          { from: "MarketSegmenter", to: "DemandRangeSimulator" },
+          { from: "DemandRangeSimulator", to: "PortfolioScoreWriter" },
+          { from: "PortfolioScoreWriter", to: "LaunchPlanGate" },
+        ],
+        subAgents: [
+          { agent_name: "LikeProductResearcher", agent_class: "ResearchAgent", agent_description: "RAG over the like-product performance library." },
+          { agent_name: "PortfolioOptimizer", agent_class: "CustomAgent", agent_description: "MILP + weighted scoring of SKU/channel options." },
+          { agent_name: "MarketSegmenter", agent_class: "CustomAgent", agent_description: "ML clustering / segmentation for launch timing & sequencing (Market Segmentation Agent)." },
+          { agent_name: "DemandRangeSimulator", agent_class: "CustomAgent", agent_description: "Monte Carlo + like-product regression for the demand range & confidence interval." },
+          { agent_name: "PortfolioScoreWriter", agent_class: "UtilityAgent", agent_description: "Evidence-grounded portfolio recommendation (magic_prompt, anti-hallucination)." },
+          { agent_name: "LaunchPlanGate", agent_class: "HumanAgent", agent_description: "Planner approves the launch shortlist (Touchpoint 1)." },
+        ],
+      },
+      tooling: "MILP · weighted scoring · like-product regression · Monte Carlo",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Brand-team picks become AI scores across like-products performance and shelf velocity, which the planner approves. (Demand-range decision is ENABLED·AUTOMATED.)" },
+      aera: "Placeholder",
+    },
+    {
+      id: "market-segmentation", phaseId: "portfolio-launch-planning",
+      title: "Market Segmentation Agent", type: "agent", status: "planned",
+      description: "Clusters channels/customers and ranks launch timing & sequencing by launch readiness and demand potential.",
+      capabilities: ["predictive","ai-augment"], metric: "TBD", optional: false,
+      refineryClass: "CustomAgent",
+      orchestration: { role: "worker", parent: "PortfolioPlanningPipeline", nodeName: "MarketSegmenter" },
+      tooling: "ML clustering · segmentation models",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Marketing-calendar dates give way to channels and customers ranked by launch readiness and demand potential." },
+      aera: null,
+    },
+    {
+      id: "npi-forecast", phaseId: "demand-forecasting",
+      title: "NPI Forecast Agent", type: "agent", status: "planned",
+      description: "Generates a live multi-level (brand → SKU → customer) demand curve and flags model drift.",
+      capabilities: ["predictive","ai-augment","logic"], metric: "TBD", optional: false,
+      refineryClass: "FlowSuperAgent",
+      orchestration: {
+        role: "flow-super-agent",
+        nodes: ["SignalCapture","LikeProductResearcher","ForecastModeler","DemandSensing","ForecastNarrator","ForecastGate"],
+        edges: [
+          { from: "SignalCapture", to: "LikeProductResearcher" },
+          { from: "LikeProductResearcher", to: "ForecastModeler" },
+          { from: "ForecastModeler", to: "DemandSensing" },
+          { from: "DemandSensing", to: "ForecastNarrator" },
+          { from: "ForecastNarrator", to: "ForecastGate" },
+        ],
+        subAgents: [
+          { agent_name: "SignalCapture", agent_class: "ToolUseAgent", agent_description: "Signal Capture Agent (SHARED with step 7) — ingests POS/orders/digital signals." },
+          { agent_name: "LikeProductResearcher", agent_class: "ResearchAgent", agent_description: "RAG over the like-product library for analogs." },
+          { agent_name: "ForecastModeler", agent_class: "CustomAgent", agent_description: "ARIMA / XGBoost / prophet multi-level forecast (core of NPI Forecast Agent)." },
+          { agent_name: "DemandSensing", agent_class: "CustomAgent", agent_description: "Demand Sensing Agent (SHARED with step 7) — refines the curve from live signals." },
+          { agent_name: "ForecastNarrator", agent_class: "UtilityAgent", agent_description: "Writes the explainable multi-level demand-curve narrative (magic_prompt)." },
+          { agent_name: "ForecastGate", agent_class: "HumanAgent", agent_description: "Planner approves/overrides the forecast (Touchpoint 1)." },
+        ],
+      },
+      tooling: "Statistical models (ARIMA, time series) · ML (XGBoost, prophet) · like-product analogy",
+      transformation: { badge: "TRANSFORMED·CONTINUOUS", note: "One static 12-week baseline becomes a live multi-level sales curve that captures product life cycle sales forecast." },
+      aera: null,
+    },
+    {
+      id: "signal-capture", phaseId: "demand-forecasting",
+      title: "Signal Capture Agent", type: "agent", status: "planned",
+      description: "Ingests and weights POS, retailer orders, and digital/unstructured signals in near real time; harmonizes & validates the demand dataset. Shared across steps 2 and 7.",
+      capabilities: ["api","ai-augment","genai"], metric: "TBD", optional: false,
+      refineryClass: "ToolUseAgent",
+      orchestration: { role: "worker", parent: "DemandForecastPipeline", alsoParent: "InMarketMonitoringAdvisor", nodeName: "SignalCapture", shared: true },
+      tooling: "Data engineering tools · GenAI for unstructured signal extraction",
+      transformation: { badge: "ENABLED·AUTOMATED", note: "POS, retailer orders and digital signals are ingested and weighted in near real time, not pulled weekly by hand." },
+      aera: null,
+    },
+    {
+      id: "demand-sensing", phaseId: "demand-forecasting",
+      title: "Demand Sensing Agent", type: "agent", status: "planned",
+      description: "Detects live demand shifts vs. the launch forecast and continuously recalibrates the in-market forecast curve. Shared across steps 2 and 7.",
+      capabilities: ["predictive","ai-augment"], metric: "TBD", optional: false,
+      refineryClass: "CustomAgent",
+      orchestration: { role: "worker", parent: "DemandForecastPipeline", alsoParent: "InMarketMonitoringAdvisor", nodeName: "DemandSensing", shared: true },
+      tooling: "ML time-series · real-time signal models",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Recalibrate sales curve with detected demand signals." },
+      aera: null,
+    },
+    {
+      id: "inventory-optimization-planning", phaseId: "inventory-planning",
+      title: "Inventory Optimization and Planning Agent", type: "agent", status: "planned",
+      description: "Computes the optimal launch quantity from the underage/overage trade-off (newsvendor one-time-buy) and publishes it as the target for downstream planning systems.",
+      capabilities: ["predictive","logic","api"], metric: "TBD", optional: false,
+      refineryClass: "FlowSuperAgent",
+      orchestration: {
+        role: "flow-super-agent",
+        nodes: ["InventoryDataFetcher","NewsvendorOptimizer","QuantityRecommendationWriter","LaunchQtyGate","DownstreamPublisher"],
+        edges: [
+          { from: "InventoryDataFetcher", to: "NewsvendorOptimizer" },
+          { from: "NewsvendorOptimizer", to: "QuantityRecommendationWriter" },
+          { from: "QuantityRecommendationWriter", to: "LaunchQtyGate" },
+          { from: "LaunchQtyGate", to: "DownstreamPublisher" },
+        ],
+        subAgents: [
+          { agent_name: "InventoryDataFetcher", agent_class: "ToolUseAgent", agent_description: "Pulls inventory/cost/service-level state from planning systems." },
+          { agent_name: "NewsvendorOptimizer", agent_class: "CustomAgent", agent_description: "Newsvendor one-time-buy model balancing underage vs. overage cost." },
+          { agent_name: "QuantityRecommendationWriter", agent_class: "UtilityAgent", agent_description: "Evidence-grounded optimal-quantity recommendation (magic_prompt)." },
+          { agent_name: "LaunchQtyGate", agent_class: "HumanAgent", agent_description: "Planner approves the optimized launch quantity (Touchpoint 1)." },
+          { agent_name: "DownstreamPublisher", agent_class: "ToolUseAgent", agent_description: "Publishes the approved target quantity to downstream planning systems (feeds step 4)." },
+        ],
+      },
+      tooling: "Newsvendor type of one-time buy model",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Launch quantity becomes an optimized recommendation balancing stockout and write-off cost for planner sign-off. (Publish-to-downstream decision is ENABLED·AUTOMATED.)" },
+      aera: "Placeholder",
+    },
+    {
+      id: "inventory-deployment-replenishing", phaseId: "inventory-positioning-deployment",
+      title: "Inventory deployment and replenishing agent", type: "agent", status: "planned",
+      description: "Sizes pre-build, positions stock across DCs/regions, allocates to customers/channels with risk buffers, and triggers replenishment within the approved envelope.",
+      capabilities: ["predictive","logic","api"], metric: "TBD", optional: false,
+      refineryClass: "FlowSuperAgent",
+      orchestration: {
+        role: "flow-super-agent",
+        nodes: ["NetworkDataFetcher","MultiEchelonOptimizer","AllocationPlanner","DeploymentPlanWriter","DeploymentGate","ReplenishmentExecutor"],
+        edges: [
+          { from: "NetworkDataFetcher", to: "MultiEchelonOptimizer" },
+          { from: "MultiEchelonOptimizer", to: "AllocationPlanner" },
+          { from: "AllocationPlanner", to: "DeploymentPlanWriter" },
+          { from: "DeploymentPlanWriter", to: "DeploymentGate" },
+          { from: "DeploymentGate", to: "ReplenishmentExecutor" },
+        ],
+        subAgents: [
+          { agent_name: "NetworkDataFetcher", agent_class: "ToolUseAgent", agent_description: "Pulls DC network state and current inventory positions." },
+          { agent_name: "MultiEchelonOptimizer", agent_class: "CustomAgent", agent_description: "Multi-echelon inventory optimization for pre-build sizing & DC positioning." },
+          { agent_name: "AllocationPlanner", agent_class: "CustomAgent", agent_description: "Allocates across customers/channels respecting commitment, priority, and safety-stock constraints." },
+          { agent_name: "DeploymentPlanWriter", agent_class: "UtilityAgent", agent_description: "Writes the pre-build + DC + allocation plan for sign-off (magic_prompt)." },
+          { agent_name: "DeploymentGate", agent_class: "HumanAgent", agent_description: "Planner approves the pre-build and DC plan (Touchpoint 1)." },
+          { agent_name: "ReplenishmentExecutor", agent_class: "ToolUseAgent", agent_description: "Auto-replenishes within the approved envelope." },
+        ],
+      },
+      tooling: "Multi-echelon inventory optimization and replenishment models",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "A static pre-build plan becomes an agent recommendation sized to demand confidence intervals for planner sign-off. (Positioning is TRANSFORMED·CONTINUOUS; channel allocation is ENABLED·AUTOMATED.)" },
+      aera: "Placeholder",
+    },
+    {
+      id: "lifecycle-management", phaseId: "launch-execution-adjustments",
+      title: "Lifecycle Management Agent", type: "agent", status: "planned",
+      description: "Updates the demand curve via phase-in/phase-out lifecycle models and flags required supply/inventory/distribution actions for the planner.",
+      capabilities: ["predictive","ai-augment","genai"], metric: "TBD", optional: false,
+      refineryClass: "CustomAgent",
+      orchestration: { role: "worker", parent: "InMarketMonitoringAdvisor", nodeName: "LifecycleManager" },
+      tooling: "LLM · statistical & ML lifecycle forecast models (phase-in / phase-out)",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "The demand curve updates and required supply and distribution actions are flagged for the planner to act on." },
+      aera: null,
+    },
+    {
+      id: "exception-handler", phaseId: "launch-execution-adjustments",
+      title: "Exception Handler Agent", type: "agent", status: "planned",
+      description: "Scores and routes exceptions (shortages, delays, demand spikes) by severity and generates a proposed next-best-action resolution.",
+      capabilities: ["predictive","virtual-agent","genai","logic"], metric: "TBD", optional: false,
+      refineryClass: "FlowSuperAgent",
+      orchestration: {
+        role: "flow-super-agent", parent: "InMarketMonitoringAdvisor",
+        nodes: ["ExceptionDetector","SeverityScorer","NextBestActionWriter","ExceptionGate"],
+        edges: [
+          { from: "ExceptionDetector", to: "SeverityScorer" },
+          { from: "SeverityScorer", to: "NextBestActionWriter" },
+          { from: "NextBestActionWriter", to: "ExceptionGate" },
+        ],
+        subAgents: [
+          { agent_name: "ExceptionDetector", agent_class: "ToolUseAgent", agent_description: "Exception alerting tools — detects shortages, delays, demand spikes." },
+          { agent_name: "SeverityScorer", agent_class: "CustomAgent", agent_description: "Scores and ranks exceptions by severity." },
+          { agent_name: "NextBestActionWriter", agent_class: "UtilityAgent", agent_description: "Generates the proposed next-best-action / resolution (magic_prompt)." },
+          { agent_name: "ExceptionGate", agent_class: "HumanAgent", agent_description: "Planner works the scored exception queue, accepts/overrides (Touchpoint 2)." },
+        ],
+      },
+      tooling: "LLM · exception alerting tools · next-best-action generation",
+      transformation: { badge: "ENABLED·AUTOMATED", note: "Exceptions are scored and routed by severity with a proposed resolution, instead of manual firefighting." },
+      aera: null,
+    },
+    {
+      id: "performance-monitoring", phaseId: "post-launch-optimization",
+      title: "Performance Monitoring Agent", type: "agent", status: "planned",
+      description: "Tracks KPIs (MAPE, WMAPE, Bias), performs root-cause analysis, and auto-flags model degradation vs. plan.",
+      capabilities: ["predictive","ai-augment","logic"], metric: "TBD", optional: false,
+      refineryClass: "AnalyticsAgent",
+      orchestration: { role: "worker", parent: "PostLaunchScalingAdvisor", nodeName: "PerformanceMonitor" },
+      tooling: "KPI metrics · accuracy & bias formulas (MAPE, WMAPE, Bias)",
+      transformation: { badge: "ENABLED·AUTOMATED", note: "MAPE, sell-through and margin are tracked against plan automatically, with model degradation auto-flagged." },
+      aera: "Placeholder",
+    },
+    {
+      id: "scaling", phaseId: "post-launch-optimization",
+      title: "Scaling Agent", type: "agent", status: "planned",
+      description: "Identifies expansion opportunities, simulates scaling scenarios, and triggers replenishment in high-velocity markets for planner approval.",
+      capabilities: ["predictive","logic"], metric: "TBD", optional: false,
+      refineryClass: "CustomAgent",
+      orchestration: { role: "worker", parent: "PostLaunchScalingAdvisor", nodeName: "ScalingSimulator" },
+      tooling: "Scenario simulator · forecasting models on simulated parameters",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Expansion opportunities are identified and replenishment triggered in high-velocity markets for planner approval." },
+      aera: "Placeholder",
+    },
+    {
+      id: "learning-loop", phaseId: "post-launch-optimization",
+      title: "Learning Loop Agent", type: "agent", status: "planned",
+      description: "Writes NPI actuals back into the like-product library and forecast models, closing the loop each cycle. Backed by Distiller MemTree persistent memory.",
+      capabilities: ["predictive","ai-augment"], metric: "TBD", optional: false,
+      refineryClass: "CustomAgent",
+      orchestration: { role: "worker", parent: "PostLaunchScalingAdvisor", nodeName: "LearningLoop", memory: "MemTree" },
+      tooling: "ML · feedback loop models · like-product library updates",
+      transformation: { badge: "TRANSFORMED·CONTINUOUS", note: "NPI actuals are written back into the like-product library and forecast models, closing the loop each cycle." },
+      aera: "Placeholder",
+    },
+  ],
+
+  /* The 3 planner governance gates — HumanAgent. Rendered as gate bands. */
+  touchpoints: [
+    { id: "touchpoint-1-launch-plan-approval", title: "Touchpoint 1 · Launch Plan Approval", type: "gate", refineryClass: "HumanAgent",
+      description: "Review agent-generated launch scenarios and confidence bands; approve initial supply, inventory, and distribution plan.",
+      gates: ["LaunchPlanGate","ForecastGate","LaunchQtyGate","DeploymentGate"],
+      phaseIds: ["portfolio-launch-planning","demand-forecasting","inventory-planning","inventory-positioning-deployment"] },
+    { id: "touchpoint-2-exception-review", title: "Touchpoint 2 · Exception Review", type: "gate", refineryClass: "HumanAgent",
+      description: "Review the scored and ranked NPI exception queue; decide accept agent recommendation or override with judgment.",
+      gates: ["ExceptionGate"], phaseIds: ["launch-execution-adjustments"] },
+    { id: "touchpoint-3-post-launch-recalibration", title: "Touchpoint 3 · Post-Launch Recalibration", type: "gate", refineryClass: "HumanAgent",
+      description: "Review sell-through vs. forecast; approve scaling or wind-down; confirm updated supply plan for the next launch window.",
+      gates: ["ScalingGate"], phaseIds: ["post-launch-optimization"] },
+  ],
+};
+
+/* =================================================================
+   EDIT THIS (v2A addition) — the technology & data foundation that
+   sits BELOW the timeline. The band engine renders 100% from this:
+   add a layer, node, or flow and it appears with no other change.
+   Design rationale: research/npi-foundation-layer-design.md
+   ================================================================= */
+const FOUNDATION = {
+  title: "Technology & Data Foundation",
+  caption: "What sits beneath the journey — data captured from SAP S4 and Kinaxis flows up through the data platform into the Aera skills that support NPI. Aera skills are a called-service layer (decision-intelligence skills), not orchestrators. Skills are flagged deterministic vs. agentic.",
+
+  /* Aera skill-type taxonomy — badge + legend only (NO filter control). */
+  skillTypes: {
+    deterministic: { label: "Deterministic", color: "#0F9D8C", meaning: "Rules- and model-driven skill with a fixed, repeatable computation — no autonomous planning. Built and running today." },
+    agentic:       { label: "Agentic",       color: "#A100FF", meaning: "Skill with autonomous, goal-seeking behavior — reasons over options and decides next actions. Shown for skills as they gain agentic capability." },
+  },
+
+  /* Capability tiers, top (closest to the timeline it feeds) → bottom (data origin). */
+  layers: [
+    { id: "aera-skills",       label: "Aera Skills",       kind: "Decision-intelligence skills · called service" },
+    { id: "planning",          label: "Planning",          kind: "Demand & supply planning" },
+    { id: "data-platform",     label: "Data Platform",     kind: "Captured transactional data" },
+    { id: "systems-of-record", label: "Systems of Record", kind: "Master data & ERP planning" },
+  ],
+
+  nodes: [
+    { id: "s4", layerId: "systems-of-record", label: "SAP S/4HANA", system: "SAP",
+      note: "System of record — finished-goods planning, raw-material planning, and all master data." },
+    { id: "databricks", layerId: "data-platform", label: "Snowflake / Databricks", system: "Lakehouse",
+      note: "Consolidated data platform. Captures transactional data from SAP S4 and Kinaxis — the single source the Aera skills read from." },
+    { id: "kinaxis", layerId: "planning", label: "Kinaxis", system: "Kinaxis",
+      note: "Demand planning (incl. new-product-launch inputs) and supply planning. Receives optimized supply plans and inventory pre-builds written back by the Aera skills." },
+
+    { id: "aera-demand-sensing", layerId: "aera-skills", label: "Demand Sensing", system: "Aera",
+      skillType: "deterministic", linkedAgentId: "demand-sensing",
+      consumes: ["POS scans → cases", "orders & shipments"], writesTo: ["recalibrated forecast signal"],
+      supportsPhases: ["demand-forecasting", "launch-execution-adjustments"],
+      note: "Reads demand and builds the sell-through curves that show what is happening at the shelf — handling the complexity of mapping point-of-sale scans up to cases — and gives planners visibility. Surfaces in the timeline as the Signal Capture + Demand Sensing worker agents (steps 2 & 7); shown here once as the underlying Aera skill." },
+
+    { id: "aera-osa", layerId: "aera-skills", label: "On-Shelf Availability", system: "Aera",
+      skillType: "deterministic", linkedAgentId: null,
+      consumes: ["distributor & customer shelf / warehouse data"], writesTo: ["service-level alerts → push actions"],
+      supportsPhases: ["distribution-fulfillment", "launch-execution-adjustments"],
+      note: "Reaches into distributor and customer shelf and warehouse data to see what is on-shelf and in the warehouse; when service levels slip, pushes out corrective actions. New skill — relates to the shelf-availability signal feeding step 7." },
+
+    { id: "aera-frozen-cut", layerId: "aera-skills", label: "Manufacturing Frozen-Period Cut", system: "Aera",
+      skillType: "deterministic", linkedAgentId: null,
+      consumes: ["demand vs. frozen-period plan"], writesTo: ["production cut → Kinaxis"],
+      supportsPhases: ["downstream-planning-systems", "launch-execution-adjustments"],
+      note: "During the production frozen period, cuts production when demand is not manifesting — protecting against over-build. New skill — drives supply planning and inventory pre-builds in Kinaxis." },
+  ],
+
+  /* Data movement. dir:"up" feeds toward skills/journey; dir:"writeback" returns into a planning system.
+     Endpoints may be a node id OR a layer id (a flow into/out of a whole tier). */
+  flows: [
+    { from: "s4",          to: "databricks",  dir: "up",        label: "master data · FG/RM plans · transactions" },
+    { from: "databricks",  to: "kinaxis",     dir: "up",        label: "data backbone feeds planning" },
+    { from: "kinaxis",     to: "aera-skills", dir: "up",        label: "plans + signals feed the skills" },
+    { from: "aera-skills", to: "kinaxis",     dir: "writeback", label: "supply plans · inventory pre-builds · production cuts" },
+  ],
+
+  /* The apex: skills feed up into the NPI journey (the timeline above). */
+  feedsJourney: { label: "Feeds the NPI journey above", note: "Aera skills are called by the timeline agents — a decision-intelligence service layer, not an orchestrator." },
+};
+
+/* =================================================================
+   ENGINE — renders entirely from the data above. Do not hardcode
+   content here; add fields to the data, then read them here.
+   ================================================================= */
+
+// ---- Inline SVG glyphs (no external assets) ----
+const GLYPHS = {
+  predictive:     '<path d="M3 17l5-6 4 4 5-8" fill="none" stroke="C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 21h18" stroke="C" stroke-width="1.6" stroke-linecap="round"/>',
+  "ai-augment":   '<circle cx="12" cy="12" r="3" fill="none" stroke="C" stroke-width="2"/><circle cx="5" cy="6" r="1.6" fill="C"/><circle cx="19" cy="6" r="1.6" fill="C"/><circle cx="5" cy="18" r="1.6" fill="C"/><circle cx="19" cy="18" r="1.6" fill="C"/><path d="M6.3 7L10 10.5M17.7 7L14 10.5M6.3 17L10 13.5M17.7 17L14 13.5" stroke="C" stroke-width="1.4"/>',
+  logic:          '<path d="M9 7L4.5 12 9 17M15 7l4.5 5L15 17" fill="none" stroke="C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.2 5.5l-2.4 13" stroke="C" stroke-width="1.6" stroke-linecap="round"/>',
+  api:            '<rect x="2.5" y="9" width="7" height="6" rx="1.6" fill="none" stroke="C" stroke-width="2"/><rect x="14.5" y="9" width="7" height="6" rx="1.6" fill="none" stroke="C" stroke-width="2"/><path d="M9.5 12h5" stroke="C" stroke-width="2" stroke-linecap="round"/><path d="M12.2 10.4l1.6 1.6-1.6 1.6" fill="none" stroke="C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+  "virtual-agent":'<path d="M4 5h16v10H9l-4 4V5z" fill="none" stroke="C" stroke-width="2" stroke-linejoin="round"/><circle cx="9" cy="10" r="1.2" fill="C"/><circle cx="12.5" cy="10" r="1.2" fill="C"/><circle cx="16" cy="10" r="1.2" fill="C"/>',
+  genai:          '<path d="M12 3l1.8 4.7L18.5 9l-4.7 1.3L12 15l-1.8-4.7L5.5 9l4.7-1.3L12 3z" fill="C"/><path d="M18.5 14l.9 2.3 2.3.9-2.3.7-.9 2.4-.9-2.4-2.3-.7 2.3-.9.9-2.3z" fill="C"/>',
+};
+function glyph(capId, color) {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    (GLYPHS[capId] || '').replace(/C/g, color) + '</svg>';
+}
+
+const $ = (sel, root = document) => root.querySelector(sel);
+const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+const esc = s => String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const prefersReduced = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Make everything except the drawer/scrim inert while the drawer is open,
+// so Tab can't escape the dialog (focus trap) and AT skips the background.
+function setBackgroundInert(on) {
+  [...document.body.children].forEach(node => {
+    if (node.id === "drawer" || node.id === "scrim" || node.tagName === "SCRIPT") return;
+    node.inert = on;
+  });
+}
+
+// helper: which refinery classes actually appear in the data (for filter chips + legend)
+function usedRefineryClasses() {
+  const set = new Set();
+  JOURNEY.agents.forEach(a => { if (a.refineryClass) set.add(a.refineryClass); });
+  (JOURNEY.touchpoints || []).forEach(t => { if (t.refineryClass) set.add(t.refineryClass); });
+  if (JOURNEY.aera && JOURNEY.aera.refineryClass) set.add(JOURNEY.aera.refineryClass);
+  if (JOURNEY.orchestrator && JOURNEY.orchestrator.refineryClass) set.add(JOURNEY.orchestrator.refineryClass);
+  // also include any sub-agent classes used inside FlowSuperAgents so the legend is complete
+  JOURNEY.agents.forEach(a => {
+    const subs = a.orchestration && a.orchestration.subAgents;
+    if (subs) subs.forEach(s => { if (s.agent_class) set.add(s.agent_class); });
+  });
+  return [...Object.keys(REFINERY_CLASSES)].filter(id => set.has(id));
+}
+
+// active filter state
+const state = {
+  caps: new Set(Object.keys(CAPABILITIES)), // all on
+  classes: new Set(usedRefineryClasses()),  // all on
+};
+
+function init() {
+  $("#jTitle").textContent = JOURNEY.title || "";
+  $("#jSub").textContent = JOURNEY.subtitle || "";
+  if (JOURNEY.client) $("#clientName").textContent = JOURNEY.client;
+  if (JOURNEY.hsy) $("#hsyName").textContent = JOURNEY.hsy;
+
+  buildClassFilters();
+  buildCapFilters();
+  buildRuler();
+  buildGroupBand();
+  buildTimeline();
+  buildLegend();
+  buildFoundation();
+  wireToolbar();
+  wireDrawer();
+  wirePan();
+  applyFilters();
+}
+
+function buildClassFilters() {
+  const box = $("#classFilters");
+  box.innerHTML = "";
+  usedRefineryClasses().forEach(id => {
+    const c = REFINERY_CLASSES[id];
+    const chip = el("button", "classchip");
+    chip.type = "button";
+    chip.setAttribute("aria-pressed", "true");
+    chip.dataset.class = id;
+    chip.innerHTML = '<span class="swatch" style="background:' + c.color + '"></span>' + esc(c.label);
+    chip.title = c.meaning;
+    chip.addEventListener("click", () => {
+      const on = chip.getAttribute("aria-pressed") === "true";
+      chip.setAttribute("aria-pressed", on ? "false" : "true");
+      if (on) state.classes.delete(id); else state.classes.add(id);
+      applyFilters();
+    });
+    box.appendChild(chip);
+  });
+}
+
+function buildCapFilters() {
+  const box = $("#capFilters");
+  box.innerHTML = "";
+  Object.entries(CAPABILITIES).forEach(([id, c]) => {
+    const chip = el("button", "capchip");
+    chip.type = "button";
+    chip.setAttribute("aria-pressed", "true");
+    chip.dataset.cap = id;
+    chip.innerHTML = '<span class="ic">' + glyph(id, c.color) + '</span>' + c.label;
+    chip.addEventListener("click", () => {
+      const on = chip.getAttribute("aria-pressed") === "true";
+      chip.setAttribute("aria-pressed", on ? "false" : "true");
+      if (on) state.caps.delete(id); else state.caps.add(id);
+      applyFilters();
+    });
+    box.appendChild(chip);
+  });
+}
+
+function buildRuler() {
+  const r = $("#ruler");
+  r.innerHTML = "";
+  JOURNEY.phases.forEach(p => {
+    const pill = el("button", "pill" + (p.placeholder ? " placeholder" : ""));
+    pill.type = "button";
+    pill.dataset.group = p.group;
+    pill.innerHTML = '<span class="n">' + p.step + '</span>' + esc(p.label);
+    pill.addEventListener("click", () => {
+      const col = document.getElementById("col-" + p.id);
+      if (col) col.scrollIntoView({ behavior: prefersReduced() ? "auto" : "smooth", inline: "start", block: "nearest" });
+    });
+    r.appendChild(pill);
+  });
+}
+
+// group band: one segment per group, spanning its contiguous phases
+function buildGroupBand() {
+  const band = $("#groupband");
+  band.innerHTML = "";
+  // group phases by their group id, preserving order
+  const order = (JOURNEY.groups || []).map(g => g.id);
+  const runs = [];
+  JOURNEY.phases.forEach(p => {
+    const last = runs[runs.length - 1];
+    if (last && last.group === p.group) last.count++;
+    else runs.push({ group: p.group, count: 1 });
+  });
+  runs.forEach(run => {
+    const g = (JOURNEY.groups || []).find(x => x.id === run.group) || { id: run.group, label: run.group, sub: run.group };
+    const seg = el("div", "groupseg");
+    seg.dataset.group = run.group;
+    // each phase col is var(--col-w) wide; mirror that with flex-basis math
+    seg.style.flex = "0 0 calc(var(--col-w) * " + run.count + ")";
+    seg.innerHTML = '<div class="gbar"><span class="gsub">' + esc(g.sub || g.id) + '</span>' + esc(g.label || "") + '</div>';
+    band.appendChild(seg);
+  });
+}
+
+function buildTimeline() {
+  const tl = $("#timeline");
+  tl.innerHTML = "";
+  JOURNEY.phases.forEach(p => {
+    const col = el("div", "col");
+    col.id = "col-" + p.id;
+    col.dataset.group = p.group;
+    col.dataset.placeholder = String(!!p.placeholder);
+
+    // stage bar
+    const bar = el("div", "bar");
+    let barHTML = '<span class="steptag">Step ' + p.step + '</span><span class="blabel">' + esc(p.label) + '</span>';
+    if (p.accentureAsset) barHTML += '<span class="asset">✓ Accenture asset</span>';
+    if (p.loop) barHTML += '<span class="loop">↺ refines &amp; adjusts</span>';
+    if (p.placeholder) barHTML += '<span class="steptag">Placeholder</span>';
+    bar.innerHTML = barHTML;
+    col.appendChild(bar);
+
+    // FROM -> TO band
+    if (p.fromTo) {
+      const ft = el("div", "fromto");
+      ft.innerHTML =
+        '<div class="ft from"><div class="lbl">FROM</div><div class="ftt">' + esc(p.fromTo.from) + '</div></div>' +
+        '<div class="ftarrow">→</div>' +
+        '<div class="ft to"><div class="lbl">TO</div><div class="ftt">' + esc(p.fromTo.to) + '</div></div>';
+      col.appendChild(ft);
+    } else if (p.placeholder) {
+      const ft = el("div", "fromto placeholder");
+      ft.innerHTML = '<div class="ph"><div class="lbl">PLACEHOLDER — NO FROM→TO ON SLIDE</div><div class="ftt">' +
+        esc(p.placeholderNote || "No named agents on slide.") + '</div></div>';
+      col.appendChild(ft);
+    }
+
+    // numbered node + continuous arrow
+    const nodeWrap = el("div", "node-wrap");
+    nodeWrap.appendChild(el("div", "node", String(p.step)));
+    col.appendChild(nodeWrap);
+
+    // lane of agent cards
+    const lane = el("div", "lane");
+    const agentsHere = JOURNEY.agents.filter(a => a.phaseId === p.id);
+    agentsHere.forEach(a => lane.appendChild(buildCard(a)));
+    if (agentsHere.length === 0) lane.classList.add("empty");
+    col.appendChild(lane);
+
+    // planner touchpoint bands for this phase
+    (JOURNEY.touchpoints || [])
+      .filter(t => (t.phaseIds || []).includes(p.id))
+      .forEach(t => col.appendChild(buildTouchband(t)));
+
+    // AERA band (called-service marker) when the phase declares one
+    if (p.aera) col.appendChild(buildAeraBand(p));
+
+    tl.appendChild(col);
+  });
+}
+
+function isOrchestrator(a) {
+  return a.refineryClass === "FlowSuperAgent" || a.refineryClass === "SuperAgent" || a.refineryClass === "orchestrator";
+}
+
+function rfBadge(classId) {
+  const c = REFINERY_CLASSES[classId];
+  if (!c) return '';
+  return '<span class="rfbadge" style="background:' + c.color + '" title="' + esc(c.meaning) + '">' +
+    '<span class="dot"></span>' + esc(c.label) + '</span>';
+}
+
+function tBadge(badge) {
+  if (!badge) return '';
+  const enabled = /ENABLED/i.test(badge);
+  return '<span class="tbadge ' + (enabled ? 'enabled' : 'transformed') + '">' + esc(badge) + '</span>';
+}
+
+function buildCard(a) {
+  const t = NODE_TYPES[a.type] || { label: a.type, color: "#6b7280" };
+  const orch = isOrchestrator(a);
+  const card = el("div", "card" + (orch ? " orch" : "") + (a.type === "service" ? " service" : ""));
+  card.tabIndex = 0;
+  card.dataset.id = a.id;
+  card.dataset.caps = (a.capabilities || []).join(" ");
+  card.dataset.class = a.refineryClass || "";
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", a.title + " — open detail");
+
+  const caps = (a.capabilities || []).map(id => {
+    const c = CAPABILITIES[id]; if (!c) return "";
+    return '<span class="ic" title="' + esc(c.label) + '">' + glyph(id, c.color) + '</span>';
+  }).join("");
+
+  // orchestration hint on the compact card
+  let orchHint = "";
+  if (orch && a.orchestration && a.orchestration.subAgents) {
+    orchHint = '<div class="orchhint">⛓ Orchestrates ' + a.orchestration.subAgents.length + ' worker agents — open to see the pipeline</div>';
+  } else if (a.orchestration && a.orchestration.role === "worker") {
+    orchHint = '<div class="workerhint">worker · ' + esc(a.orchestration.parent || "") +
+      (a.orchestration.shared ? ' · shared' : '') + '</div>';
+  }
+
+  card.innerHTML =
+    '<div class="toprow">' +
+      '<span class="badge" style="background:' + t.color + '">' + esc(t.label) + '</span>' +
+      rfBadge(a.refineryClass) +
+      (a.optional ? '<span class="badge opt">Optional</span>' : '') +
+    '</div>' +
+    '<h3>' + esc(a.title) + '</h3>' +
+    '<p class="desc">' + esc(a.description || "") + '</p>' +
+    tBadge(a.transformation && a.transformation.badge) +
+    (a.metric ? '<div class="metric">' + esc(a.metric) + '</div>' : '') +
+    (caps ? '<div class="caps">' + caps + '</div>' : '') +
+    orchHint;
+
+  card.addEventListener("click", () => openDrawer(a));
+  card.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDrawer(a); }
+  });
+  return card;
+}
+
+function buildTouchband(t) {
+  const band = el("div", "touchband");
+  band.tabIndex = 0;
+  band.setAttribute("role", "button");
+  band.setAttribute("aria-label", t.title + " — open detail");
+  band.innerHTML =
+    '<div class="th"><span class="gicon">👤</span>' +
+      '<span class="gtitle">' + esc(t.title) + '</span>' +
+      rfGateChip(t.refineryClass) +
+    '</div>' +
+    '<div class="gdesc">' + esc(t.description || "") + '</div>';
+  band.addEventListener("click", () => openTouchpointDrawer(t));
+  band.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTouchpointDrawer(t); }
+  });
+  return band;
+}
+function rfGateChip(classId) {
+  const c = REFINERY_CLASSES[classId] || { label: classId, color: "#2563EB" };
+  return '<span class="gclass" style="background:' + c.color + '">' + esc(c.label) + '</span>';
+}
+
+function buildAeraBand(p) {
+  const a = JOURNEY.aera || {};
+  const placeholder = p.aera === "Placeholder";
+  const band = el("div", "aeraband" + (placeholder ? " placeholder" : ""));
+  band.innerHTML =
+    '<div class="ah"><span class="alabel">AERA Decision Cloud</span>' +
+      '<span class="aclass">' + esc((REFINERY_CLASSES[a.refineryClass] || {}).label || a.refineryClass || "ToolUseAgent") + ' · called service</span>' +
+    '</div>' +
+    '<div class="adesc">' + (placeholder ? "Placeholder — AERA called here on request (decision-intelligence service, not an orchestrator)."
+        : esc(a.description || "")) + '</div>';
+  return band;
+}
+
+function buildLegend() {
+  const grid = $("#legendGrid");
+  grid.innerHTML = "";
+  Object.entries(CAPABILITIES).forEach(([id, c]) => {
+    grid.appendChild(el("div", "legend-item",
+      '<span class="ic">' + glyph(id, c.color) + '</span>' + esc(c.label)));
+  });
+
+  const classBox = $("#classLegend");
+  classBox.innerHTML = "";
+  usedRefineryClasses().forEach(id => {
+    const item = el("span", "", rfBadge(id));
+    item.title = REFINERY_CLASSES[id].meaning;
+    classBox.appendChild(item.firstChild);
+  });
+
+  const types = $("#typeLegend");
+  types.innerHTML = "";
+  Object.values(NODE_TYPES).forEach(t => {
+    types.appendChild(el("span", "badge", esc(t.label))).style.background = t.color;
+  });
+
+  const badges = $("#badgeLegend");
+  badges.innerHTML =
+    tBadge("TRANSFORMED·AUGMENTED") + tBadge("TRANSFORMED·CONTINUOUS") + tBadge("ENABLED·AUTOMATED");
+
+  const skillBox = $("#skillTypeLegend");
+  if (skillBox && typeof FOUNDATION !== "undefined" && FOUNDATION.skillTypes) {
+    skillBox.innerHTML = "";
+    Object.values(FOUNDATION.skillTypes).forEach(st => {
+      const b = el("span", "skill-badge", esc(st.label));
+      b.style.background = st.color;
+      b.title = st.meaning || "";
+      skillBox.appendChild(b);
+    });
+  }
+}
+
+function wireToolbar() {
+  $("#clearBtn").addEventListener("click", () => {
+    state.caps = new Set(Object.keys(CAPABILITIES));
+    state.classes = new Set(usedRefineryClasses());
+    document.querySelectorAll(".capchip").forEach(c => c.setAttribute("aria-pressed", "true"));
+    document.querySelectorAll(".classchip").forEach(c => c.setAttribute("aria-pressed", "true"));
+    applyFilters();
+  });
+}
+
+function applyFilters() {
+  const cards = document.querySelectorAll(".card");
+  let hidden = 0;
+  cards.forEach(card => {
+    const cardCaps = card.dataset.caps ? card.dataset.caps.split(" ") : [];
+    const okCaps = cardCaps.length === 0 || cardCaps.some(c => state.caps.has(c));
+    const cls = card.dataset.class;
+    const okClass = !cls || state.classes.has(cls);
+    const visible = okCaps && okClass;
+    card.classList.toggle("dimmed", !visible);
+    // keep filtered-out cards out of the tab order + hidden from AT
+    card.tabIndex = visible ? 0 : -1;
+    if (visible) card.removeAttribute("aria-hidden"); else card.setAttribute("aria-hidden", "true");
+    if (!visible) hidden++;
+  });
+  const total = cards.length;
+  const allCaps = state.caps.size === Object.keys(CAPABILITIES).length;
+  const allClasses = state.classes.size === usedRefineryClasses().length;
+  const filtering = !allCaps || !allClasses;
+  $("#filterStat").textContent = filtering
+    ? (total - hidden) + " of " + total + " shown"
+    : total + " agents";
+}
+
+// ---- Drawer ----
+let lastFocused = null;
+
+function openDrawer(a) {
+  lastFocused = document.activeElement;
+  const t = NODE_TYPES[a.type] || { label: a.type, color: "#6b7280" };
+  const phase = JOURNEY.phases.find(p => p.id === a.phaseId);
+  const rf = REFINERY_CLASSES[a.refineryClass];
+  const body = $("#drawerBody");
+
+  const capsFull = (a.capabilities || []).map(id => {
+    const c = CAPABILITIES[id]; if (!c) return "";
+    return '<div class="d-cap"><span class="ic">' + glyph(id, c.color) + '</span>' + esc(c.label) + '</div>';
+  }).join("");
+
+  // refinery class block
+  const rfBlock = rf ?
+    '<div class="d-section-title">AI Refinery class</div>' +
+    '<div class="d-rfclass"><div class="rf-name">' + esc(rf.label) + '</div>' +
+    '<div class="rf-mean">' + esc(rf.meaning) + '</div></div>' : '';
+
+  // orchestration block
+  let orchBlock = "";
+  const o = a.orchestration;
+  if (o && (o.role === "flow-super-agent" || o.subAgents)) {
+    const subByName = {};
+    (o.subAgents || []).forEach(s => subByName[s.agent_name] = s);
+    const seq = (o.nodes && o.nodes.length) ? o.nodes : (o.subAgents || []).map(s => s.agent_name);
+    const rows = seq.map((name, i) => {
+      const s = subByName[name] || { agent_name: name, agent_class: "", agent_description: "" };
+      const c = REFINERY_CLASSES[s.agent_class] || { label: s.agent_class, color: "#6b7280" };
+      const arrow = i < seq.length - 1 ? '<div class="pn-arrow" style="text-align:center;font-size:14px;color:var(--ink-faint)">↓</div>' : '';
+      return '<div class="d-pnode">' +
+          (s.agent_class ? '<span class="pn-rf" style="background:' + c.color + '">' + esc(c.label) + '</span>' : '') +
+          '<div class="pn-body"><div class="pn-name">' + esc(s.agent_name) + '</div>' +
+          (s.agent_description ? '<div class="pn-desc">' + esc(s.agent_description) + '</div>' : '') +
+          '</div></div>' + arrow;
+    }).join("");
+    const roleLabel = a.refineryClass === "SuperAgent" ? "Dynamic agent pool it routes" : "Pipeline it coordinates (DAG)";
+    orchBlock =
+      '<div class="d-section-title">Orchestration — ' + esc(roleLabel) + '</div>' +
+      '<div class="d-pipeline">' + rows + '</div>';
+  } else if (o && o.role === "worker") {
+    orchBlock =
+      '<div class="d-section-title">Orchestration role</div>' +
+      '<div class="d-worker"><b>Worker</b> inside <b>' + esc(o.parent || "") + '</b>' +
+        (o.alsoParent ? ' &amp; <b>' + esc(o.alsoParent) + '</b>' : '') +
+        (o.nodeName ? ' · node <b>' + esc(o.nodeName) + '</b>' : '') +
+        (o.shared ? ' · <b>shared worker</b> (declared once, reused across pipelines)' : '') +
+        (o.memory ? ' · persists to <b>' + esc(o.memory) + '</b> memory' : '') +
+      '</div>';
+  }
+
+  // tooling block
+  const toolBlock = a.tooling ?
+    '<div class="d-section-title">Tooling 🔧</div><div class="d-tooling">' +
+    a.tooling.split("·").map(s => s.trim()).filter(Boolean)
+      .map(tg => '<span class="d-tool">🔧 ' + esc(tg) + '</span>').join("") +
+    '</div>' : '';
+
+  // transformation block
+  let transBlock = "";
+  if (a.transformation && a.transformation.badge) {
+    const enabled = /ENABLED/i.test(a.transformation.badge);
+    transBlock =
+      '<div class="d-section-title">Transformation</div>' +
+      '<div class="d-transform ' + (enabled ? 'enabled' : 'transformed') + '">' +
+        tBadge(a.transformation.badge) +
+        (a.transformation.note ? '<div class="t-note">' + esc(a.transformation.note) + '</div>' : '') +
+      '</div>';
+  }
+
+  // AERA block
+  const aeraBlock = a.aera ?
+    '<div class="d-section-title">AERA</div>' +
+    '<div class="d-aera"><div class="a-lbl">AERA Decision Cloud · called service (' +
+      esc((REFINERY_CLASSES[JOURNEY.aera.refineryClass] || {}).label || "ToolUseAgent") + ')</div>' +
+      (a.aera === "Placeholder" ? "Placeholder — AERA is invoked here on request as a decision-intelligence service, not an orchestrator." : esc(a.aera)) +
+    '</div>' : '';
+
+  body.innerHTML =
+    '<div class="d-phase">' + (phase ? "Step " + phase.step + " · " + esc(phase.label) : "") + '</div>' +
+    '<h2 id="drawerTitle">' + esc(a.title) + '</h2>' +
+    '<div class="d-badges">' +
+      '<span class="badge" style="background:' + t.color + '">' + esc(t.label) + '</span>' +
+      rfBadge(a.refineryClass) +
+      (a.optional ? '<span class="badge opt">Optional</span>' : '') +
+    '</div>' +
+    (a.metric ? '<div class="d-metric">' + esc(a.metric) + '</div>' : '') +
+    '<p class="d-desc">' + esc(a.description || "") + '</p>' +
+    rfBlock +
+    orchBlock +
+    toolBlock +
+    transBlock +
+    aeraBlock +
+    (capsFull ? '<div class="d-section-title">Capabilities</div>' + capsFull : '');
+
+  const drawer = $("#drawer");
+  drawer.classList.add("open");
+  $("#scrim").classList.add("open");
+  setBackgroundInert(true);
+  drawer.focus();
+}
+
+function openTouchpointDrawer(t) {
+  lastFocused = document.activeElement;
+  const rf = REFINERY_CLASSES[t.refineryClass] || { label: t.refineryClass, color: "#2563EB", meaning: "" };
+  const phases = (t.phaseIds || []).map(id => {
+    const p = JOURNEY.phases.find(x => x.id === id);
+    return p ? "Step " + p.step + " · " + p.label : id;
+  });
+  const body = $("#drawerBody");
+  body.innerHTML =
+    '<div class="d-phase">Planner governance touchpoint</div>' +
+    '<h2 id="drawerTitle">👤 ' + esc(t.title) + '</h2>' +
+    '<div class="d-badges">' +
+      '<span class="badge" style="background:' + (NODE_TYPES.gate.color) + '">Gate</span>' +
+      rfBadge(t.refineryClass) +
+    '</div>' +
+    '<p class="d-desc">' + esc(t.description || "") + '</p>' +
+    '<div class="d-section-title">AI Refinery class</div>' +
+    '<div class="d-rfclass"><div class="rf-name">' + esc(rf.label) + '</div>' +
+      '<div class="rf-mean">' + esc(rf.meaning) + '</div></div>' +
+    '<div class="d-section-title">Gates it consolidates</div>' +
+    '<div class="d-worker">' + (t.gates || []).map(g => '<b>' + esc(g) + '</b>').join(" · ") + '</div>' +
+    '<div class="d-section-title">Steps it governs</div>' +
+    '<div class="d-worker">' + phases.map(esc).join("<br>") + '</div>';
+
+  const drawer = $("#drawer");
+  drawer.classList.add("open");
+  $("#scrim").classList.add("open");
+  setBackgroundInert(true);
+  drawer.focus();
+}
+
+function closeDrawer() {
+  $("#drawer").classList.remove("open");
+  $("#scrim").classList.remove("open");
+  setBackgroundInert(false);
+  if (lastFocused) lastFocused.focus();
+}
+function wireDrawer() {
+  $("#drawerClose").addEventListener("click", closeDrawer);
+  $("#scrim").addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && $("#drawer").classList.contains("open")) closeDrawer();
+  });
+}
+
+// ---- Drag-to-pan + shift-wheel horizontal scroll ----
+function wirePan() {
+  const tl = $("#timeline");
+  let down = false, startX = 0, startScroll = 0, moved = false;
+  tl.addEventListener("mousedown", e => {
+    if (e.target.closest(".card") || e.target.closest(".touchband")) return;
+    down = true; moved = false; startX = e.pageX; startScroll = tl.scrollLeft;
+    tl.classList.add("grabbing");
+  });
+  window.addEventListener("mousemove", e => {
+    if (!down) return;
+    const dx = e.pageX - startX;
+    if (Math.abs(dx) > 3) moved = true;
+    tl.scrollLeft = startScroll - dx;
+  });
+  window.addEventListener("mouseup", () => { down = false; tl.classList.remove("grabbing"); });
+  tl.addEventListener("wheel", e => {
+    if (e.shiftKey || (Math.abs(e.deltaX) > Math.abs(e.deltaY))) return;
+    if (e.deltaY !== 0) { tl.scrollLeft += e.deltaY; e.preventDefault(); }
+  }, { passive: false });
+  // keep the group band scrolling in lockstep with the timeline (rAF-throttled)
+  const band = $("#groupband");
+  let bandRaf = 0;
+  tl.addEventListener("scroll", () => {
+    if (bandRaf) return;
+    bandRaf = requestAnimationFrame(() => {
+      band.style.transform = "translateX(" + (-tl.scrollLeft) + "px)";
+      bandRaf = 0;
+    });
+  }, { passive: true });
+}
+
+/* ---- Technology & Data Foundation band (v2A) ----
+   Renders 100% from the FOUNDATION object. Layers stack top→bottom;
+   flows crossing each adjacent boundary render as connectors. ---- */
+function fdnLayerIndex(endpointId) {
+  const byLayer = FOUNDATION.layers.findIndex(l => l.id === endpointId);
+  if (byLayer >= 0) return byLayer;
+  const n = FOUNDATION.nodes.find(x => x.id === endpointId);
+  return n ? FOUNDATION.layers.findIndex(l => l.id === n.layerId) : -1;
+}
+function fdnLabelOf(endpointId) {
+  const n = FOUNDATION.nodes.find(x => x.id === endpointId);
+  if (n) return n.label;
+  const l = FOUNDATION.layers.find(x => x.id === endpointId);
+  return l ? l.label : endpointId;
+}
+
+function buildFoundation() {
+  const root = $("#foundation");
+  if (!root || typeof FOUNDATION === "undefined") return;
+  root.innerHTML = "";
+
+  const head = el("div", "fhead",
+    '<span class="ftitle" id="fdnTitle">' + esc(FOUNDATION.title || "") + '</span>' +
+    '<span class="ftag">Foundation · v2A</span>');
+  root.appendChild(head);
+  if (FOUNDATION.caption) root.appendChild(el("div", "fcap", esc(FOUNDATION.caption)));
+
+  if (FOUNDATION.feedsJourney) {
+    const apex = el("div", "fdn-apex",
+      '<span class="arr">↑</span>' + esc(FOUNDATION.feedsJourney.label) + '<span class="arr">↑</span>');
+    apex.title = FOUNDATION.feedsJourney.note || "";
+    root.appendChild(apex);
+  }
+
+  FOUNDATION.layers.forEach((layer, i) => {
+    root.appendChild(buildFdnRow(layer));
+    if (i < FOUNDATION.layers.length - 1) {
+      const conn = buildFdnFlow(i, i + 1);
+      if (conn) root.appendChild(conn);
+    }
+  });
+}
+
+function buildFdnRow(layer) {
+  const row = el("div", "fdn-row");
+  row.dataset.layer = layer.id;
+  row.appendChild(el("div", "fdn-label",
+    '<span class="ll">' + esc(layer.label) + '</span>' +
+    (layer.kind ? '<span class="lk">' + esc(layer.kind) + '</span>' : '')));
+  const nodes = el("div", "fdn-nodes");
+  FOUNDATION.nodes.filter(n => n.layerId === layer.id).forEach(n => nodes.appendChild(buildFdnNode(n)));
+  row.appendChild(nodes);
+  return row;
+}
+
+function buildFdnNode(n) {
+  const isSkill = n.layerId === "aera-skills" || !!n.skillType;
+  const node = el("div", "fdn-node clickable" + (isSkill ? " skill" : ""));
+  node.tabIndex = 0;
+  node.dataset.id = n.id;
+  node.setAttribute("role", "button");
+  node.setAttribute("aria-label", n.label + " — open detail");
+
+  let head = '<span class="nname">' + esc(n.label) + '</span>';
+  if (n.system) head += '<span class="nsys">' + esc(n.system) + '</span>';
+  if (n.skillType) {
+    const st = (FOUNDATION.skillTypes || {})[n.skillType] || { label: n.skillType, color: "#6b7280", meaning: "" };
+    head += '<span class="skill-badge" style="background:' + st.color + '" title="' + esc(st.meaning) + '">' + esc(st.label) + '</span>';
+  }
+
+  let chips = "";
+  (n.consumes || []).forEach(c => chips += '<span class="fdn-chip in" title="reads">↓ ' + esc(c) + '</span>');
+  (n.writesTo || []).forEach(c => chips += '<span class="fdn-chip out" title="writes">↑ ' + esc(c) + '</span>');
+  (n.supportsPhases || []).forEach(pid => {
+    const p = JOURNEY.phases.find(x => x.id === pid);
+    if (p) chips += '<button type="button" class="fdn-chip step" data-phase="' + esc(pid) + '" title="' + esc(p.label) + ' — jump">→ Step ' + p.step + '</button>';
+  });
+
+  node.innerHTML =
+    '<div class="nh">' + head + '</div>' +
+    (n.note ? '<div class="nnote">' + esc(n.note) + '</div>' : '') +
+    (chips ? '<div class="fdn-chips">' + chips + '</div>' : '');
+
+  node.addEventListener("click", e => {
+    const stepChip = e.target.closest(".fdn-chip.step");
+    if (stepChip) {
+      e.stopPropagation();
+      const col = document.getElementById("col-" + stepChip.dataset.phase);
+      if (col) col.scrollIntoView({ behavior: prefersReduced() ? "auto" : "smooth", inline: "start", block: "nearest" });
+      return;
+    }
+    openFoundationDrawer(n);
+  });
+  node.addEventListener("keydown", e => {
+    if ((e.key === "Enter" || e.key === " ") && !e.target.closest(".fdn-chip.step")) {
+      e.preventDefault(); openFoundationDrawer(n);
+    }
+  });
+  return node;
+}
+
+function buildFdnFlow(upperIdx, lowerIdx) {
+  const ups = [], wbs = [];
+  (FOUNDATION.flows || []).forEach(f => {
+    const a = fdnLayerIndex(f.from), b = fdnLayerIndex(f.to);
+    if (a < 0 || b < 0) return;
+    if (Math.min(a, b) !== upperIdx || Math.max(a, b) !== lowerIdx) return;
+    (f.dir === "writeback" ? wbs : ups).push(f);
+  });
+  if (!ups.length && !wbs.length) return null;
+  const flow = el("div", "fdn-flow");
+  let html = "";
+  ups.forEach(f => html += '<span class="up"><span class="gly">↑</span><span>' + esc(f.label || "feeds up") + '</span></span>');
+  wbs.forEach(f => html += '<span class="wb"><span class="gly">↩</span><span>writeback · ' + esc(f.label || "") + '</span></span>');
+  flow.innerHTML = html;
+  return flow;
+}
+
+function openFoundationDrawer(n) {
+  lastFocused = document.activeElement;
+  const layer = FOUNDATION.layers.find(l => l.id === n.layerId) || {};
+  const st = n.skillType ? (FOUNDATION.skillTypes || {})[n.skillType] : null;
+  const body = $("#drawerBody");
+
+  const rel = (FOUNDATION.flows || []).filter(f =>
+    f.from === n.id || f.to === n.id ||
+    ((f.from === n.layerId || f.to === n.layerId) && n.layerId === "aera-skills"));
+  const flowRows = rel.map(f => {
+    const dirLbl = f.dir === "writeback" ? "↩ writes back" : "↑ feeds up";
+    return '<div class="d-worker">' + dirLbl + ' · <b>' + esc(fdnLabelOf(f.from)) + '</b> → <b>' + esc(fdnLabelOf(f.to)) + '</b>' +
+      (f.label ? '<br><span style="color:var(--ink-soft)">' + esc(f.label) + '</span>' : '') + '</div>';
+  }).join("");
+
+  const steps = (n.supportsPhases || []).map(pid => {
+    const p = JOURNEY.phases.find(x => x.id === pid);
+    return p ? "Step " + p.step + " · " + p.label : pid;
+  });
+
+  let linked = "";
+  if (n.linkedAgentId) {
+    const ag = JOURNEY.agents.find(a => a.id === n.linkedAgentId);
+    if (ag) linked =
+      '<div class="d-section-title">Appears in the timeline as</div>' +
+      '<div class="d-worker"><b>' + esc(ag.title) + '</b> — ' +
+        esc((REFINERY_CLASSES[ag.refineryClass] || {}).label || ag.refineryClass || "") +
+        ' worker. Shown here once as the underlying Aera skill, not duplicated as a separate timeline agent.</div>';
+  }
+
+  body.innerHTML =
+    '<div class="d-phase">' + esc(layer.label || "") + (layer.kind ? ' · ' + esc(layer.kind) : '') + '</div>' +
+    '<h2 id="drawerTitle">' + esc(n.label) + '</h2>' +
+    '<div class="d-badges">' +
+      (n.system ? '<span class="badge" style="background:#6b7280">' + esc(n.system) + '</span>' : '') +
+      (st ? '<span class="skill-badge" style="background:' + st.color + '">' + esc(st.label) + '</span>' : '') +
+    '</div>' +
+    (n.note ? '<p class="d-desc">' + esc(n.note) + '</p>' : '') +
+    (st ? '<div class="d-section-title">Skill type</div>' +
+      '<div class="d-rfclass"><div class="rf-name" style="color:' + st.color + '">' + esc(st.label) + '</div>' +
+      '<div class="rf-mean">' + esc(st.meaning) + '</div></div>' : '') +
+    (n.consumes && n.consumes.length ?
+      '<div class="d-section-title">Consumes</div><div class="d-tooling">' +
+      n.consumes.map(c => '<span class="d-tool">↓ ' + esc(c) + '</span>').join("") + '</div>' : '') +
+    (n.writesTo && n.writesTo.length ?
+      '<div class="d-section-title">Writes</div><div class="d-tooling">' +
+      n.writesTo.map(c => '<span class="d-tool">↑ ' + esc(c) + '</span>').join("") + '</div>' : '') +
+    (flowRows ? '<div class="d-section-title">Data flows</div>' + flowRows : '') +
+    (steps.length ? '<div class="d-section-title">Supports NPI steps</div><div class="d-worker">' + steps.map(esc).join("<br>") + '</div>' : '') +
+    linked;
+
+  const drawer = $("#drawer");
+  drawer.classList.add("open");
+  $("#scrim").classList.add("open");
+  setBackgroundInert(true);
+  drawer.focus();
+}
+
+init();
+</script>
+</body>
+</html>
