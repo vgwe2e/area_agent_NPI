@@ -194,6 +194,66 @@
   .timeline-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
     padding: 6px 22px 8px; }
 
+  /* ---------- People-impact band (v2B): today vs. with agents, per step ---------- */
+  .hc-toggle {
+    align-self: flex-start; display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--hair); background: #fff; cursor: pointer; font: inherit;
+    font-size: 12px; font-weight: 700; color: var(--ink-soft);
+    padding: 6px 12px; border-radius: 999px; margin: 2px 0 8px;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .hc-toggle:hover { border-color: var(--accent-line); color: var(--accent); }
+  .hc-toggle:focus-visible { outline: 3px solid var(--accent-line); outline-offset: 2px; }
+  .hc-toggle .chev { transition: transform .18s ease; color: var(--accent); }
+  .hc-toggle[aria-expanded="true"] .chev { transform: rotate(90deg); }
+
+  /* hc-wrap = container; hc-bandclip = viewport that clips horizontal overflow;
+     the band inside is translated in lockstep with the timeline so cells stay
+     column-aligned with the steps. */
+  .hc-wrap { flex: 0 0 auto; margin-bottom: 8px; }
+  .hc-summary {
+    font-size: 12px; color: var(--ink-soft); margin: 0 0 8px; line-height: 1.4;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .hc-summary .net { font-weight: 800; color: var(--ink); }
+  .hc-summary .arrow { color: var(--accent); font-weight: 800; }
+  .hc-summary .net.after { color: var(--accent); }
+  .hc-summary .save { font-size: 11px; font-weight: 800; color: var(--post-green); background: var(--planned-soft); border-radius: 5px; padding: 2px 7px; }
+  .hc-summary .note { font-size: 11px; color: var(--ink-faint); }
+  .hc-bandclip { overflow: hidden; }
+  .hc-band { display: flex; gap: 0; padding: 0; align-items: flex-start; will-change: transform; }
+  .hc-cell { flex: 0 0 var(--col-w); padding: 0 8px; display: flex; flex-direction: column; gap: 6px; }
+  .hc-row { border-radius: 8px; padding: 8px 10px; border: 1px solid var(--hair); }
+  .hc-row.before { background: #f4f4f8; }
+  .hc-row.after  { background: var(--accent-soft); border-color: var(--accent-line); }
+  .hc-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 5px; }
+  .hc-lbl  { font-size: 8.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .hc-row.after .hc-lbl { color: var(--accent); }
+  .hc-count { font-size: 16px; font-weight: 800; line-height: 1; color: var(--ink); }
+  .hc-row.after .hc-count { color: var(--accent); }
+  .hc-unit { font-size: 9.5px; color: var(--ink-faint); }
+  .hc-people { display: flex; flex-wrap: wrap; gap: 2px; }
+  .hc-people svg { width: 12px; height: 12px; display: block; }
+  .hc-row.before .hc-people svg path { fill: var(--ink-faint); }
+  .hc-row.after  .hc-people svg path { fill: var(--accent); }
+  .hc-delta {
+    margin-left: auto; font-size: 9.5px; font-weight: 800; color: var(--post-green);
+    background: var(--planned-soft); border-radius: 5px; padding: 2px 6px;
+  }
+  /* clickable rows reveal the prescribed roles inline */
+  .hc-row { cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }
+  .hc-row:hover { border-color: var(--accent-line); box-shadow: var(--shadow); }
+  .hc-row:focus-visible { outline: 3px solid var(--accent-line); outline-offset: 2px; }
+  .hc-row .hc-caret { font-size: 9px; color: var(--ink-faint); transition: transform .18s ease; }
+  .hc-row[aria-expanded="true"] .hc-caret { transform: rotate(90deg); }
+  .hc-roles { display: none; flex-wrap: wrap; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--hair); }
+  .hc-row[aria-expanded="true"] .hc-roles { display: flex; }
+  .hc-rolechip {
+    font-size: 10px; font-weight: 600; color: var(--ink); background: #fff;
+    border: 1px solid var(--hair); border-radius: 999px; padding: 3px 8px;
+  }
+  .hc-row.after .hc-rolechip { border-color: var(--accent-line); color: var(--accent); }
+
   /* group band row above the stage bars.
      No own horizontal padding — it lives inside .timeline-wrap (padding: 0 28px),
      so the group bars stay column-aligned with the timeline below. */
@@ -215,7 +275,7 @@
 
   .timeline {
     flex: 1 1 auto; min-height: 0;
-    display: flex; gap: 0; overflow-x: auto; overflow-y: auto; padding-bottom: 6px;
+    display: flex; align-items: flex-start; gap: 0; overflow-x: auto; overflow-y: auto; padding-bottom: 6px;
     cursor: grab; scroll-behavior: smooth;
   }
   .timeline.grabbing { cursor: grabbing; scroll-behavior: auto; }
@@ -624,6 +684,13 @@
     <p class="scrollhint">Drag or scroll to pan the timeline →</p>
     <div class="timeline-wrap">
       <h2 class="sr-only">NPI decision-flow timeline</h2>
+      <button class="hc-toggle" id="hcToggle" type="button" aria-expanded="false" aria-controls="headcountWrap">
+        <span class="chev" aria-hidden="true">▸</span> People per step · today → with agents
+      </button>
+      <div class="hc-wrap" id="headcountWrap" hidden>
+        <div class="hc-summary" id="hcSummary"></div>
+        <div class="hc-bandclip"><div class="hc-band" id="headcountBand"></div></div>
+      </div>
       <div class="groupband" id="groupband"></div>
       <div class="timeline" id="timeline"></div>
     </div>
@@ -1070,6 +1137,52 @@ const DATA_ENVIRONMENTS = {
   aera:   { label: "Aera",            color: "#0F6E56", meaning: "The Aera decision-intelligence platform as the agent runtime & data environment." },
 };
 
+/* Prescribed CPG NPI supply-chain roles (PRESCRIPTIVE — we don't have client
+   actuals; these are the typical roles Accenture would expect at each step).
+   Each role gets an id + label; edit freely. */
+const ROLES = {
+  "brand-mgr":          { label: "Brand Manager" },
+  "category-mgr":       { label: "Category Manager" },
+  "demand-planner":     { label: "Demand Planner" },
+  "supply-planner":     { label: "Supply Planner" },
+  "inventory-analyst":  { label: "Inventory Analyst" },
+  "deployment-planner": { label: "Deployment Planner" },
+  "sop-lead":           { label: "S&OP Lead" },
+  "launch-mgr":         { label: "NPI / Launch Manager" },
+  "revenue-growth":     { label: "Revenue Growth Manager" },
+  "finance-analyst":    { label: "Finance Analyst" },
+  "data-analyst":       { label: "Data / BI Analyst" },
+  "customer-sc":        { label: "Customer Supply Chain Analyst" },
+  "production-planner": { label: "Production Planner" },
+  "procurement":        { label: "Procurement / Sourcing Specialist" },
+  "comanufacturing":    { label: "Co-Manufacturing Coordinator" },
+  "capacity-planner":   { label: "Capacity Planner" },
+  "plant-scheduler":    { label: "Plant Scheduler" },
+  "logistics":          { label: "Logistics Coordinator" },
+  "transportation":     { label: "Transportation Planner" },
+  "order-mgmt":         { label: "Order Management Specialist" },
+  "sales-account":      { label: "Sales Account Manager" },
+};
+
+/* People-impact per step — PRESCRIPTIVE role lists (no client actuals).
+   today = roles doing the task today; withAgents = roles still needed once
+   agents do the heavy lifting (typically the human-in-the-loop approvers).
+   Per-step counts derive from list length; the net (journey) figure de-dupes
+   roles that span multiple steps. Keyed by phase id. */
+const HEADCOUNT = {
+  unit: "roles",
+  byPhase: {
+    "portfolio-launch-planning":        { today: ["brand-mgr","category-mgr","demand-planner","launch-mgr","revenue-growth","finance-analyst","data-analyst","sop-lead"], withAgents: ["brand-mgr","sop-lead"] },
+    "demand-forecasting":               { today: ["demand-planner","data-analyst","category-mgr","customer-sc","finance-analyst","brand-mgr","revenue-growth","sop-lead","supply-planner","launch-mgr"], withAgents: ["demand-planner","sop-lead"] },
+    "inventory-planning":               { today: ["supply-planner","inventory-analyst","demand-planner","sop-lead","finance-analyst","production-planner"], withAgents: ["supply-planner"] },
+    "downstream-planning-systems":      { today: ["production-planner","supply-planner","inventory-analyst","procurement","sop-lead","logistics","comanufacturing","capacity-planner","demand-planner","data-analyst","finance-analyst","plant-scheduler"], withAgents: ["production-planner","supply-planner","sop-lead"] },
+    "inventory-positioning-deployment": { today: ["deployment-planner","inventory-analyst","supply-planner","logistics","customer-sc","demand-planner","sop-lead","data-analyst","finance-analyst"], withAgents: ["deployment-planner","supply-planner"] },
+    "distribution-fulfillment":         { today: ["logistics","customer-sc","deployment-planner","inventory-analyst","transportation","order-mgmt","sop-lead"], withAgents: ["logistics","customer-sc"] },
+    "launch-execution-adjustments":     { today: ["demand-planner","supply-planner","brand-mgr","category-mgr","customer-sc","inventory-analyst","deployment-planner","logistics","data-analyst","revenue-growth","finance-analyst","sop-lead","launch-mgr","sales-account"], withAgents: ["demand-planner","sop-lead","brand-mgr"] },
+    "post-launch-optimization":         { today: ["demand-planner","data-analyst","brand-mgr","category-mgr","finance-analyst"], withAgents: ["demand-planner"] },
+  },
+};
+
 /* =================================================================
    ENGINE — renders entirely from the data above. Do not hardcode
    content here; add fields to the data, then read them here.
@@ -1155,12 +1268,14 @@ function init() {
   buildCapFilters();
   buildRuler();
   buildGroupBand();
+  buildHeadcount();
   buildTimeline();
   buildLegend();
   buildFoundation();
   wireToolbar();
   wireDrawer();
   wirePan();
+  wireHeadcount();
   applyFilters();
 }
 
@@ -1240,6 +1355,74 @@ function buildGroupBand() {
     seg.style.flex = "0 0 calc(var(--col-w) * " + run.count + ")";
     seg.innerHTML = '<div class="gbar"><span class="gsub">' + esc(g.sub || g.id) + '</span>' + esc(g.label || "") + '</div>';
     band.appendChild(seg);
+  });
+}
+
+/* ---- People-impact band (v2B) ---- */
+const PERSON_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4zm0 2c-3.3 0-8 1.7-8 5v1h16v-1c0-3.3-4.7-5-8-5z"/></svg>';
+const HC_MAX_ICONS = 16; // cap icons drawn per box (count is always shown as a number)
+function peopleIcons(n) {
+  let s = ""; const cap = Math.min(Math.max(0, n), HC_MAX_ICONS);
+  for (let i = 0; i < cap; i++) s += PERSON_SVG;
+  return s;
+}
+function buildHcRow(kind, label, roleIds, saved) {
+  const row = el("div", "hc-row " + kind);
+  const chips = (roleIds || []).map(id =>
+    '<span class="hc-rolechip">' + esc((ROLES[id] || {}).label || id) + '</span>').join("");
+  row.innerHTML =
+    '<div class="hc-head">' +
+      '<span class="hc-count">' + roleIds.length + '</span>' +
+      '<span class="hc-lbl">' + esc(label) + '</span>' +
+      '<span class="hc-caret" aria-hidden="true">▸</span>' +
+      (saved && saved > 0 ? '<span class="hc-delta">−' + saved + '</span>' : '') +
+    '</div>' +
+    '<div class="hc-people">' + peopleIcons(roleIds.length) + '</div>' +
+    '<div class="hc-roles">' + chips + '</div>';
+  row.setAttribute("aria-expanded", "false");
+  row.setAttribute("aria-label", label + ": " + roleIds.length + " roles — toggle role list");
+  makeKeyRow(row, () => row.setAttribute("aria-expanded",
+    row.getAttribute("aria-expanded") === "true" ? "false" : "true"));
+  return row;
+}
+
+function buildHeadcount() {
+  const band = $("#headcountBand");
+  if (!band || typeof HEADCOUNT === "undefined") return;
+  band.innerHTML = "";
+  const unit = HEADCOUNT.unit || "roles";
+  const todaySet = new Set(), afterSet = new Set();
+
+  JOURNEY.phases.forEach(p => {
+    const hc = (HEADCOUNT.byPhase || {})[p.id] || { today: [], withAgents: [] };
+    const today = hc.today || [], after = hc.withAgents || [];
+    today.forEach(r => todaySet.add(r));
+    after.forEach(r => afterSet.add(r));
+    const cell = el("div", "hc-cell");
+    cell.appendChild(buildHcRow("before", "Today", today, Math.max(0, today.length - after.length)));
+    cell.appendChild(buildHcRow("after", "With agents", after, 0));
+    band.appendChild(cell);
+  });
+
+  const summary = $("#hcSummary");
+  if (summary) {
+    const nToday = todaySet.size, nAfter = afterSet.size, net = Math.max(0, nToday - nAfter);
+    summary.innerHTML =
+      'Net distinct ' + esc(unit) + ' across the journey:' +
+      '<span class="net">' + nToday + '</span><span class="arrow">→</span>' +
+      '<span class="net after">' + nAfter + '</span>' +
+      (net > 0 ? '<span class="save">−' + net + ' ' + esc(unit) + '</span>' : '') +
+      '<span class="note">de-duplicated — a role spanning steps is counted once · click a row to see the roles</span>';
+  }
+}
+function wireHeadcount() {
+  const btn = $("#hcToggle"), wrap = $("#headcountWrap"), tl = $("#timeline"), hcBand = $("#headcountBand");
+  if (!btn || !wrap) return;
+  btn.addEventListener("click", () => {
+    const open = wrap.hasAttribute("hidden");
+    if (open) { wrap.removeAttribute("hidden"); } else { wrap.setAttribute("hidden", ""); }
+    btn.setAttribute("aria-expanded", String(open));
+    if (open && tl && hcBand) hcBand.style.transform = "translateX(" + (-tl.scrollLeft) + "px)";
   });
 }
 
@@ -1682,13 +1865,16 @@ function wirePan() {
     if (e.shiftKey || (Math.abs(e.deltaX) > Math.abs(e.deltaY))) return;
     if (e.deltaY !== 0) { tl.scrollLeft += e.deltaY; e.preventDefault(); }
   }, { passive: false });
-  // keep the group band scrolling in lockstep with the timeline (rAF-throttled)
+  // keep the group band + people-impact band scrolling in lockstep with the timeline
   const band = $("#groupband");
+  const hcBand = $("#headcountBand");
   let bandRaf = 0;
   tl.addEventListener("scroll", () => {
     if (bandRaf) return;
     bandRaf = requestAnimationFrame(() => {
-      band.style.transform = "translateX(" + (-tl.scrollLeft) + "px)";
+      const x = "translateX(" + (-tl.scrollLeft) + "px)";
+      band.style.transform = x;
+      if (hcBand) hcBand.style.transform = x;
       bandRaf = 0;
     });
   }, { passive: true });
