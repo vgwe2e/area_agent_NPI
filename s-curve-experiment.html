@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S-Curve / Z-Curve Process Flow — Experiment</title>
+<style>
+  /* ============================================================
+     THEME TOKENS
+     ============================================================ */
+  :root {
+    --accent:      #A100FF;
+    --accent-soft: #f3e6ff;
+    --ink:         #1c1c28;
+    --ink-soft:    #5b5b6b;
+    --ink-faint:   #9494a3;
+    --bg:          #FAFAFA;
+    --panel:       #ffffff;
+    --hair:        #e6e6ee;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --radius: 10px;
+
+    /* Step-type accent colors */
+    --col-data:       #A100FF;
+    --col-transform:  #7B00CC;
+    --col-human:      #00A3E0;
+    --col-boundary:   #00875A;
+    --col-decision:   #FF6900;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: var(--font);
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Sticky top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 32px;
+    background: #fff;
+    border-bottom: 1px solid var(--hair);
+    box-shadow: 0 1px 6px rgba(20,20,40,.06);
+  }
+  .topbar-brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .topbar-brand .chev {
+    color: var(--accent); font-size: 22px; font-weight: 900; line-height: 1;
+  }
+  .topbar-brand .name {
+    font-weight: 800; font-size: 17px; letter-spacing: -.02em;
+  }
+  .topbar-title {
+    font-size: 13.5px; font-weight: 600; color: var(--ink-soft); letter-spacing: -.01em;
+  }
+  .topbar-meta {
+    font-size: 12px; color: var(--ink-faint);
+  }
+
+  /* ---------- Page layout ---------- */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  section.variant {
+    margin-bottom: 72px;
+  }
+  section.variant h2 {
+    font-size: 18px; font-weight: 700; letter-spacing: -.02em;
+    margin-bottom: 4px;
+  }
+  section.variant .variant-sub {
+    font-size: 12.5px; color: var(--ink-faint); margin-bottom: 24px;
+  }
+
+  .svg-wrap {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(20,20,40,.04), 0 4px 16px rgba(20,20,40,.05);
+  }
+  .svg-wrap svg {
+    display: block;
+    width: 100%;
+  }
+
+  /* ---------- Tooltip ---------- */
+  .flow-tooltip {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999;
+    background: #fff;
+    border: 1px solid var(--hair);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(20,20,40,.14);
+    padding: 12px 15px;
+    min-width: 180px;
+    max-width: 240px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+  .flow-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .flow-tooltip .tt-label {
+    font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 5px;
+  }
+  .flow-tooltip .tt-badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 99px;
+    color: #fff;
+    margin-bottom: 7px;
+  }
+  .flow-tooltip .tt-note {
+    font-size: 11.5px; color: var(--ink-soft); line-height: 1.5;
+  }
+
+  /* ---------- Legend strip ---------- */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 20px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--ink-soft);
+  }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Sticky top bar ── -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <span class="chev">›</span>
+    <span class="name">Accenture</span>
+  </div>
+  <span class="topbar-title">S-Curve / Z-Curve Process Flow — Visualization Experiment</span>
+  <span class="topbar-meta">2026-06-20</span>
+</header>
+
+<!-- ── Tooltip (shared, moved by JS) ── -->
+<div class="flow-tooltip" id="tooltip" role="tooltip" aria-hidden="true">
+  <div class="tt-label" id="tt-label"></div>
+  <span class="tt-badge" id="tt-badge"></span>
+  <div class="tt-note" id="tt-note"></div>
+</div>
+
+<main>
+
+  <!-- Variant A -->
+  <section class="variant" id="section-a">
+    <h2>Variant A — Classic Snake</h2>
+    <div class="variant-sub">Nodes in alternating horizontal rows. Path curves between row-ends. Layout auto-adjusts for any number of steps.</div>
+    <div class="legend" id="legend-a"></div>
+    <div class="svg-wrap" id="wrap-a"><svg id="svg-a" aria-label="Classic Snake flow diagram"></svg></div>
+  </section>
+
+  <!-- Variant B -->
+  <section class="variant" id="section-b">
+    <h2>Variant B — Diagonal S-Curve</h2>
+    <div class="variant-sub">Nodes distributed along a true S-shaped Bézier. Even parametric spacing gives a fluid consulting-deck aesthetic.</div>
+    <div class="legend" id="legend-b"></div>
+    <div class="svg-wrap" id="wrap-b"><svg id="svg-b" aria-label="Diagonal S-curve flow diagram"></svg></div>
+  </section>
+
+  <!-- Variant C -->
+  <section class="variant" id="section-c">
+    <h2>Variant C — Compact Z</h2>
+    <div class="variant-sub">Three vertical columns. Nodes stack top-to-bottom inside each column, connected by a Z-shaped spine between column endpoints.</div>
+    <div class="legend" id="legend-c"></div>
+    <div class="svg-wrap" id="wrap-c"><svg id="svg-c" aria-label="Compact Z-curve flow diagram"></svg></div>
+  </section>
+
+</main>
+
+<script>
+'use strict';
+
+// ─── DATA ───────────────────────────────────────────────────────────────────
+// Edit only this region. Add / remove steps freely — the engine re-lays itself
+// out automatically. No engine edits required for content changes.
+
+const FLOW = {
+  title: "Agent Execution Flow",
+  steps: [
+    { id: 1, label: "Ingest Raw Data",      type: "data",      icon: "⬇", note: "Pulls from SAP & PIM feeds" },
+    { id: 2, label: "Validate & Cleanse",   type: "transform", icon: "⚙", note: "Schema checks, dedup" },
+    { id: 3, label: "Enrich & Score",       type: "transform", icon: "⚙", note: "AI scoring model applied" },
+    { id: 4, label: "Human Review Gate",    type: "human",     icon: "👤", note: "Planner approves or rejects" },
+    { id: 5, label: "Broadcast to Systems", type: "boundary",  icon: "↗", note: "Pushes to downstream APIs" },
+    { id: 6, label: "Confirm & Archive",    type: "data",      icon: "✓", note: "Audit log written" }
+  ]
+};
+
+// ─── ENGINE ─────────────────────────────────────────────────────────────────
+// Everything below reads from FLOW. Do not edit this section to add content.
+
+/* ── Shared UTILS ─────────────────────────────────────────────── */
+const UTILS = {
+  TYPE_COLORS: {
+    data:      "#A100FF",
+    transform: "#7B00CC",
+    human:     "#00A3E0",
+    boundary:  "#00875A",
+    decision:  "#FF6900"
+  },
+
+  typeColor(type) {
+    return this.TYPE_COLORS[type] || "#888888";
+  },
+
+  // Create a namespaced SVG element with given attributes
+  svgEl(tag, attrs) {
+    const NS = "http://www.w3.org/2000/svg";
+    const el = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      el.setAttribute(k, String(v));
+    }
+    return el;
+  },
+
+  // Create a plain HTML element with given attributes
+  htmlEl(tag, attrs, text) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      el.setAttribute(k, String(v));
+    }
+    if (text !== undefined) el.textContent = text;
+    return el;
+  },
+
+  // Clamp a value between min and max
+  clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); },
+
+  // Linear interpolation
+  lerp(a, b, t) { return a + (b - a) * t; },
+
+  // Cubic Bézier point at parameter t, given 4 control points
+  cubicBezier(p0, p1, p2, p3, t) {
+    const mt = 1 - t;
+    return {
+      x: mt*mt*mt*p0.x + 3*mt*mt*t*p1.x + 3*mt*t*t*p2.x + t*t*t*p3.x,
+      y: mt*mt*mt*p0.y + 3*mt*mt*t*p1.y + 3*mt*t*t*p2.y + t*t*t*p3.y
+    };
+  },
+
+  // Build the shared legend for a given container element
+  buildLegend(container) {
+    container.innerHTML = "";
+    const seen = new Set();
+    for (const step of FLOW.steps) {
+      if (seen.has(step.type)) continue;
+      seen.add(step.type);
+      const item = this.htmlEl("div", { class: "legend-item" });
+      const dot  = this.htmlEl("div", { class: "legend-dot",
+        style: `background:${this.typeColor(step.type)}` });
+      const lbl  = this.htmlEl("span", {}, step.type.charAt(0).toUpperCase() + step.type.slice(1));
+      item.appendChild(dot);
+      item.appendChild(lbl);
+      container.appendChild(item);
+    }
+  }
+};
+
+/* ── Tooltip logic ────────────────────────────────────────────── */
+const TOOLTIP = (() => {
+  const el    = document.getElementById("tooltip");
+  const label = document.getElementById("tt-label");
+  const badge = document.getElementById("tt-badge");
+  const note  = document.getElementById("tt-note");
+
+  function show(step, x, y) {
+    label.textContent = step.label;
+    badge.textContent = step.type;
+    badge.style.background = UTILS.typeColor(step.type);
+    note.textContent  = step.note || "";
+    el.classList.add("visible");
+    el.setAttribute("aria-hidden", "false");
+    _pos(x, y);
+  }
+
+  function hide() {
+    el.classList.remove("visible");
+    el.setAttribute("aria-hidden", "true");
+  }
+
+  function _pos(x, y) {
+    const W = el.offsetWidth  || 200;
+    const H = el.offsetHeight || 80;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const ox = 14, oy = 14;
+    let lx = x + ox;
+    let ly = y + oy;
+    if (lx + W > vw - 8) lx = x - W - ox;
+    if (ly + H > vh - 8) ly = y - H - oy;
+    el.style.left = lx + "px";
+    el.style.top  = ly + "px";
+  }
+
+  document.addEventListener("mousemove", e => {
+    if (el.classList.contains("visible")) _pos(e.clientX, e.clientY);
+  });
+
+  return { show, hide };
+})();
+
+/* ── Node circle renderer (shared by all variants) ────────────── */
+function renderNode(svgEl, step, cx, cy, radius) {
+  const color = UTILS.typeColor(step.type);
+  const g = UTILS.svgEl("g", {
+    class: "flow-node",
+    style: "cursor:pointer",
+    tabindex: "0",
+    role: "img",
+    "aria-label": `Step ${step.id}: ${step.label}`
+  });
+
+  // Shadow circle
+  const shadow = UTILS.svgEl("circle", {
+    cx, cy,
+    r: radius + 3,
+    fill: "rgba(20,20,40,0.10)",
+    filter: "blur(3px)"
+  });
+
+  // Main circle
+  const circle = UTILS.svgEl("circle", {
+    cx, cy, r: radius,
+    fill: color,
+    stroke: "#fff",
+    "stroke-width": "2.5"
+  });
+
+  // Icon text
+  const iconT = UTILS.svgEl("text", {
+    x: cx, y: cy - 5,
+    "text-anchor": "middle",
+    "dominant-baseline": "middle",
+    "font-size": "13",
+    fill: "#fff",
+    style: "pointer-events:none; user-select:none;"
+  });
+  iconT.textContent = step.icon;
+
+  // Number badge
+  const numT = UTILS.svgEl("text", {
+    x: cx, y: cy + 8,
+    "text-anchor": "middle",
+    "dominant-baseline": "middle",
+    "font-size": "10",
+    "font-weight": "700",
+    fill: "rgba(255,255,255,0.85)",
+    style: "pointer-events:none; user-select:none;"
+  });
+  numT.textContent = step.id;
+
+  g.appendChild(shadow);
+  g.appendChild(circle);
+  g.appendChild(iconT);
+  g.appendChild(numT);
+
+  // Tooltip events
+  function onEnter(e) { TOOLTIP.show(step, e.clientX, e.clientY); }
+  function onLeave()  { TOOLTIP.hide(); }
+  g.addEventListener("mouseenter", onEnter);
+  g.addEventListener("mouseleave", onLeave);
+  g.addEventListener("focus",  e => { const r = g.getBoundingClientRect(); TOOLTIP.show(step, r.right, r.top); });
+  g.addEventListener("blur",   onLeave);
+
+  svgEl.appendChild(g);
+  return g;
+}
+
+/* ── Label renderer (shared) ──────────────────────────────────── */
+function renderLabel(svgEl, step, x, y, above) {
+  const g = UTILS.svgEl("g", { style: "pointer-events:none;" });
+
+  const labelT = UTILS.svgEl("text", {
+    x, y: above ? y - 4 : y + 4,
+    "text-anchor": "middle",
+    "dominant-baseline": above ? "auto" : "hanging",
+    "font-size": "12",
+    "font-weight": "600",
+    fill: "#1c1c28"
+  });
+  labelT.textContent = step.label;
+
+  g.appendChild(labelT);
+  svgEl.appendChild(g);
+}
+
+/* ── Chevron arrow along a path segment ───────────────────────── */
+function renderChevron(svgEl, x, y, angle) {
+  const size = 5;
+  const g = UTILS.svgEl("g", {
+    transform: `translate(${x},${y}) rotate(${angle})`
+  });
+  const path = UTILS.svgEl("path", {
+    d: `M${-size},${-size} L0,0 L${-size},${size}`,
+    stroke: "#C0C0C0",
+    "stroke-width": "1.8",
+    fill: "none",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+  });
+  g.appendChild(path);
+  svgEl.appendChild(g);
+}
+
+/* =================================================================
+   VARIANT A — Classic Snake
+   ================================================================= */
+function renderSnake(svgRoot, steps) {
+  svgRoot.innerHTML = "";
+  if (!steps.length) return;
+
+  const containerW = svgRoot.parentElement.clientWidth || 900;
+  const PAD    = 48;
+  const NODE_R = 22;
+  const ROW_H  = 120;  // vertical distance between row centres
+  const LABEL_ABOVE_H = 28; // extra space above for label
+  const LABEL_BELOW_H = 28; // extra space below
+
+  // How many nodes per row
+  const N    = steps.length;
+  const cols = Math.ceil(Math.sqrt(N));
+  const rows = Math.ceil(N / cols);
+
+  const innerW = containerW - PAD * 2;
+  const colW   = innerW / cols;
+
+  // Total height: rows * ROW_H + padding + label space
+  const totalH = rows * ROW_H + PAD * 2 + LABEL_ABOVE_H + LABEL_BELOW_H;
+
+  svgRoot.setAttribute("viewBox", `0 0 ${containerW} ${totalH}`);
+  svgRoot.setAttribute("height", totalH);
+
+  // Background
+  const bg = UTILS.svgEl("rect", { x:0, y:0, width: containerW, height: totalH, fill: "#FAFAFA" });
+  svgRoot.appendChild(bg);
+
+  // Compute node positions
+  const positions = [];
+  for (let i = 0; i < N; i++) {
+    const row  = Math.floor(i / cols);
+    const col  = i % cols;
+    const rowReversed = (row % 2 === 1);
+    const colInRow = rowReversed ? (cols - 1 - col) : col;
+    const cx = PAD + colInRow * colW + colW / 2;
+    const cy = PAD + LABEL_ABOVE_H + row * ROW_H + NODE_R;
+    positions.push({ cx, cy, row, col: colInRow, rowReversed });
+  }
+
+  // Draw spine path between consecutive nodes
+  // Within a row: straight horizontal
+  // Between rows: S-shaped cubic Bézier
+  const pathParts = [];
+  for (let i = 0; i < N - 1; i++) {
+    const a = positions[i];
+    const b = positions[i + 1];
+    if (a.row === b.row) {
+      // Same row: straight line
+      pathParts.push({ type: "line", x1: a.cx, y1: a.cy, x2: b.cx, y2: b.cy });
+    } else {
+      // Row transition: cubic Bézier curving down
+      const cp1x = a.cx;
+      const cp1y = a.cy + ROW_H * 0.6;
+      const cp2x = b.cx;
+      const cp2y = b.cy - ROW_H * 0.6;
+      pathParts.push({ type: "curve",
+        x1: a.cx, y1: a.cy,
+        cp1x, cp1y, cp2x, cp2y,
+        x2: b.cx, y2: b.cy
+      });
+    }
+  }
+
+  // Render spine
+  let d = "";
+  for (const seg of pathParts) {
+    if (seg.type === "line") {
+      d += `M${seg.x1},${seg.y1} L${seg.x2},${seg.y2} `;
+    } else {
+      d += `M${seg.x1},${seg.y1} C${seg.cp1x},${seg.cp1y} ${seg.cp2x},${seg.cp2y} ${seg.x2},${seg.y2} `;
+    }
+  }
+  if (d) {
+    const spine = UTILS.svgEl("path", {
+      d,
+      stroke: "#D0D0D0",
+      "stroke-width": "2",
+      fill: "none",
+      "stroke-linecap": "round"
+    });
+    svgRoot.appendChild(spine);
+  }
+
+  // Render chevrons midway along each segment
+  for (const seg of pathParts) {
+    if (seg.type === "line") {
+      const mx = (seg.x1 + seg.x2) / 2;
+      const my = (seg.y1 + seg.y2) / 2;
+      const angle = Math.atan2(seg.y2 - seg.y1, seg.x2 - seg.x1) * 180 / Math.PI;
+      renderChevron(svgRoot, mx, my, angle);
+    } else {
+      // Midpoint on Bézier at t=0.5
+      const p0 = { x: seg.x1,   y: seg.y1   };
+      const p1 = { x: seg.cp1x, y: seg.cp1y };
+      const p2 = { x: seg.cp2x, y: seg.cp2y };
+      const p3 = { x: seg.x2,   y: seg.y2   };
+      const mid  = UTILS.cubicBezier(p0, p1, p2, p3, 0.5);
+      const mid2 = UTILS.cubicBezier(p0, p1, p2, p3, 0.52);
+      const angle = Math.atan2(mid2.y - mid.y, mid2.x - mid.x) * 180 / Math.PI;
+      renderChevron(svgRoot, mid.x, mid.y, angle);
+    }
+  }
+
+  // Render labels + nodes
+  for (let i = 0; i < N; i++) {
+    const step = steps[i];
+    const { cx, cy } = positions[i];
+    // Labels alternate above/below by row parity for readability
+    const above = (Math.floor(i / cols) % 2 === 0);
+    renderLabel(svgRoot, step, cx, cy + (above ? -NODE_R : NODE_R), above);
+    renderNode(svgRoot, step, cx, cy, NODE_R);
+  }
+}
+
+/* =================================================================
+   VARIANT B — Diagonal S-Curve
+   ================================================================= */
+function renderSCurve(svgRoot, steps) {
+  svgRoot.innerHTML = "";
+  if (!steps.length) return;
+
+  const containerW = svgRoot.parentElement.clientWidth || 900;
+  const PAD = 60;
+  const NODE_R = 22;
+  const W = containerW;
+  const H = Math.max(320, Math.round(containerW * 0.42));
+
+  svgRoot.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svgRoot.setAttribute("height", H);
+
+  const bg = UTILS.svgEl("rect", { x:0, y:0, width: W, height: H, fill: "#FAFAFA" });
+  svgRoot.appendChild(bg);
+
+  // S-curve: two cubic Bézier segments forming an S
+  // Top-left to bottom-right, with inflection in the centre
+  const p0 = { x: PAD,     y: PAD };
+  const p3 = { x: W - PAD, y: H - PAD };
+  const mid = { x: W / 2,  y: H / 2 };
+
+  // First half: p0 → mid (curves right-then-down)
+  const h1p1 = { x: p0.x + (mid.x - p0.x) * 0.8, y: p0.y };
+  const h1p2 = { x: mid.x, y: p0.y + (mid.y - p0.y) * 0.3 };
+
+  // Second half: mid → p3 (curves down-then-right)
+  const h2p1 = { x: mid.x, y: mid.y + (p3.y - mid.y) * 0.7 };
+  const h2p2 = { x: p3.x - (p3.x - mid.x) * 0.8, y: p3.y };
+
+  // Render spine
+  const spineD = `M${p0.x},${p0.y} C${h1p1.x},${h1p1.y} ${h1p2.x},${h1p2.y} ${mid.x},${mid.y} C${h2p1.x},${h2p1.y} ${h2p2.x},${h2p2.y} ${p3.x},${p3.y}`;
+  const spine = UTILS.svgEl("path", {
+    d: spineD,
+    stroke: "#D0D0D0",
+    "stroke-width": "2",
+    fill: "none",
+    "stroke-linecap": "round"
+  });
+  svgRoot.appendChild(spine);
+
+  // Evenly distribute N nodes along the compound curve by parameter t ∈ [0,1]
+  // Each half occupies [0, 0.5] and [0.5, 1]
+  function evalSCurve(t) {
+    if (t <= 0.5) {
+      const tt = t * 2;
+      return UTILS.cubicBezier(p0, h1p1, h1p2, mid, tt);
+    } else {
+      const tt = (t - 0.5) * 2;
+      return UTILS.cubicBezier(mid, h2p1, h2p2, p3, tt);
+    }
+  }
+
+  function evalSCurveTangent(t) {
+    const dt = 0.005;
+    const t2 = Math.min(1, t + dt);
+    const a = evalSCurve(t);
+    const b = evalSCurve(t2);
+    return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+  }
+
+  const N = steps.length;
+  const tValues = N === 1
+    ? [0.5]
+    : steps.map((_, i) => i / (N - 1));
+
+  const positions = tValues.map(t => evalSCurve(t));
+
+  // Chevrons between nodes
+  for (let i = 0; i < N - 1; i++) {
+    const tMid = (tValues[i] + tValues[i + 1]) / 2;
+    const pt = evalSCurve(tMid);
+    const angle = evalSCurveTangent(tMid);
+    renderChevron(svgRoot, pt.x, pt.y, angle);
+  }
+
+  // Labels and nodes
+  for (let i = 0; i < N; i++) {
+    const step = steps[i];
+    const { x: cx, y: cy } = positions[i];
+    // Alternate label above/below based on curve quadrant
+    const above = i % 2 === 0;
+    renderLabel(svgRoot, step, cx, cy + (above ? -NODE_R : NODE_R), above);
+    renderNode(svgRoot, step, cx, cy, NODE_R);
+  }
+}
+
+/* =================================================================
+   VARIANT C — Compact Z
+   ================================================================= */
+function renderZCurve(svgRoot, steps) {
+  svgRoot.innerHTML = "";
+  if (!steps.length) return;
+
+  const containerW = svgRoot.parentElement.clientWidth || 900;
+  const PAD_X = 60;
+  const PAD_Y = 48;
+  const NODE_R = 22;
+  const N = steps.length;
+
+  // Three columns; distribute steps as evenly as possible
+  const NUM_COLS = 3;
+  const basePerCol = Math.floor(N / NUM_COLS);
+  const extras = N % NUM_COLS;
+  // Column counts: first `extras` columns get one extra
+  const colCounts = [];
+  for (let c = 0; c < NUM_COLS; c++) {
+    colCounts.push(basePerCol + (c < extras ? 1 : 0));
+  }
+
+  const maxInCol = Math.max(...colCounts);
+  const NODE_V_GAP = 72;  // vertical gap between nodes in same column
+  const colH = maxInCol * NODE_V_GAP;
+  const totalH = colH + PAD_Y * 2 + 40; // label space
+
+  const innerW = containerW - PAD_X * 2;
+  const colW   = innerW / NUM_COLS;
+
+  svgRoot.setAttribute("viewBox", `0 0 ${containerW} ${totalH}`);
+  svgRoot.setAttribute("height", totalH);
+
+  const bg = UTILS.svgEl("rect", { x:0, y:0, width: containerW, height: totalH, fill: "#FAFAFA" });
+  svgRoot.appendChild(bg);
+
+  // Compute positions per column
+  // Col 0: top→bottom, Col 1: bottom→top, Col 2: top→bottom (Z-pattern)
+  const positions = [];
+  let stepIdx = 0;
+  const colXCentres = [];
+
+  for (let c = 0; c < NUM_COLS; c++) {
+    const cx = PAD_X + c * colW + colW / 2;
+    colXCentres.push(cx);
+    const cnt = colCounts[c];
+    const goingDown = (c % 2 === 0);
+    for (let r = 0; r < cnt; r++) {
+      const rowIndex = goingDown ? r : (cnt - 1 - r);
+      // Vertically centre the column's nodes within the full column height
+      const vStart = PAD_Y + 20 + (maxInCol - cnt) * NODE_V_GAP / 2;
+      const cy = vStart + rowIndex * NODE_V_GAP;
+      positions.push({ cx, cy, col: c });
+      stepIdx++;
+    }
+  }
+
+  // Draw vertical spines within each column
+  let base = 0;
+  for (let c = 0; c < NUM_COLS; c++) {
+    const cnt = colCounts[c];
+    if (cnt > 1) {
+      for (let r = 0; r < cnt - 1; r++) {
+        const a = positions[base + r];
+        const b = positions[base + r + 1];
+        const line = UTILS.svgEl("line", {
+          x1: a.cx, y1: a.cy,
+          x2: b.cx, y2: b.cy,
+          stroke: "#D0D0D0",
+          "stroke-width": "2",
+          "stroke-linecap": "round"
+        });
+        svgRoot.appendChild(line);
+        // Chevron midway
+        const mx = (a.cx + b.cx) / 2;
+        const my = (a.cy + b.cy) / 2;
+        const angle = Math.atan2(b.cy - a.cy, b.cx - a.cx) * 180 / Math.PI;
+        renderChevron(svgRoot, mx, my, angle);
+      }
+    }
+    base += cnt;
+  }
+
+  // Draw Z-connectors between column endpoints
+  // Col 0 last node → Col 1 first node (Z diagonal or horizontal)
+  // Col 1 last node → Col 2 first node
+  function colEndpoints(colIdx) {
+    let start = 0;
+    for (let c = 0; c < colIdx; c++) start += colCounts[c];
+    const cnt = colCounts[colIdx];
+    const goingDown = (colIdx % 2 === 0);
+    // "entry" is the first node fed in sequence, "exit" is the last
+    const entryPos = positions[start];
+    const exitPos  = positions[start + cnt - 1];
+    return { entry: entryPos, exit: exitPos };
+  }
+
+  for (let c = 0; c < NUM_COLS - 1; c++) {
+    const { exit: exitA } = colEndpoints(c);
+    const { entry: entryB } = colEndpoints(c + 1);
+
+    // Curved Z connector
+    const dx = entryB.cx - exitA.cx;
+    const dy = entryB.cy - exitA.cy;
+    const cp1x = exitA.cx  + dx * 0.4;
+    const cp1y = exitA.cy;
+    const cp2x = entryB.cx - dx * 0.4;
+    const cp2y = entryB.cy;
+
+    const zPath = UTILS.svgEl("path", {
+      d: `M${exitA.cx},${exitA.cy} C${cp1x},${cp1y} ${cp2x},${cp2y} ${entryB.cx},${entryB.cy}`,
+      stroke: "#B0B0B0",
+      "stroke-width": "2",
+      "stroke-dasharray": "5,3",
+      fill: "none",
+      "stroke-linecap": "round"
+    });
+    svgRoot.appendChild(zPath);
+
+    // Chevron at midpoint of connector
+    const midPt = UTILS.cubicBezier(
+      { x: exitA.cx,  y: exitA.cy  },
+      { x: cp1x,      y: cp1y      },
+      { x: cp2x,      y: cp2y      },
+      { x: entryB.cx, y: entryB.cy },
+      0.5
+    );
+    const midPt2 = UTILS.cubicBezier(
+      { x: exitA.cx,  y: exitA.cy  },
+      { x: cp1x,      y: cp1y      },
+      { x: cp2x,      y: cp2y      },
+      { x: entryB.cx, y: entryB.cy },
+      0.52
+    );
+    const angle = Math.atan2(midPt2.y - midPt.y, midPt2.x - midPt.x) * 180 / Math.PI;
+    renderChevron(svgRoot, midPt.x, midPt.y, angle);
+  }
+
+  // Column header labels (A, B, C)
+  const colNames = ["Column 1", "Column 2", "Column 3"];
+  for (let c = 0; c < NUM_COLS; c++) {
+    const lbl = UTILS.svgEl("text", {
+      x: colXCentres[c],
+      y: 18,
+      "text-anchor": "middle",
+      "font-size": "10",
+      "font-weight": "700",
+      "letter-spacing": "0.07em",
+      fill: "#B0B0B0",
+      style: "text-transform:uppercase; pointer-events:none;"
+    });
+    lbl.textContent = colNames[c].toUpperCase();
+    svgRoot.appendChild(lbl);
+  }
+
+  // Render labels and nodes
+  for (let i = 0; i < N; i++) {
+    const step = steps[i];
+    const { cx, cy, col } = positions[i];
+    // Labels: alternate left/right by column
+    const above = (col === 1); // middle column labels above, others below
+    renderLabel(svgRoot, step, cx, cy + (above ? -NODE_R : NODE_R), above);
+    renderNode(svgRoot, step, cx, cy, NODE_R);
+  }
+}
+
+/* ── Orchestrator: build legends + render all three variants ──── */
+function renderAll() {
+  const steps = FLOW.steps;
+
+  UTILS.buildLegend(document.getElementById("legend-a"));
+  UTILS.buildLegend(document.getElementById("legend-b"));
+  UTILS.buildLegend(document.getElementById("legend-c"));
+
+  renderSnake(  document.getElementById("svg-a"), steps);
+  renderSCurve( document.getElementById("svg-b"), steps);
+  renderZCurve( document.getElementById("svg-c"), steps);
+}
+
+/* ── Initial render + responsive resize ──────────────────────── */
+renderAll();
+
+let _rTimer;
+const _ro = new ResizeObserver(() => {
+  clearTimeout(_rTimer);
+  _rTimer = setTimeout(renderAll, 60);
+});
+_ro.observe(document.body);
+</script>
+</body>
+</html>
