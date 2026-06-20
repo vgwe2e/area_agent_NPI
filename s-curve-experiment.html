@@ -164,8 +164,8 @@
 
   <!-- Variant A -->
   <section class="variant" id="section-a">
-    <h2>Variant A — Classic Snake</h2>
-    <div class="variant-sub">Nodes in alternating horizontal rows. Path curves between row-ends. Layout auto-adjusts for any number of steps.</div>
+    <h2>Variant A — Racetrack</h2>
+    <div class="variant-sub">Nodes in alternating horizontal rows joined by true semicircular U-turn end-caps — the consultant "running track" process map style.</div>
     <div class="legend" id="legend-a"></div>
     <div class="svg-wrap" id="wrap-a"><svg id="svg-a" aria-label="Classic Snake flow diagram"></svg></div>
   </section>
@@ -424,119 +424,123 @@ function renderChevron(svgEl, x, y, angle) {
 }
 
 /* =================================================================
-   VARIANT A — Classic Snake
+   VARIANT A — Racetrack (U-turn end-caps)
+   Continuous path: horizontal rows joined by semicircular arcs,
+   like a running track. Nodes sit ON the spine.
    ================================================================= */
 function renderSnake(svgRoot, steps) {
   svgRoot.innerHTML = "";
   if (!steps.length) return;
 
+  const N          = steps.length;
   const containerW = svgRoot.parentElement.clientWidth || 900;
-  const PAD    = 48;
-  const NODE_R = 22;
-  const ROW_H  = 120;  // vertical distance between row centres
-  const LABEL_ABOVE_H = 28; // extra space above for label
-  const LABEL_BELOW_H = 28; // extra space below
 
-  // How many nodes per row
-  const N    = steps.length;
-  const cols = Math.ceil(Math.sqrt(N));
-  const rows = Math.ceil(N / cols);
+  // ── Layout constants ────────────────────────────────────
+  const COLS    = Math.max(2, Math.ceil(N / 3));  // ~3 rows for any N
+  const ROWS    = Math.ceil(N / COLS);
+  const ROW_H   = 120;          // px between row centres
+  const ARC_R   = ROW_H / 2;   // U-turn semicircle radius
+  const PAD_X   = ARC_R + 28;  // horizontal padding (arc + breathing room)
+  const PAD_TOP = 56;
+  const PAD_BOT = 56;
+  const NODE_R  = 22;
 
-  const innerW = containerW - PAD * 2;
-  const colW   = innerW / cols;
+  const leftEdge  = PAD_X;
+  const rightEdge = containerW - PAD_X;
+  const totalH    = PAD_TOP + (ROWS - 1) * ROW_H + PAD_BOT;
 
-  // Total height: rows * ROW_H + padding + label space
-  const totalH = rows * ROW_H + PAD * 2 + LABEL_ABOVE_H + LABEL_BELOW_H;
+  // Nodes are inset from the arc endpoints so labels don't overlap the curves
+  const NODE_INSET    = 44;
+  const nodeAreaLeft  = leftEdge  + NODE_INSET;
+  const nodeAreaRight = rightEdge - NODE_INSET;
+  const nodeSpan      = nodeAreaRight - nodeAreaLeft;
+
+  // Column x-positions (same for every row)
+  const colX = [];
+  for (let c = 0; c < COLS; c++) {
+    colX.push(COLS === 1
+      ? (nodeAreaLeft + nodeAreaRight) / 2
+      : nodeAreaLeft + c * nodeSpan / (COLS - 1));
+  }
+
+  // Row y-positions
+  const rowY = [];
+  for (let r = 0; r < ROWS; r++) rowY.push(PAD_TOP + r * ROW_H);
 
   svgRoot.setAttribute("viewBox", `0 0 ${containerW} ${totalH}`);
   svgRoot.setAttribute("height", totalH);
 
-  // Background
-  const bg = UTILS.svgEl("rect", { x:0, y:0, width: containerW, height: totalH, fill: "#FAFAFA" });
-  svgRoot.appendChild(bg);
+  svgRoot.appendChild(UTILS.svgEl("rect", {
+    x:0, y:0, width: containerW, height: totalH, fill: "#FAFAFA"
+  }));
 
-  // Compute node positions
+  // ── Build continuous racetrack path ────────────────────
+  // Row 0: L→R  (M leftEdge → L rightEdge)
+  // Arc at right: clockwise (sweep=1) — bulges right
+  // Row 1: R→L  (L leftEdge)
+  // Arc at left: counter-clockwise (sweep=0) — bulges left
+  // Row 2: L→R  ... and so on
+  let d = `M ${leftEdge},${rowY[0]}`;
+  for (let r = 0; r < ROWS; r++) {
+    const goRight = (r % 2 === 0);
+    d += ` L ${goRight ? rightEdge : leftEdge},${rowY[r]}`;
+    if (r < ROWS - 1) {
+      if (goRight) {
+        d += ` A ${ARC_R} ${ARC_R} 0 0 1 ${rightEdge},${rowY[r + 1]}`;
+      } else {
+        d += ` A ${ARC_R} ${ARC_R} 0 0 0 ${leftEdge},${rowY[r + 1]}`;
+      }
+    }
+  }
+
+  // Soft glow behind spine
+  svgRoot.appendChild(UTILS.svgEl("path", {
+    d,
+    stroke: "rgba(74,0,180,0.12)",
+    "stroke-width": "14",
+    fill: "none",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+  }));
+
+  // Main spine
+  svgRoot.appendChild(UTILS.svgEl("path", {
+    d,
+    stroke: "#4A00B4",
+    "stroke-width": "3.5",
+    fill: "none",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+  }));
+
+  // ── Node positions ──────────────────────────────────────
   const positions = [];
   for (let i = 0; i < N; i++) {
-    const row  = Math.floor(i / cols);
-    const col  = i % cols;
-    const rowReversed = (row % 2 === 1);
-    const colInRow = rowReversed ? (cols - 1 - col) : col;
-    const cx = PAD + colInRow * colW + colW / 2;
-    const cy = PAD + LABEL_ABOVE_H + row * ROW_H + NODE_R;
-    positions.push({ cx, cy, row, col: colInRow, rowReversed });
+    const row      = Math.floor(i / COLS);
+    const posInRow = i % COLS;
+    const goRight  = (row % 2 === 0);
+    const colIdx   = goRight ? posInRow : (COLS - 1 - posInRow);
+    positions.push({ cx: colX[colIdx], cy: rowY[row], row });
   }
 
-  // Draw spine path between consecutive nodes
-  // Within a row: straight horizontal
-  // Between rows: S-shaped cubic Bézier
-  const pathParts = [];
-  for (let i = 0; i < N - 1; i++) {
-    const a = positions[i];
-    const b = positions[i + 1];
-    if (a.row === b.row) {
-      // Same row: straight line
-      pathParts.push({ type: "line", x1: a.cx, y1: a.cy, x2: b.cx, y2: b.cy });
-    } else {
-      // Row transition: cubic Bézier curving down
-      const cp1x = a.cx;
-      const cp1y = a.cy + ROW_H * 0.6;
-      const cp2x = b.cx;
-      const cp2y = b.cy - ROW_H * 0.6;
-      pathParts.push({ type: "curve",
-        x1: a.cx, y1: a.cy,
-        cp1x, cp1y, cp2x, cp2y,
-        x2: b.cx, y2: b.cy
-      });
-    }
-  }
+  // Start cap (on the spine, before the first node)
+  svgRoot.appendChild(UTILS.svgEl("circle", {
+    cx: leftEdge, cy: rowY[0], r: 6,
+    fill: "#A100FF", stroke: "#fff", "stroke-width": "2"
+  }));
 
-  // Render spine
-  let d = "";
-  for (const seg of pathParts) {
-    if (seg.type === "line") {
-      d += `M${seg.x1},${seg.y1} L${seg.x2},${seg.y2} `;
-    } else {
-      d += `M${seg.x1},${seg.y1} C${seg.cp1x},${seg.cp1y} ${seg.cp2x},${seg.cp2y} ${seg.x2},${seg.y2} `;
-    }
-  }
-  if (d) {
-    const spine = UTILS.svgEl("path", {
-      d,
-      stroke: "#D0D0D0",
-      "stroke-width": "2",
-      fill: "none",
-      "stroke-linecap": "round"
-    });
-    svgRoot.appendChild(spine);
-  }
+  // End cap
+  const sLast = positions[N - 1];
+  svgRoot.appendChild(UTILS.svgEl("circle", {
+    cx: sLast.cx, cy: sLast.cy, r: 6,
+    fill: "#00875A", stroke: "#fff", "stroke-width": "2"
+  }));
 
-  // Render chevrons midway along each segment
-  for (const seg of pathParts) {
-    if (seg.type === "line") {
-      const mx = (seg.x1 + seg.x2) / 2;
-      const my = (seg.y1 + seg.y2) / 2;
-      const angle = Math.atan2(seg.y2 - seg.y1, seg.x2 - seg.x1) * 180 / Math.PI;
-      renderChevron(svgRoot, mx, my, angle);
-    } else {
-      // Midpoint on Bézier at t=0.5
-      const p0 = { x: seg.x1,   y: seg.y1   };
-      const p1 = { x: seg.cp1x, y: seg.cp1y };
-      const p2 = { x: seg.cp2x, y: seg.cp2y };
-      const p3 = { x: seg.x2,   y: seg.y2   };
-      const mid  = UTILS.cubicBezier(p0, p1, p2, p3, 0.5);
-      const mid2 = UTILS.cubicBezier(p0, p1, p2, p3, 0.52);
-      const angle = Math.atan2(mid2.y - mid.y, mid2.x - mid.x) * 180 / Math.PI;
-      renderChevron(svgRoot, mid.x, mid.y, angle);
-    }
-  }
-
-  // Render labels + nodes
+  // ── Labels and nodes ────────────────────────────────────
   for (let i = 0; i < N; i++) {
     const step = steps[i];
-    const { cx, cy } = positions[i];
-    // Labels alternate above/below by row parity for readability
-    const above = (Math.floor(i / cols) % 2 === 0);
+    const { cx, cy, row } = positions[i];
+    const above = (row % 2 === 0);
     renderLabel(svgRoot, step, cx, cy + (above ? -NODE_R : NODE_R), above);
     renderNode(svgRoot, step, cx, cy, NODE_R);
   }
