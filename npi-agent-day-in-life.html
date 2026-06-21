@@ -78,6 +78,37 @@
     padding: 2px 7px; border-radius: 99px; color: #fff; margin-left: 5px; margin-bottom: 8px;
   }
   .tt-note  { font-size: 11.5px; color: var(--ink-soft); line-height: 1.55; }
+
+  /* ── Present mode (URL: ?present) ── */
+  body.present { background: #fff; }
+  body.present main { max-width: 1200px; padding: 32px 48px 80px; }
+  body.present .agent-section { margin-bottom: 96px; scroll-margin-top: 76px; }
+  body.present .agent-header { padding: 32px 40px 24px; }
+  body.present .agent-header h2 { font-size: 30px; }
+  body.present .phase-tag { font-size: 12px; }
+  body.present .exec-intro { font-size: 19px; line-height: 1.65; max-width: none; color: var(--ink); }
+  body.present .agent-body { padding: 28px 40px 44px; }
+  body.present .legend-item { font-size: 14px; }
+  body.present .legend-dot { width: 13px; height: 13px; }
+  /* prev / next nav — hidden unless present mode */
+  .present-nav { display: none; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  body.present .present-nav { display: flex; }
+  .present-nav a {
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    text-decoration: none; padding: 5px 14px;
+    background: rgba(161,0,255,0.07); border: 1.5px solid rgba(161,0,255,0.22);
+    border-radius: 6px; transition: background 140ms;
+  }
+  .present-nav a:hover { background: rgba(161,0,255,0.16); }
+  /* back link in topbar — hidden unless present mode */
+  .topbar-back {
+    display: none; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 700; color: var(--ink-soft);
+    text-decoration: none;
+  }
+  .topbar-back:hover { color: var(--ink); }
+  body.present .topbar-back { display: flex; }
+  body.present .topbar-meta { display: none; }
 </style>
 </head>
 <body>
@@ -88,6 +119,7 @@
     <span class="name">Accenture &times; Hershey's</span>
   </div>
   <span class="topbar-title">NPI Agents &mdash; A Day in the Life of Your Data</span>
+  <a class="topbar-back" href="npi-timeline-framework-v2.html">&#8592; Back to Timeline</a>
   <span class="topbar-meta">2026-06-21</span>
 </header>
 
@@ -560,18 +592,20 @@ function renderRacetrack(svg, steps) {
   if (!N) return;
 
   const containerW = svg.parentElement.clientWidth || 900;
+  const PRESENT   = document.body.classList.contains("present");
+  const PSCALE    = PRESENT ? 1.9 : 1;
 
   const COLS    = Math.max(2, Math.ceil(N / 3));
   const ROWS    = Math.ceil(N / COLS);
-  const NODE_R  = Math.max(12, Math.round(24 - N * 0.45));
-  const ROW_H   = Math.max(96, Math.round(140 - N * 2));
+  const NODE_R  = Math.max(12, Math.round(24 - N * 0.45)) * PSCALE | 0;
+  const ROW_H   = Math.max(96, Math.round((140 - N * 2) * (PRESENT ? 1.55 : 1)));
   const ARC_R   = ROW_H / 2;
   const PAD_X   = ARC_R + 28;
-  const TECH_H  = Math.max(9, Math.round(13 - N * 0.18)) + 12;
-  const PAD_TOP = 56 + TECH_H;
-  const PAD_BOT = 56 + TECH_H;
+  const FONT_LG = Math.max(9, Math.round(13 - N * 0.18)) * PSCALE | 0;
+  const TECH_H  = FONT_LG + 12;
+  const PAD_TOP = (PRESENT ? 72 : 56) + TECH_H;
+  const PAD_BOT = (PRESENT ? 72 : 56) + TECH_H;
   const INSET   = NODE_R + 22;
-  const FONT_LG = Math.max(9, Math.round(13 - N * 0.18));
 
   const leftEdge      = PAD_X;
   const rightEdge     = containerW - PAD_X;
@@ -652,9 +686,10 @@ function buildLegend(steps, container) {
 /* -- Page builder -- */
 function buildPage() {
   const main = document.getElementById("main");
-  AGENTS.forEach(agent => {
+  AGENTS.forEach((agent, idx) => {
     const section = document.createElement("div");
     section.className = "agent-section";
+    section.id = agent.id;
 
     const hdr = document.createElement("div");
     hdr.className = "agent-header";
@@ -666,7 +701,13 @@ function buildPage() {
     const intro = document.createElement("p");
     intro.className = "exec-intro";
     intro.textContent = agent.execIntro;
-    hdr.appendChild(phaseTag); hdr.appendChild(h2); hdr.appendChild(intro);
+    // prev / next nav (only visible in present mode via CSS)
+    const nav = document.createElement("div");
+    nav.className = "present-nav";
+    const prev = AGENTS[idx - 1], next = AGENTS[idx + 1];
+    if (prev) { const a = document.createElement("a"); a.href = "#" + prev.id; a.textContent = "← " + prev.title; nav.appendChild(a); }
+    if (next) { const a = document.createElement("a"); a.href = "#" + next.id; a.textContent = next.title + " →"; nav.appendChild(a); }
+    hdr.appendChild(phaseTag); hdr.appendChild(h2); hdr.appendChild(intro); hdr.appendChild(nav);
 
     const body = document.createElement("div");
     body.className = "agent-body";
@@ -690,6 +731,21 @@ function buildPage() {
 }
 
 buildPage();
+
+// ── Present mode init ──────────────────────────────────────────────────────
+(function () {
+  if (!/[?&]present/.test(location.search)) return;
+  document.body.classList.add("present");
+  // Scroll to the agent section named in the hash, if any
+  const hash = location.hash.slice(1);
+  if (hash) {
+    // Use two rAF frames so ResizeObserver has fired and SVGs are sized
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: "instant", block: "start" });
+    }));
+  }
+})();
 </script>
 </body>
 </html>

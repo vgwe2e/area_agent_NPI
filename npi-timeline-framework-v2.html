@@ -387,6 +387,15 @@
     width: 40px; height: 40px; border-radius: 10px; font-size: 22px; color: var(--ink-soft);
   }
   .drawer .close:hover { background: var(--neutral-200); color: var(--ink); }
+  .drawer .d-flow-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 14px; font-weight: 700; letter-spacing: -.01em;
+    color: var(--accent); background: rgba(161,0,255,0.07);
+    border: 1.5px solid rgba(161,0,255,0.22); border-radius: 8px;
+    padding: 9px 18px; text-decoration: none;
+    margin: 2px 0 22px; transition: background 140ms;
+  }
+  .drawer .d-flow-btn:hover { background: rgba(161,0,255,0.16); }
   .drawer .d-badges { display: flex; gap: 8px; align-items: center; margin: 4px 0 16px; flex-wrap: wrap; }
   .drawer h2 { margin: 0 0 6px; font-size: 28px; letter-spacing: -.02em; }
   .drawer .d-phase { font-size: 15px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
@@ -1297,6 +1306,11 @@ function openDrawer(a) {
       '</div>';
   }
 
+  // Process Flow deep-link (opens day-in-life page in present mode)
+  const flowBtn = a.placeholder ? '' :
+    '<a class="d-flow-btn" href="npi-agent-day-in-life.html?present#' + a.id + '" target="_blank">' +
+    '&#9654; Process Flow</a>';
+
   // AERA block
   const aeraBlock = a.aera ?
     '<div class="d-section-title">AERA</div>' +
@@ -1315,6 +1329,7 @@ function openDrawer(a) {
     '</div>' +
     (a.metric ? '<div class="d-metric">' + esc(a.metric) + '</div>' : '') +
     '<p class="d-desc">' + esc(a.description || "") + '</p>' +
+    flowBtn +
     rfBlock +
     orchBlock +
     toolBlock +
