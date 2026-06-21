@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPI Agents — A Day in the Life of Your Data</title>
+<style>
+  :root {
+    --accent:    #A100FF;
+    --spine:     #4A00B4;
+    --ink:       #1c1c28;
+    --ink-soft:  #5b5b6b;
+    --ink-faint: #9494a3;
+    --bg:        #F5F5F7;
+    --panel:     #ffffff;
+    --hair:      #e6e6ee;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { font-family: var(--font); background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 32px; background: #fff;
+    border-bottom: 1px solid var(--hair);
+    box-shadow: 0 1px 6px rgba(20,20,40,.06);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 9px; }
+  .topbar-brand .chev { color: var(--accent); font-size: 22px; font-weight: 900; }
+  .topbar-brand .name { font-weight: 800; font-size: 16px; letter-spacing: -.02em; }
+  .topbar-title { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+  .topbar-meta  { font-size: 12px; color: var(--ink-faint); }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 48px 32px 96px; }
+
+  .agent-section {
+    margin-bottom: 72px; background: var(--panel);
+    border: 1px solid var(--hair); border-radius: 12px; overflow: hidden;
+    box-shadow: 0 1px 2px rgba(20,20,40,.04), 0 4px 20px rgba(20,20,40,.05);
+  }
+  .agent-header { padding: 28px 32px 20px; border-bottom: 1px solid var(--hair); }
+  .phase-tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+  }
+  .agent-header h2 { font-size: 20px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 10px; }
+  .exec-intro { font-size: 14px; line-height: 1.6; color: var(--ink-soft); max-width: 680px; }
+
+  .agent-body { padding: 24px 32px 32px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-soft); }
+  .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .svg-wrap svg { display: block; width: 100%; }
+
+  /* Tooltip */
+  .flow-tooltip {
+    position: fixed; pointer-events: none; z-index: 999;
+    background: #fff; border: 1px solid var(--hair); border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(20,20,40,.14);
+    padding: 13px 16px; min-width: 200px; max-width: 300px;
+    opacity: 0; transform: translateY(4px);
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+  .flow-tooltip.visible { opacity: 1; transform: translateY(0); }
+  .tt-label { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .tt-tech  {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: .04em;
+    background: rgba(161,0,255,0.09); color: #6B00C4;
+    padding: 2px 8px; border-radius: 99px; margin-bottom: 8px;
+  }
+  .tt-type  {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    letter-spacing: .05em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 99px; color: #fff; margin-left: 5px; margin-bottom: 8px;
+  }
+  .tt-note  { font-size: 11.5px; color: var(--ink-soft); line-height: 1.55; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <span class="chev">&#8250;</span>
+    <span class="name">Accenture &times; Hershey's</span>
+  </div>
+  <span class="topbar-title">NPI Agents &mdash; A Day in the Life of Your Data</span>
+  <span class="topbar-meta">2026-06-21</span>
+</header>
+
+<div class="flow-tooltip" id="tooltip" role="tooltip" aria-hidden="true">
+  <div class="tt-label" id="tt-label"></div>
+  <div style="margin-bottom:2px">
+    <span class="tt-tech"  id="tt-tech"></span><span class="tt-type" id="tt-type"></span>
+  </div>
+  <div class="tt-note" id="tt-note"></div>
+</div>
+
+<main id="main"></main>
+
+<script>
+'use strict';
+
+// ─── DATA ───────────────────────────────────────────────────────────────────
+// Steps shape: { label, note, type, tech }
+// type  -> data | transform | human | boundary | decision
+// tech  -> short name of the method or technology used at this step
+
+const AGENTS = [
+
+  {
+    id: "portfolio-optimization",
+    title: "Portfolio Optimization Agent",
+    phase: "Portfolio & Launch Planning",
+    execIntro: "Every week, the brand team submits a shortlist of SKU candidates. The agent takes that list, researches comparable launches, scores every option against each other, simulates demand risk, and hands the planner a ranked recommendation with confidence ranges ready to approve.",
+    steps: [
+      { label: "Brand team submits shortlist",
+        note: "The brand team's initial SKU candidates arrive — this list is the raw material the entire evaluation will work from.",
+        type: "data", tech: "Structured Data Intake" },
+      { label: "AI researches similar launches",
+        note: "Taking that shortlist, the system looks up how comparable products performed at launch — velocity, sell-through, margin — to build an evidence base for scoring.",
+        type: "transform", tech: "RAG · Like-Product Library" },
+      { label: "AI scores every option",
+        note: "With that research in hand, each SKU is rated across shelf velocity, margin potential, and channel fit using a weighted model, so options can be compared objectively.",
+        type: "transform", tech: "MILP · Weighted Scoring" },
+      { label: "Demand ranges simulated",
+        note: "For the top-scoring candidates, the AI runs thousands of scenarios to produce low, mid, and high demand estimates — so the recommendation comes with a quantified risk range.",
+        type: "transform", tech: "Monte Carlo Simulation" },
+      { label: "Launch plan drafted",
+        note: "From those simulation results, a ranked shortlist with confidence intervals is written in plain language — the planner receives a ready-to-review recommendation, not raw data.",
+        type: "boundary", tech: "LLM Narrative Generation" },
+      { label: "Planner approves the lineup",
+        note: "The planner reviews that recommendation and confirms or adjusts which products move forward — nothing advances without an explicit human decision.",
+        type: "human", tech: "Human-in-the-Loop Gate" },
+      { label: "Plan locked for supply",
+        note: "The moment the planner approves, that lineup is published automatically to inventory and supply planning — downstream systems update without a manual handoff.",
+        type: "data", tech: "Automated System Handoff" },
+    ],
+  },
+
+  {
+    id: "market-segmentation",
+    title: "Market Segmentation Agent",
+    phase: "Portfolio & Launch Planning",
+    execIntro: "Once the product lineup is set, this agent takes all retailer and channel data, clusters the market by readiness, ranks the rollout sequence, and hands the portfolio plan a channel-by-channel launch order ready to execute.",
+    steps: [
+      { label: "Channel & customer data pulled",
+        note: "Sales velocity, inventory capacity, and historical readiness scores are gathered for every retail channel — this is the raw picture the segmentation model will sort.",
+        type: "data", tech: "Data Pipeline / ETL" },
+      { label: "AI clusters the market",
+        note: "Taking that data, the AI groups channels and customers by how ready they are to receive and move the new product — separating early movers from channels that need more time.",
+        type: "transform", tech: "ML Clustering (K-Means)" },
+      { label: "Launch timing ranked",
+        note: "From those clusters, each group is scored and ranked by demand potential and logistical readiness — producing a clear, evidence-backed sequence.",
+        type: "transform", tech: "Demand Readiness Scoring" },
+      { label: "Sequence recommendation written",
+        note: "With that ranking in hand, the AI writes a phased rollout order — which channels go first, which follow, and the specific reasoning behind each placement.",
+        type: "boundary", tech: "LLM Narrative Generation" },
+      { label: "Sequence feeds portfolio plan",
+        note: "That ranked channel order flows automatically into the broader launch plan and drives allocation decisions — no separate meeting or spreadsheet handoff needed.",
+        type: "data", tech: "Automated Integration" },
+    ],
+  },
+
+  {
+    id: "npi-forecast",
+    title: "NPI Forecast Agent",
+    phase: "Demand Forecasting",
+    execIntro: "This agent takes live market signals and analogous launch history, builds a week-by-week demand curve at every level, refines it the moment real in-market data arrives, and hands the planner an approved forecast ready to drive inventory decisions.",
+    steps: [
+      { label: "Live signals collected",
+        note: "Store scans, retailer orders, and digital interest data are ingested automatically — these are the real-world inputs the forecast model will be built on.",
+        type: "data", tech: "Real-Time Data Ingestion" },
+      { label: "Similar launches researched",
+        note: "With those signals in place, the AI finds past products that launched under comparable conditions and uses their performance trajectory as an analog baseline.",
+        type: "transform", tech: "RAG · Like-Product Analogy" },
+      { label: "Demand curve built",
+        note: "Using that baseline plus the live signals, the model constructs a week-by-week sales forecast simultaneously at brand, SKU, and customer level.",
+        type: "transform", tech: "ARIMA / XGBoost / Prophet" },
+      { label: "Curve refined with live data",
+        note: "As early in-market signals arrive, that curve is immediately recalibrated — the forecast reflects what is actually happening, not just what was expected.",
+        type: "transform", tech: "Demand Sensing Model" },
+      { label: "Forecast explained in plain English",
+        note: "With the curve locked, the AI writes a plain-language summary — the forecast numbers, the key assumptions behind them, and what would cause them to be wrong.",
+        type: "boundary", tech: "LLM Narrative Generation" },
+      { label: "Planner reviews and approves",
+        note: "The planner reads that summary, overrides any line where judgment differs from the model, and signs off — only the approved version flows forward.",
+        type: "human", tech: "Human-in-the-Loop Gate" },
+      { label: "Forecast feeds inventory plan",
+        note: "The moment the planner approves, that demand curve automatically drives launch quantity calculations in the next agent — no manual re-entry.",
+        type: "data", tech: "Automated System Handoff" },
+    ],
+  },
+
+  {
+    id: "signal-capture",
+    title: "Signal Capture Agent",
+    phase: "Demand Forecasting",
+    execIntro: "Every day, this agent pulls in POS scans, retailer orders, and digital signals from every source, validates and weights each one, flags anything suspicious, and hands the forecast engine a single clean, trusted dataset.",
+    steps: [
+      { label: "Store sales data arrives",
+        note: "Point-of-sale scans from every retail partner are pulled in automatically — these are the primary demand signals that everything downstream will be built on.",
+        type: "data", tech: "POS Data Pipeline" },
+      { label: "Retailer orders ingested",
+        note: "Those store scans are joined by retailer order files, which are matched against expected volumes to catch fulfillment gaps before they become surprises.",
+        type: "data", tech: "EDI / File Integration" },
+      { label: "Digital signals read",
+        note: "On top of that transactional data, search interest, social mentions, and e-commerce browsing patterns are structured and quantified — giving the model an early-warning layer.",
+        type: "transform", tech: "GenAI Signal Extraction" },
+      { label: "Signals weighted and validated",
+        note: "With all those sources assembled, each one is scored by recency, reliability, and historical accuracy before it enters the demand model — noisy sources carry less weight.",
+        type: "transform", tech: "Source Reliability Scoring" },
+      { label: "Gaps and anomalies flagged",
+        note: "From that weighted dataset, missing feeds, statistical outliers, and implausible values are surfaced — the planner decides whether to fill, exclude, or escalate each one.",
+        type: "decision", tech: "Statistical Anomaly Detection" },
+      { label: "Clean dataset published",
+        note: "Once the planner resolves any flags, a single harmonized demand dataset is delivered to the forecast engine — one trusted input, no further preparation needed.",
+        type: "boundary", tech: "Data Harmonization Layer" },
+    ],
+  },
+
+  {
+    id: "demand-sensing",
+    title: "Demand Sensing Agent",
+    phase: "Demand Forecasting",
+    execIntro: "Every morning, this agent compares yesterday's real sales against the forecast, flags drift that crosses a material threshold, recalibrates the demand curve, and pushes the updated number into inventory planning before the first meeting of the day.",
+    steps: [
+      { label: "New signals arrive daily",
+        note: "Fresh in-market data flows in every 24 hours from the Signal Capture Agent — this is the real-world evidence the sensing model will hold against the forecast.",
+        type: "data", tech: "Real-Time Data Feed" },
+      { label: "Actuals vs. forecast compared",
+        note: "Taking those new signals, the AI measures exactly how real-world velocity compares to what was predicted at every SKU and customer — surfacing both over- and underperformance.",
+        type: "transform", tech: "Variance Analysis Model" },
+      { label: "Drift above threshold flagged",
+        note: "Where that gap crosses a material threshold, the planner is automatically alerted — small noise is filtered out; only differences large enough to change a decision surface.",
+        type: "decision", tech: "Threshold Alert Engine" },
+      { label: "Forecast curve recalibrated",
+        note: "Using those flagged deltas, the AI re-weights the demand model with the latest signal data — so the curve reflects what is actually happening in market, not the original plan.",
+        type: "transform", tech: "ML Time-Series Recalibration" },
+      { label: "Updated forecast published",
+        note: "That recalibrated demand curve flows automatically into inventory planning — downstream systems see the updated number the moment it is ready, without a manual re-entry step.",
+        type: "boundary", tech: "Automated System Handoff" },
+    ],
+  },
+
+  {
+    id: "inventory-optimization-planning",
+    title: "Inventory Optimization & Planning Agent",
+    phase: "Inventory Planning",
+    execIntro: "This agent takes the approved demand forecast, models the cost of running short against the cost of overstocking, calculates the optimal launch quantity, and hands the planner a recommendation with the math explained in plain language and ready for sign-off.",
+    steps: [
+      { label: "Inventory state pulled",
+        note: "Current stock levels, unit costs, and service-level targets are read from planning systems — this is the starting context the quantity decision will be built on.",
+        type: "data", tech: "ERP / Planning System API" },
+      { label: "Trade-off calculated",
+        note: "With that context in hand, the AI models both sides of the launch bet: the cost of running out of stock on a new product versus the cost of being left with unsold inventory.",
+        type: "transform", tech: "Newsvendor Problem Model" },
+      { label: "Optimal quantity determined",
+        note: "From that trade-off model, a single recommended launch quantity is generated — anchored to the demand confidence interval and the service-level target.",
+        type: "transform", tech: "One-Time Buy Optimization" },
+      { label: "Recommendation written up",
+        note: "With that number calculated, the AI explains it in plain language: the math behind it, the risk at the low and high ends, and what changes if the planner adjusts it.",
+        type: "boundary", tech: "LLM Narrative Generation" },
+      { label: "Planner approves the quantity",
+        note: "The planner reviews that recommendation and signs off — or adjusts it based on market judgment the model does not have — before anything is committed to supply.",
+        type: "human", tech: "Human-in-the-Loop Gate" },
+      { label: "Quantity published to supply plan",
+        note: "The moment the planner approves, that quantity flows automatically into procurement and production scheduling — downstream systems update without a meeting or an email.",
+        type: "data", tech: "Automated System Handoff" },
+    ],
+  },
+
+  {
+    id: "inventory-deployment-replenishing",
+    title: "Inventory Deployment & Replenishment Agent",
+    phase: "Inventory Positioning & Deployment",
+    execIntro: "With the launch quantity approved, this agent reads the full DC network, calculates the pre-build, positions stock across distribution centers, allocates to each retailer, and once the planner signs off, triggers replenishment automatically within the approved envelope.",
+    steps: [
+      { label: "DC network state read",
+        note: "Current stock levels at every distribution center and regional warehouse are loaded in real time — this is the network picture the deployment plan will optimize against.",
+        type: "data", tech: "Inventory Management API" },
+      { label: "Pre-build volume sized",
+        note: "From that network snapshot, the AI calculates how much to manufacture before launch day — anchored to the demand confidence interval and existing DC capacity constraints.",
+        type: "transform", tech: "Multi-Echelon Optimization" },
+      { label: "Stock positioned across DCs",
+        note: "With that pre-build quantity set, inventory is distributed across distribution centers according to expected regional velocity and inbound lead times.",
+        type: "transform", tech: "Network Flow Optimization" },
+      { label: "Allocated to customers & channels",
+        note: "From that positioned stock, each retailer and channel receives its allocation — respecting existing commitments, safety stock floors, and priority rules.",
+        type: "transform", tech: "Constrained Allocation Model" },
+      { label: "Planner approves the plan",
+        note: "The planner reviews the full pre-build and deployment plan in one view — nothing ships and no purchase orders are raised until there is explicit sign-off.",
+        type: "human", tech: "Human-in-the-Loop Gate" },
+      { label: "Replenishment triggered",
+        note: "The moment the plan is approved, replenishment orders are raised automatically within the approved envelope — no manual purchase orders, no follow-up emails.",
+        type: "boundary", tech: "Automated Replenishment Engine" },
+    ],
+  },
+
+  {
+    id: "lifecycle-management",
+    title: "Lifecycle Management Agent",
+    phase: "Launch Execution & Adjustments",
+    execIntro: "Post-launch, this agent watches daily velocity against the original forecast, classifies what lifecycle phase the product has entered, updates the demand curve accordingly, and flags the supply or distribution actions that need a human decision.",
+    steps: [
+      { label: "Post-launch velocity monitored",
+        note: "Actual sell-through is tracked daily against the original forecast — this continuous evidence stream is what the lifecycle model reads to detect trend changes early.",
+        type: "data", tech: "Real-Time KPI Tracking" },
+      { label: "Lifecycle phase detected",
+        note: "From those velocity trends, the AI classifies where the product currently sits in its lifecycle: ramping up, at peak, plateauing, or entering decline.",
+        type: "transform", tech: "Phase-In / Phase-Out Model" },
+      { label: "Demand curve updated",
+        note: "With that phase classification in hand, the forecast is revised using models that know how products of this type naturally decay or accelerate at each lifecycle stage.",
+        type: "transform", tech: "Lifecycle Forecast Model" },
+      { label: "Required actions flagged",
+        note: "From that updated curve, the agent surfaces the concrete supply or distribution moves that follow — markdowns, reallocation, or cutbacks — ready for the planner to decide on.",
+        type: "decision", tech: "Rule-Based Exception Logic" },
+      { label: "Planner acts on flagged items",
+        note: "The planner reviews those flagged actions, decides which to approve, and the system executes the approved moves — closing the loop between the updated forecast and action.",
+        type: "human", tech: "Human-in-the-Loop Gate" },
+    ],
+  },
+
+  {
+    id: "exception-handler",
+    title: "Exception Handler Agent",
+    phase: "Launch Execution & Adjustments",
+    execIntro: "The moment a supply shortage, delivery delay, or demand spike appears, this agent scores its severity, ranks it against everything else in the queue, generates a resolution, and hands the planner a prioritized action list — not an inbox full of alerts.",
+    steps: [
+      { label: "Anomaly detected",
+        note: "A supply shortage, a delivery delay, or an unexpected demand spike is flagged the moment the signal appears — this is the raw exception that needs to be triaged.",
+        type: "data", tech: "Alerting & Monitoring Tools" },
+      { label: "Severity scored",
+        note: "Taking that raw anomaly, the AI rates it by likely business impact — potential lost revenue, service-level failure, or margin erosion — so urgency is quantified, not guessed.",
+        type: "transform", tech: "Impact Scoring Model" },
+      { label: "Exceptions ranked by urgency",
+        note: "With all active exceptions now scored, the full queue is sorted — so the planner always works the most business-critical issue first and never has to triage a raw alert list.",
+        type: "transform", tech: "Priority Ranking Algorithm" },
+      { label: "Next-best action generated",
+        note: "For each ranked exception, the AI recommends the single most practical resolution — expedite, reallocate, or defer — with the reasoning, so the planner can approve in one step.",
+        type: "boundary", tech: "LLM Next-Best-Action" },
+      { label: "Planner works the queue",
+        note: "The planner reviews that prioritized list and acts on each item — accepting the AI recommendation or overriding it with judgment — rather than responding to ad-hoc alerts.",
+        type: "human", tech: "Human-in-the-Loop Gate" },
+      { label: "Resolution logged and learned",
+        note: "That outcome is written to memory — the next time the same class of exception appears, it is scored more accurately, routed faster, and resolved with a better recommendation.",
+        type: "data", tech: "Feedback Loop / Memory" },
+    ],
+  },
+
+  {
+    id: "performance-monitoring",
+    title: "Performance Monitoring Agent",
+    phase: "Post-Launch Optimization",
+    execIntro: "At period close, this agent pulls the actuals, measures forecast accuracy at every level, identifies what drove each miss, and hands the planner a live dashboard with model health scores and recalibration flags — no manual report build required.",
+    steps: [
+      { label: "Actuals collected",
+        note: "Confirmed shipment, sell-through, and margin data are pulled in automatically at period close — this ground truth is what forecast accuracy will be measured against.",
+        type: "data", tech: "Data Pipeline / ETL" },
+      { label: "Accuracy measured",
+        note: "Taking those actuals, the AI calculates forecast error across every SKU and customer simultaneously using MAPE, WMAPE, and Bias — a complete accuracy picture in seconds.",
+        type: "transform", tech: "MAPE / WMAPE / Bias Metrics" },
+      { label: "Root causes identified",
+        note: "From those accuracy numbers, the AI surfaces what drove each miss — demand volatility, a supply disruption, a bad model assumption, or a data quality issue upstream.",
+        type: "transform", tech: "Root-Cause Analysis Model" },
+      { label: "Model health checked",
+        note: "With root causes identified, any forecast model whose accuracy is trending down period-over-period is flagged automatically — before the degradation starts affecting decisions.",
+        type: "decision", tech: "Model Degradation Detection" },
+      { label: "Dashboard updated automatically",
+        note: "All those metrics, root causes, and health flags are surfaced to the planner in a live dashboard — no manual data pulls, no report builds, no waiting for an analyst to run numbers.",
+        type: "boundary", tech: "Automated Reporting Layer" },
+    ],
+  },
+
+  {
+    id: "scaling",
+    title: "Scaling Agent",
+    phase: "Post-Launch Optimization",
+    execIntro: "Once the product is live, this agent scans every market for velocity outpacing the forecast, surfaces the strongest expansion candidates, runs scenario simulations, and hands the planner ready-to-approve scaling options with quantified upside and risk.",
+    steps: [
+      { label: "High-velocity markets identified",
+        note: "The AI scans all markets and flags those where sell-through is significantly outpacing the forecast — these are the candidates where adding stock could capture incremental revenue.",
+        type: "data", tech: "Velocity Anomaly Detection" },
+      { label: "Expansion opportunities surfaced",
+        note: "From those flagged markets, the strongest expansion candidates are ranked by evidence — velocity delta, margin upside, and logistical risk — so the planner works the best options first.",
+        type: "transform", tech: "Opportunity Scoring Model" },
+      { label: "Scaling scenarios simulated",
+        note: "For each top candidate, the AI models multiple scenarios: what happens if we add stock here, what is the expected incremental sell-through, and what does it cost to act versus not act.",
+        type: "transform", tech: "Scenario Simulation Engine" },
+      { label: "Scenarios written for review",
+        note: "With those simulations complete, a concise plain-language summary of each option — the opportunity, the risk, and what it costs to act — is prepared for planner review.",
+        type: "boundary", tech: "LLM Narrative Generation" },
+      { label: "Planner approves or adjusts",
+        note: "The planner selects which markets to scale into, by how much, and on what timeline — the system executes the approved plan automatically within the supply envelope.",
+        type: "human", tech: "Human-in-the-Loop Gate" },
+    ],
+  },
+
+  {
+    id: "learning-loop",
+    title: "Learning Loop Agent",
+    phase: "Post-Launch Optimization",
+    execIntro: "When the launch cycle closes, this agent reconciles the full actuals against the plan, extracts what drove accuracy and what caused misses, writes the findings into the like-product library, and recalibrates the models — so the next NPI team starts smarter.",
+    steps: [
+      { label: "Launch cycle closes",
+        note: "Final actuals are confirmed against the original plan — this complete, reconciled picture of what happened is the raw material every learning downstream depends on.",
+        type: "data", tech: "Data Reconciliation" },
+      { label: "Learnings extracted",
+        note: "Taking that full-cycle dataset, the AI identifies what the forecast got right, what it missed, and the specific factors — market, model, or data — that drove each difference.",
+        type: "transform", tech: "LLM Analysis · Distillation" },
+      { label: "Like-product library updated",
+        note: "Those learnings are written into the reference database — so any future product that resembles this one starts with this launch's real performance as its analog baseline.",
+        type: "data", tech: "MemTree Persistent Memory" },
+      { label: "Forecast models recalibrated",
+        note: "With the library updated, model weights are adjusted based on what actually drove accuracy this cycle — the models get quantifiably smarter with each completed launch.",
+        type: "transform", tech: "Online Model Retraining" },
+      { label: "Next launch starts smarter",
+        note: "Because of that recalibration, every future NPI opens with a baseline already shaped by real experience — accuracy compounds cycle over cycle rather than restarting from scratch.",
+        type: "boundary", tech: "Baseline Calibration" },
+    ],
+  },
+
+];
+
+// ─── ENGINE ─────────────────────────────────────────────────────────────────
+
+const TYPE_COLORS = {
+  data:      "#A100FF",
+  transform: "#7B00CC",
+  human:     "#00A3E0",
+  boundary:  "#00875A",
+  decision:  "#FF6900",
+};
+const TYPE_ICONS = { data:"⬇", transform:"⚙", human:"👤", boundary:"↗", decision:"◆" };
+
+function typeColor(t) { return TYPE_COLORS[t] || "#888"; }
+function typeIcon(t)  { return TYPE_ICONS[t]  || "○"; }
+
+function svgEl(tag, attrs) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, String(v));
+  return el;
+}
+
+/* -- Tooltip -- */
+const TT = (() => {
+  const el   = document.getElementById("tooltip");
+  const lbl  = document.getElementById("tt-label");
+  const tech = document.getElementById("tt-tech");
+  const type = document.getElementById("tt-type");
+  const note = document.getElementById("tt-note");
+  function pos(x, y) {
+    const W = el.offsetWidth || 240, H = el.offsetHeight || 100;
+    const ox = 14, oy = 14;
+    let lx = x + ox, ly = y + oy;
+    if (lx + W > window.innerWidth  - 8) lx = x - W - ox;
+    if (ly + H > window.innerHeight - 8) ly = y - H - oy;
+    el.style.left = lx + "px"; el.style.top = ly + "px";
+  }
+  document.addEventListener("mousemove", e => { if (el.classList.contains("visible")) pos(e.clientX, e.clientY); });
+  return {
+    show(step, x, y) {
+      lbl.textContent  = step.label;
+      tech.textContent = step.tech || "";
+      tech.style.display = step.tech ? "" : "none";
+      type.textContent = step.type;
+      type.style.background = typeColor(step.type);
+      note.textContent = step.note || "";
+      el.classList.add("visible");
+      el.setAttribute("aria-hidden", "false");
+      pos(x, y);
+    },
+    hide() { el.classList.remove("visible"); el.setAttribute("aria-hidden", "true"); }
+  };
+})();
+
+/* -- Node renderer -- */
+function renderNode(svg, step, idx, cx, cy, R) {
+  const color = typeColor(step.type);
+  const g = svgEl("g", { class: "flow-node", style: "cursor:pointer", tabindex: "0",
+    role: "img", "aria-label": "Step " + (idx + 1) + ": " + step.label });
+  g.appendChild(svgEl("circle", { cx, cy, r: R + 3, fill: "rgba(20,20,40,0.09)", filter: "blur(3px)" }));
+  g.appendChild(svgEl("circle", { cx, cy, r: R, fill: color, stroke: "#fff", "stroke-width": "2.5" }));
+  const icon = svgEl("text", { x: cx, y: cy - Math.round(R * 0.22),
+    "text-anchor":"middle","dominant-baseline":"middle",
+    "font-size": Math.round(R * 0.62), fill:"#fff", style:"pointer-events:none;user-select:none;" });
+  icon.textContent = typeIcon(step.type);
+  g.appendChild(icon);
+  const num = svgEl("text", { x: cx, y: cy + Math.round(R * 0.46),
+    "text-anchor":"middle","dominant-baseline":"middle",
+    "font-size": Math.round(R * 0.44), "font-weight":"700",
+    fill:"rgba(255,255,255,0.80)", style:"pointer-events:none;user-select:none;" });
+  num.textContent = idx + 1;
+  g.appendChild(num);
+  function onEnter(e) { TT.show(step, e.clientX, e.clientY); }
+  g.addEventListener("mouseenter", onEnter);
+  g.addEventListener("mouseleave", () => TT.hide());
+  g.addEventListener("focus",  e => { const r = g.getBoundingClientRect(); TT.show(step, r.right, r.top); });
+  g.addEventListener("blur",   () => TT.hide());
+  svg.appendChild(g);
+}
+
+/* -- Label + tech-tag renderer -- */
+function renderLabel(svg, step, x, yBase, above, fontSz) {
+  const fs     = fontSz || 12;
+  const fsTech = Math.max(8, fs - 2);
+  const g      = svgEl("g", { style: "pointer-events:none;" });
+
+  if (above) {
+    const labelY = yBase - 4;
+    const techY  = labelY - fs - 5;
+    const lbl = svgEl("text", { x, y: labelY,
+      "text-anchor":"middle", "dominant-baseline":"auto",
+      "font-size": fs, "font-weight":"600", fill:"#1c1c28" });
+    lbl.textContent = step.label;
+    g.appendChild(lbl);
+    if (step.tech) renderTechPill(g, step.tech, x, techY, fsTech, true);
+  } else {
+    const labelY = yBase + 4;
+    const techY  = labelY + fs + 5;
+    const lbl = svgEl("text", { x, y: labelY,
+      "text-anchor":"middle", "dominant-baseline":"hanging",
+      "font-size": fs, "font-weight":"600", fill:"#1c1c28" });
+    lbl.textContent = step.label;
+    g.appendChild(lbl);
+    if (step.tech) renderTechPill(g, step.tech, x, techY, fsTech, false);
+  }
+
+  svg.appendChild(g);
+}
+
+/* Approximate-width pill */
+function renderTechPill(g, techStr, cx, y, fs, above) {
+  const estW  = Math.min(techStr.length * fs * 0.54 + 16, 190);
+  const pillH = fs + 7;
+  const pillX = cx - estW / 2;
+  const pillY = above ? y - pillH + 2 : y;
+
+  g.appendChild(svgEl("rect", {
+    x: pillX, y: pillY, width: estW, height: pillH, rx: pillH / 2,
+    fill: "rgba(161,0,255,0.08)"
+  }));
+  const txt = svgEl("text", {
+    x: cx, y: pillY + pillH / 2,
+    "text-anchor":"middle", "dominant-baseline":"middle",
+    "font-size": fs, "font-weight":"600",
+    fill: "#6B00C4", style:"letter-spacing:0.02em;"
+  });
+  txt.textContent = techStr;
+  g.appendChild(txt);
+}
+
+/* -- Racetrack renderer -- */
+function renderRacetrack(svg, steps) {
+  svg.innerHTML = "";
+  const N = steps.length;
+  if (!N) return;
+
+  const containerW = svg.parentElement.clientWidth || 900;
+
+  const COLS    = Math.max(2, Math.ceil(N / 3));
+  const ROWS    = Math.ceil(N / COLS);
+  const NODE_R  = Math.max(12, Math.round(24 - N * 0.45));
+  const ROW_H   = Math.max(96, Math.round(140 - N * 2));
+  const ARC_R   = ROW_H / 2;
+  const PAD_X   = ARC_R + 28;
+  const TECH_H  = Math.max(9, Math.round(13 - N * 0.18)) + 12;
+  const PAD_TOP = 56 + TECH_H;
+  const PAD_BOT = 56 + TECH_H;
+  const INSET   = NODE_R + 22;
+  const FONT_LG = Math.max(9, Math.round(13 - N * 0.18));
+
+  const leftEdge      = PAD_X;
+  const rightEdge     = containerW - PAD_X;
+  const nodeAreaLeft  = leftEdge  + INSET;
+  const nodeAreaRight = rightEdge - INSET;
+  const nodeSpan      = nodeAreaRight - nodeAreaLeft;
+  const totalH        = PAD_TOP + (ROWS - 1) * ROW_H + PAD_BOT;
+
+  const colX = Array.from({ length: COLS }, (_, c) =>
+    COLS === 1 ? (nodeAreaLeft + nodeAreaRight) / 2
+               : nodeAreaLeft + c * nodeSpan / (COLS - 1));
+  const rowY = Array.from({ length: ROWS }, (_, r) => PAD_TOP + r * ROW_H);
+
+  svg.setAttribute("viewBox", "0 0 " + containerW + " " + totalH);
+  svg.setAttribute("height", totalH);
+  svg.appendChild(svgEl("rect", { x:0, y:0, width:containerW, height:totalH, fill:"#ffffff" }));
+
+  // Build continuous racetrack path
+  let d = "M " + leftEdge + "," + rowY[0];
+  for (let r = 0; r < ROWS; r++) {
+    const goRight = (r % 2 === 0);
+    d += " L " + (goRight ? rightEdge : leftEdge) + "," + rowY[r];
+    if (r < ROWS - 1) {
+      d += goRight
+        ? " A " + ARC_R + " " + ARC_R + " 0 0 1 " + rightEdge + "," + rowY[r+1]
+        : " A " + ARC_R + " " + ARC_R + " 0 0 0 " + leftEdge  + "," + rowY[r+1];
+    }
+  }
+
+  svg.appendChild(svgEl("path", { d, stroke:"rgba(74,0,180,0.10)", "stroke-width":"14",
+    fill:"none", "stroke-linecap":"round", "stroke-linejoin":"round" }));
+  svg.appendChild(svgEl("path", { d, stroke:"#4A00B4", "stroke-width":"3.5",
+    fill:"none", "stroke-linecap":"round", "stroke-linejoin":"round" }));
+
+  // Node positions
+  const positions = steps.map((_, i) => {
+    const row = Math.floor(i / COLS);
+    const posInRow = i % COLS;
+    const goRight  = (row % 2 === 0);
+    const colIdx   = goRight ? posInRow : (COLS - 1 - posInRow);
+    return { cx: colX[colIdx], cy: rowY[row], row };
+  });
+
+  // Start / end caps
+  svg.appendChild(svgEl("circle", { cx:leftEdge, cy:rowY[0], r:6,
+    fill:"#A100FF", stroke:"#fff", "stroke-width":"2" }));
+  const last = positions[N - 1];
+  svg.appendChild(svgEl("circle", { cx:last.cx, cy:last.cy, r:6,
+    fill:"#00875A", stroke:"#fff", "stroke-width":"2" }));
+
+  // Labels drawn first (behind nodes)
+  positions.forEach(({ cx, cy, row }, i) => {
+    const above = (row % 2 === 0);
+    renderLabel(svg, steps[i], cx, cy + (above ? -NODE_R : NODE_R), above, FONT_LG);
+  });
+  // Nodes on top
+  positions.forEach(({ cx, cy }, i) => renderNode(svg, steps[i], i, cx, cy, NODE_R));
+}
+
+/* -- Legend builder -- */
+function buildLegend(steps, container) {
+  const seen = new Set();
+  steps.forEach(s => {
+    if (seen.has(s.type)) return;
+    seen.add(s.type);
+    const item = document.createElement("div");
+    item.className = "legend-item";
+    const dot = document.createElement("div");
+    dot.className = "legend-dot";
+    dot.style.background = typeColor(s.type);
+    const lbl = document.createElement("span");
+    lbl.textContent = s.type.charAt(0).toUpperCase() + s.type.slice(1);
+    item.appendChild(dot); item.appendChild(lbl);
+    container.appendChild(item);
+  });
+}
+
+/* -- Page builder -- */
+function buildPage() {
+  const main = document.getElementById("main");
+  AGENTS.forEach(agent => {
+    const section = document.createElement("div");
+    section.className = "agent-section";
+
+    const hdr = document.createElement("div");
+    hdr.className = "agent-header";
+    const phaseTag = document.createElement("div");
+    phaseTag.className = "phase-tag";
+    phaseTag.textContent = agent.phase;
+    const h2 = document.createElement("h2");
+    h2.textContent = agent.title;
+    const intro = document.createElement("p");
+    intro.className = "exec-intro";
+    intro.textContent = agent.execIntro;
+    hdr.appendChild(phaseTag); hdr.appendChild(h2); hdr.appendChild(intro);
+
+    const body = document.createElement("div");
+    body.className = "agent-body";
+    const legend = document.createElement("div");
+    legend.className = "legend";
+    buildLegend(agent.steps, legend);
+    const svgWrap = document.createElement("div");
+    svgWrap.className = "svg-wrap";
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("aria-label", agent.title + " data flow");
+    svgWrap.appendChild(svg);
+    body.appendChild(legend); body.appendChild(svgWrap);
+
+    section.appendChild(hdr); section.appendChild(body);
+    main.appendChild(section);
+
+    renderRacetrack(svg, agent.steps);
+    const ro = new ResizeObserver(() => renderRacetrack(svg, agent.steps));
+    ro.observe(svgWrap);
+  });
+}
+
+buildPage();
+</script>
+</body>
+</html>
