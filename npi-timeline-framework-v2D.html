@@ -2209,6 +2209,7 @@ const FLOW_TYPE_COLORS = {
   boundary: "#00875A", decision: "#FF6900",
 };
 const FLOW_TYPE_ICONS = { data: "⬇", transform: "⚙", human: "👤", boundary: "↗", decision: "◆" };
+const FLOW_TYPE_LABELS = { data: "Automation", transform: "Traditional AI", boundary: "GenAI", decision: "Agentic" };
 function flowTypeColor(t) { return FLOW_TYPE_COLORS[t] || "#888"; }
 function flowTypeIcon(t)  { return FLOW_TYPE_ICONS[t] || "○"; }
 
@@ -2387,12 +2388,12 @@ function openFlowOverlay(agentId) {
   legendEl.innerHTML = "";
   const seen = new Set();
   fa.steps.forEach(s => {
-    if (seen.has(s.type)) return; seen.add(s.type);
+    const label = FLOW_TYPE_LABELS[s.type]; if (!label || seen.has(s.type)) return; seen.add(s.type);
     const item = document.createElement("div"); item.className = "flow-legend-item";
     const dot  = document.createElement("div"); dot.className = "flow-legend-dot";
     dot.style.background = flowTypeColor(s.type);
     const lbl  = document.createElement("span");
-    lbl.textContent = s.type.charAt(0).toUpperCase() + s.type.slice(1);
+    lbl.textContent = label;
     item.appendChild(dot); item.appendChild(lbl); legendEl.appendChild(item);
   });
 
