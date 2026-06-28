@@ -351,7 +351,7 @@
   }
   .agent-panel .ap-val { font-size: 13px; color: var(--ink); line-height: 1.55; }
   .agent-panel .ap-agentic {
-    background: #f8fafc; border-radius: 8px; border-left: 3px solid; padding: 10px 12px;
+    background: #f8fafc; border-radius: 8px; padding: 10px 12px;
     margin-bottom: 16px;
   }
   .agent-panel .ap-agentic .ap-label { margin-bottom: 4px; }
@@ -471,7 +471,7 @@
 
   .card h3 { margin: 0 0 3px; font-size: 14px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
   /* ── true-agent card face ── */
-  .card.true-agent { border-left: 4px solid var(--ta-color, #A100FF); }
+
   .card.true-agent .ta-num {
     font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
     margin-bottom: 4px;
@@ -486,7 +486,7 @@
     padding: 2px 8px; display: inline-block; margin-top: 2px;
   }
   /* ── execution card (steps with no reasoning agent — SAP/Kinaxis runs the plan) ── */
-  .card.exec-card { border-left: 4px solid #9CA3AF; background: #f9f9fb; }
+  .card.exec-card { background: #f9f9fb; }
   .card.exec-card .ec-label {
     font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
     color: #9CA3AF; margin-bottom: 4px;
@@ -585,7 +585,7 @@
   .seg-body[hidden] { display: none; }
   .aera-note {
     font-size: 12px; line-height: 1.6; color: var(--ink-soft);
-    border-left: 3px solid #16A34A; padding: 3px 0 3px 10px; margin-bottom: 12px;
+    padding: 3px 0; margin-bottom: 12px;
   }
 
   /* ---------- Drawer ---------- */
@@ -851,9 +851,96 @@
   padding: 2px 7px; border-radius: 99px; color: #fff; margin-left: 5px; margin-bottom: 8px;
 }
 .ft-note { font-size: 11.5px; color: var(--ink-soft); line-height: 1.55; }
+
+  /* ── Login overlay ── */
+  #loginOverlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit;
+  }
+  #loginOverlay.fade-out {
+    opacity: 0; transition: opacity .35s ease; pointer-events: none;
+  }
+  .login-box {
+    width: 340px; padding: 48px 40px 40px;
+    border: 1px solid #e0e0e8; border-radius: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.08);
+    display: flex; flex-direction: column; gap: 0;
+  }
+  .login-logo {
+    font-size: 13px; font-weight: 800; letter-spacing: .04em;
+    color: #A100FF; margin-bottom: 28px;
+  }
+  .login-logo .chev { font-style: normal; }
+  .login-title {
+    font-size: 18px; font-weight: 800; color: #1c1c28;
+    margin-bottom: 4px; line-height: 1.2;
+  }
+  .login-sub {
+    font-size: 12px; color: #5b5b6b; margin-bottom: 28px; line-height: 1.4;
+  }
+  .login-field {
+    width: 100%; box-sizing: border-box;
+    border: 1px solid #d0d0dd; border-radius: 7px;
+    padding: 10px 14px; font-size: 14px; font-family: inherit;
+    color: #1c1c28; outline: none; margin-bottom: 12px;
+    transition: border-color .15s;
+  }
+  .login-field:focus { border-color: #A100FF; }
+  .login-btn {
+    width: 100%; padding: 11px; border: none; border-radius: 7px;
+    background: #A100FF; color: #fff;
+    font-size: 14px; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: filter .15s; margin-top: 4px;
+  }
+  .login-btn:hover { filter: brightness(1.1); }
+  .login-err {
+    font-size: 12px; color: #dc2626; margin-top: 8px;
+    min-height: 16px; text-align: center;
+  }
 </style>
 </head>
 <body>
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo"><span class="chev">&gt;</span> accenture</div>
+    <div class="login-title">NPI Agent Timeline</div>
+    <div class="login-sub">Hershey's &times; Accenture &middot; Confidential</div>
+    <input class="login-field" id="loginPass" type="password" placeholder="Access code" autocomplete="current-password"/>
+    <button class="login-btn" id="loginBtn" type="button">Enter</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const HASH = "9779a65d1e76f429437c4ec13f62573ab4bcb3d35fdb2f060ab70c41d4d0a9e8";
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+  }
+  async function attempt() {
+    const val = document.getElementById("loginPass").value;
+    const h = await sha256(val);
+    if (h === HASH) {
+      const ov = document.getElementById("loginOverlay");
+      ov.classList.add("fade-out");
+      ov.addEventListener("transitionend", () => ov.remove(), { once: true });
+    } else {
+      const err = document.getElementById("loginErr");
+      err.textContent = "Incorrect access code.";
+      document.getElementById("loginPass").value = "";
+      setTimeout(() => { err.textContent = ""; }, 2200);
+    }
+  }
+  document.getElementById("loginBtn").addEventListener("click", attempt);
+  document.getElementById("loginPass").addEventListener("keydown", e => {
+    if (e.key === "Enter") attempt();
+  });
+})();
+</script>
+
 
 <header class="app">
   <div class="brand">
@@ -1525,15 +1612,15 @@ function openOrchestratorPanel() {
     '<div class="ap-sect" style="margin-top:4px">' +
       '<div class="ap-label">Routing in action — three scenarios</div>' +
       '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">' +
-        '<div style="border-left:3px solid #D97706;background:#FFFBEB;border-radius:0 6px 6px 0;padding:10px 12px">' +
+        '<div style="background:#FFFBEB;border-radius:6px;padding:10px 12px">' +
           '<div style="font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#D97706;margin-bottom:5px">① Forecast too uncertain — loop back</div>' +
           '<div style="font-size:13px;color:var(--ink-soft);line-height:1.6">Agent 2 returns a demand curve with a confidence interval wider than the inventory planning threshold. Passing it forward would make Agent 3\'s plan unreliable. The orchestrator routes back to Agent 1: narrow the SKU list to the most defensible candidates, then re-forecast with a tighter scope.</div>' +
         '</div>' +
-        '<div style="border-left:3px solid #EA580C;background:#FFF7ED;border-radius:0 6px 6px 0;padding:10px 12px">' +
+        '<div style="background:#FFF7ED;border-radius:6px;padding:10px 12px">' +
           '<div style="font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#EA580C;margin-bottom:5px">② Mid-launch demand spike — re-trigger</div>' +
           '<div style="font-size:13px;color:var(--ink-soft);line-height:1.6">Week 2 post-launch. Live POS data shows demand tracking 35% above the locked plan. The orchestrator compares the deviation against the inventory plan\'s tolerance band — threshold exceeded. It re-triggers Agent 3 automatically with the updated demand signal. DC positions recalculate. No coordination meeting.</div>' +
         '</div>' +
-        '<div style="border-left:3px solid #A100FF;background:#FAF5FF;border-radius:0 6px 6px 0;padding:10px 12px">' +
+        '<div style="background:#FAF5FF;border-radius:6px;padding:10px 12px">' +
           '<div style="font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#A100FF;margin-bottom:5px">③ Large expedite — hold for human</div>' +
           '<div style="font-size:13px;color:var(--ink-soft);line-height:1.6">Agent 4 scores a shelf gap: the fix is a $420K air freight expedite. The orchestrator evaluates magnitude — this exceeds the auto-resolve limit. It creates a hold: the plan pauses, the planner receives the scored recommendation with full reasoning, and nothing advances until explicit sign-off.</div>' +
         '</div>' +
@@ -1892,7 +1979,7 @@ function openDrawer(a) {
   if (a.executionCard) {
     const body = $("#drawerBody");
     body.innerHTML =
-      '<div style="border-left:4px solid #9CA3AF;padding-left:12px;margin-bottom:20px">' +
+      '<div style="margin-bottom:20px">' +
         '<div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9CA3AF;margin-bottom:3px">Execution · ' + esc(a.system || '') + '</div>' +
         '<h2 id="drawerTitle" style="font-size:22px;font-weight:800;margin:0">' + esc(a.title) + '</h2>' +
       '</div>' +
@@ -1917,7 +2004,7 @@ function openDrawer(a) {
     const body = $("#drawerBody");
     const c = ta.color || "#A100FF";
     body.innerHTML =
-      '<div style="border-left:4px solid ' + c + ';padding-left:12px;margin-bottom:20px">' +
+      '<div style="margin-bottom:20px">' +
         '<div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:' + c + ';margin-bottom:3px">Agent ' + (ta.num||'') + (phase ? ' · ' + esc(phase.label) : '') + '</div>' +
         '<h2 id="drawerTitle" style="font-size:22px;font-weight:800;margin:0">' + esc(a.title) + '</h2>' +
       '</div>' +
@@ -1942,7 +2029,7 @@ function openDrawer(a) {
         '<div class="d-section-title" style="margin-top:20px">Aera skills consumed</div>' +
         '<div style="font-size:12px;color:var(--ink-soft);margin-bottom:12px">These Aera skills run deterministically today. This agent reads their output and applies reasoning on top of it.</div>' +
         a.aeraInputs.map(inp =>
-          '<div style="border-left:3px solid #0F9D8C;padding-left:12px;margin-bottom:16px">' +
+          '<div style="margin-bottom:16px">' +
             '<div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0F9D8C;margin-bottom:3px">' + esc(inp.skill) + ' <span style="opacity:.6;font-weight:600;text-transform:none;letter-spacing:0">· ' + esc(inp.role) + '</span></div>' +
             '<div style="font-size:12.5px;line-height:1.6;color:var(--ink)">' + esc(inp.note) + '</div>' +
           '</div>'
