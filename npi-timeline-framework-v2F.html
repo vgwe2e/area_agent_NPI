@@ -1119,6 +1119,10 @@ const JOURNEY = {
       outcome: "Forecast accuracy improves 20–40% cycle-over-cycle. Supply chain reacts in hours, not weeks. Planners see a live number each morning instead of a stale quarterly update.",
       replaces: "Kinaxis is configured for existing SKU demand cycles — not new launches where there is no prior sales history. NPI forecasts are typically entered as a one-time static curve at launch: a number the team agrees on, loaded into Kinaxis, and rarely revisited until something goes wrong. The like-product matching and analogue-based forecasting that should underpin it happens outside the system, when it happens at all.",
       humanApproval: "Planner reviews the demand curve, the key assumptions, and any uncertainty flags — then approves the forecast that flows into inventory planning.",
+      aeraInputs: [
+        { skill: "Demand Sensing", role: "signal", note: "Demand Sensing runs continuously — pulling POS scans, retailer EDI, and digital signals and computing the deviation from the current plan. Agent 2 reads that deviation signal and makes the reasoning call: is this drift large enough to revise the demand curve? Does the revision cross a threshold that should re-trigger Agent 3 on inventory? The skill produces the observation; the agent decides what it means and what to do next." },
+        { skill: "Demand Plan Reconciliation", role: "baseline", note: "Before Agent 2 can reason about the demand curve, the commercial promotional plan (PlanX) and the Kinaxis statistical demand plan need to be reconciled — resolving the SKU-by-channel variance between what sales committed to retailers and what the supply model says demand will be. Agent 2 uses the reconciled output as its working baseline. Where the two plans still diverge materially after reconciliation, Agent 2 flags those lines for planner review rather than passing a false-confident number into inventory planning." },
+      ],
       description: "Kinaxis handles demand planning for established SKUs well — but new product launches have no prior sales history to draw from. This agent fills that gap by pulling every comparable launch from the like-product library, matching the new product on category, pack, and channel profile, and selecting the right forecasting model based on how much real data is available.\n\nThe moment in-market data starts arriving — POS scans, retailer orders, digital signals — the demand curve recalibrates automatically. If the deviation is material enough to change an inventory decision, it re-triggers planning downstream — no coordination meeting required.\n\nWhat makes it an agent: it selects the model based on data maturity — sparse early-launch data means a structural analog model; sufficient history means an XGBoost ensemble. It monitors continuously and decides when drift is large enough to act.",
       capabilities: ["genai","ml","predictive","statistical"],
       metric: "Forecast accuracy (MAPE / WMAPE)",
@@ -1151,6 +1155,9 @@ const JOURNEY = {
       outcome: "Exception resolution time drops from days to hours. Planners deal with 3 structured decisions instead of 25+ raw alerts. Every resolution feeds the learning agent.",
       replaces: "Kinaxis and SAP both surface exception alerts — but through separate views, with no cross-system prioritization and no business-impact scoring. A planner sees a Kinaxis shortage alert and a SAP order hold at the same time, with no way to know which costs more to ignore. Triage is manual, based on experience and whoever is loudest, not on what actually matters most. Some exceptions get resolved; others compound quietly until launch week.",
       humanApproval: "For high-magnitude decisions — expedite fees, large reallocations, customer commitments — the agent presents a scored recommendation and waits for explicit approval before acting.",
+      aeraInputs: [
+        { skill: "Supply Chain Loss Prevention", role: "exception event", note: "SCLP monitors inventory positions against the revised demand envelope and fires a loss-exposure alert when a pre-build is tracking above it. Agent 4 receives that alert as an exception event — it doesn't do the loss detection itself. It pulls the relevant data from Kinaxis and SAP, scores the exposure against current demand, and determines: does this resolve through a DC reallocation (within authority — act automatically), does it warrant a markdown recommendation for planner approval, or is the exposure small enough to monitor rather than act on now? The skill tells the agent what is happening; the agent decides what to do about it." },
+      ],
       description: "During a live NPI launch, Kinaxis flags supply imbalances, SAP surfaces order holds, and retailer EDI signals shelf gaps — all as separate alert streams with no shared priority ranking. Planners manually piece together which issue is most urgent and what to do about it, usually resolving whatever surfaced most recently rather than whatever costs most to ignore.\n\nThis agent consolidates every signal into a single scored exception queue. When an exception appears, it pulls the relevant data from Kinaxis and SAP, scores the business impact, and generates the best resolution path. For exceptions within its authority — a 200-unit DC reallocation — it acts automatically and logs the action. For decisions above its threshold — a $400K expedite fee — it surfaces a one-click approval with the full reasoning already written.\n\nWhat makes it an agent: it reasons about its own decision authority. The boundary between act and escalate is dynamic, based on magnitude and risk type — not a hardcoded rule.",
       capabilities: ["genai","logic","predictive"],
       metric: "Exception resolution time & service-level preservation",
@@ -1171,6 +1178,45 @@ const JOURNEY = {
       capabilities: ["genai","ml","statistical"],
       metric: "Forecast improvement cycle-over-cycle",
       transformation: { badge: "TRANSFORMED·CONTINUOUS", note: "A quarterly retrospective becomes a continuous learning loop. Every launch automatically improves the next one." },
+    },
+
+    /* ── Aera running skills — deterministic, in production today.
+       Visible as subordinate cards; consumed by the true agents above. ── */
+    {
+      id: "demand-sensing-skill",
+      phaseId: "demand-forecasting",
+      aeraSkill: true, skillType: "deterministic",
+      title: "Demand Sensing",
+      type: "agent", status: "deployed",
+      refineryClass: "CustomAgent",
+      capabilities: ["ml", "api"],
+      description: "Pulls POS scan data, retailer EDI orders, and digital signals on a continuous cycle. Computes the deviation from the current demand plan and surfaces a structured delta signal when actuals diverge materially from the plan baseline.",
+      transformation: { badge: "ENABLED·AUTOMATED", note: "Running in Aera today — continuous signal capture replaces periodic manual data pulls." },
+      aera: "Running. Demand Sensing is a live Aera skill — it produces the deviation signal that the Demand Intelligence Agent reads to decide whether to revise the demand curve.",
+    },
+    {
+      id: "demand-reconciliation-skill",
+      phaseId: "demand-forecasting",
+      aeraSkill: true, skillType: "deterministic",
+      title: "Demand Plan Reconciliation",
+      type: "agent", status: "deployed",
+      refineryClass: "CustomAgent",
+      capabilities: ["logic", "api"],
+      description: "Reconciles the commercial and promotional demand plan (PlanX) with the Kinaxis statistical demand plan — resolving the SKU-by-channel variance between what sales committed to and what the supply model projects. Produces a single reconciled demand signal with a variance report by line.",
+      transformation: { badge: "ENABLED·AUTOMATED", note: "Running in Aera today — automated reconciliation replaces manual plan-vs-plan comparison across two systems." },
+      aera: "Running. Demand Plan Reconciliation is a live Aera skill — its reconciled output is the working baseline the Demand Intelligence Agent reasons from when evaluating forecast confidence and flagging divergences for planner review.",
+    },
+    {
+      id: "sclp-skill",
+      phaseId: "launch-execution-adjustments",
+      aeraSkill: true, skillType: "deterministic",
+      title: "Supply Chain Loss Prevention",
+      type: "agent", status: "deployed",
+      refineryClass: "CustomAgent",
+      capabilities: ["ml", "logic", "api"],
+      description: "Monitors live inventory positions against the revised demand envelope. Detects when a pre-build is tracking above the updated demand signal and fires a structured loss-exposure alert — flagging the affected SKU, DC location, and estimated write-off exposure.",
+      transformation: { badge: "ENABLED·AUTOMATED", note: "Running in Aera today — automated overbuild detection replaces reactive inventory reviews that happen after the loss is already locked in." },
+      aera: "Running. Supply Chain Loss Prevention is a live Aera skill — it produces the loss-exposure event that the Exception & Risk Agent receives, scores for business impact, and routes to either an automatic resolution or a planner approval.",
     },
   ],
 
@@ -1808,7 +1854,16 @@ function openDrawer(a) {
       '<div style="font-size:13px;line-height:1.6;margin-bottom:16px">' + esc(a.outcome || '') + '</div>' +
       '<div class="d-section-title">What it replaces</div>' +
       '<div style="font-size:13px;line-height:1.6;color:var(--ink-soft);margin-bottom:16px">' + esc(a.replaces || '') + '</div>' +
-      (a.transformation ? '<div class="d-section-title">Transformation</div>' + tBadge(a.transformation.badge) + '<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">' + esc(a.transformation.note || '') + '</div>' : '');
+      (a.transformation ? '<div class="d-section-title">Transformation</div>' + tBadge(a.transformation.badge) + '<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">' + esc(a.transformation.note || '') + '</div>' : '') +
+      (a.aeraInputs && a.aeraInputs.length ?
+        '<div class="d-section-title" style="margin-top:20px">Aera skills consumed</div>' +
+        '<div style="font-size:12px;color:var(--ink-soft);margin-bottom:12px">These Aera skills run deterministically today. This agent reads their output and applies reasoning on top of it.</div>' +
+        a.aeraInputs.map(inp =>
+          '<div style="border-left:3px solid #0F9D8C;padding-left:12px;margin-bottom:16px">' +
+            '<div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0F9D8C;margin-bottom:3px">' + esc(inp.skill) + ' <span style="opacity:.6;font-weight:600;text-transform:none;letter-spacing:0">· ' + esc(inp.role) + '</span></div>' +
+            '<div style="font-size:12.5px;line-height:1.6;color:var(--ink)">' + esc(inp.note) + '</div>' +
+          '</div>'
+        ).join('') : '');
     const drawer = $("#drawer");
     drawer.classList.add("open");
     $("#scrim").classList.add("open");
