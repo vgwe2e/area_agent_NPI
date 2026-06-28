@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPI True Agent Architecture — v2E · HSY × Accenture</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent:    #A100FF;
+  --accent-dk: #7B00CC;
+  --ink:       #0f172a;
+  --ink-soft:  #64748b;
+  --surface:   #ffffff;
+  --bg:        #f8fafc;
+  --hair:      #e2e8f0;
+  --font:      system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --a1: #1d4ed8; --a1-bg: #eff6ff; --a1-border: #93c5fd;
+  --a2: #059669; --a2-bg: #ecfdf5; --a2-border: #6ee7b7;
+  --a3: #7c3aed; --a3-bg: #f5f3ff; --a3-border: #c4b5fd;
+  --a4: #ea580c; --a4-bg: #fff7ed; --a4-border: #fdba74;
+  --a5: #0284c7; --a5-bg: #f0f9ff; --a5-border: #7dd3fc;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 40px 36px 60px;
+  min-height: 100vh;
+}
+
+/* ── Page header ── */
+.page-header { margin-bottom: 32px; }
+.client-tag {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+}
+h1 { font-size: 28px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+.subtitle { font-size: 14px; color: var(--ink-soft); }
+.subtitle strong { color: var(--ink); }
+
+/* ── Insight strip ── */
+.insight-strip {
+  display: flex; gap: 20px; margin-bottom: 28px; flex-wrap: wrap;
+}
+.insight-chip {
+  background: var(--surface); border: 1.5px solid var(--hair);
+  border-radius: 8px; padding: 12px 16px; flex: 1 1 160px;
+}
+.insight-chip .ic-num {
+  font-size: 26px; font-weight: 800; color: var(--accent); line-height: 1;
+}
+.insight-chip .ic-label {
+  font-size: 11px; color: var(--ink-soft); margin-top: 2px;
+}
+
+/* ── Orchestrator banner ── */
+.orchestrator {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 12px 12px 0 0;
+  padding: 18px 28px;
+  display: flex; align-items: flex-start; gap: 16px;
+}
+.orc-icon { font-size: 26px; flex: 0 0 auto; margin-top: 2px; }
+.orc-text {}
+.orc-title { font-size: 16px; font-weight: 800; margin-bottom: 3px; }
+.orc-desc  { font-size: 12px; opacity: .88; line-height: 1.6; }
+.orc-props {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;
+}
+.orc-prop {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; background: rgba(255,255,255,.18);
+  padding: 3px 10px; border-radius: 20px;
+}
+
+/* ── Agent flow ── */
+.agent-rail {
+  background: #f1f5f9;
+  border: 1.5px solid var(--hair);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 20px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+/* ── Connector ── */
+.connector {
+  flex: 0 0 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
+  padding: 0 4px;
+}
+.conn-label {
+  font-size: 9px; font-weight: 600; color: var(--ink-soft);
+  text-align: center; white-space: nowrap; line-height: 1.3;
+}
+.conn-line {
+  width: 100%; height: 2px; background: #cbd5e1; position: relative;
+}
+.conn-line::after {
+  content: ''; position: absolute; right: -1px; top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent; border-left: 8px solid #cbd5e1;
+}
+
+/* ── Agent card ── */
+.agent-card {
+  flex: 1 1 180px; min-width: 190px; max-width: 230px;
+  background: var(--surface);
+  border-radius: 10px;
+  border: 1.5px solid var(--hair);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow .15s, transform .15s;
+  position: relative;
+}
+.agent-card:hover { box-shadow: 0 6px 28px rgba(0,0,0,.10); transform: translateY(-2px); }
+.agent-card.open  { box-shadow: 0 6px 28px rgba(0,0,0,.12); }
+
+.ac-top-bar { height: 4px; flex: 0 0 4px; }
+
+.ac-header { padding: 12px 14px 8px; border-bottom: 1px solid var(--hair); }
+.ac-num  { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+.ac-name { font-size: 14px; font-weight: 800; line-height: 1.25; color: var(--ink); }
+
+.ac-steps { display: flex; gap: 4px; padding: 10px 14px 6px; flex-wrap: wrap; }
+.step-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 9px;
+  border-radius: 20px; border: 1.5px solid; white-space: nowrap;
+}
+.step-label { font-size: 10px; color: var(--ink-soft); padding: 0 14px 8px; line-height: 1.4; }
+
+.ac-divider { height: 1px; background: var(--hair); margin: 0 14px; }
+
+.ac-decision { padding: 10px 14px 6px; }
+.ac-decision .lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-soft); margin-bottom: 3px; }
+.ac-decision .val { font-size: 12px; font-weight: 600; color: var(--ink); line-height: 1.45; }
+
+.ac-agentic { margin: 0 14px 10px; padding: 8px 10px; background: #f8fafc; border-radius: 6px; border-left: 3px solid; }
+.ac-agentic .lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 3px; }
+.ac-agentic .val { font-size: 11px; color: var(--ink-soft); line-height: 1.5; }
+
+.ac-expand-hint {
+  text-align: center; font-size: 10px; color: var(--ink-soft);
+  padding: 6px; border-top: 1px solid var(--hair);
+  -webkit-user-select: none; user-select: none;
+}
+.agent-card.open .ac-expand-hint { display: none; }
+
+/* Expanded detail */
+.ac-detail { display: none; padding: 0 14px 14px; }
+.agent-card.open .ac-detail { display: block; }
+.ac-detail .lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-soft); margin: 10px 0 5px; }
+.tool-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.tool-chip {
+  font-size: 10px; font-family: 'Menlo', 'Consolas', monospace;
+  padding: 2px 7px; border-radius: 4px;
+  background: #f1f5f9; color: var(--ink-soft);
+  border: 1px solid var(--hair);
+}
+
+/* ── Feedback note ── */
+.feedback-note {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin: 0 0 16px; flex-wrap: wrap;
+}
+.fn-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--ink-soft);
+  border: 1.5px dashed #cbd5e1; border-radius: 20px;
+  padding: 5px 14px; background: var(--surface);
+}
+.fn-pill .fn-icon { font-size: 13px; }
+
+/* ── Automation layer ── */
+.automation-layer {
+  background: #1e293b; border-radius: 12px;
+  padding: 20px 28px; margin-bottom: 40px;
+}
+.auto-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.auto-badge {
+  font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  background: #334155; color: #94a3b8; padding: 3px 10px; border-radius: 20px;
+}
+.auto-title { font-size: 13px; font-weight: 600; color: #94a3b8; }
+.auto-items { display: flex; gap: 12px; flex-wrap: wrap; }
+.auto-item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: #94a3b8;
+  background: #263244; border-radius: 7px; padding: 7px 12px;
+}
+.auto-dot { width: 6px; height: 6px; border-radius: 50%; background: #475569; flex: 0 0 auto; }
+
+/* ── Key insight footer ── */
+.insight-footer {
+  border-top: 1.5px solid var(--hair); padding-top: 24px; margin-top: 8px;
+}
+.insight-footer h3 { font-size: 13px; font-weight: 800; color: var(--ink); margin-bottom: 12px; }
+.insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.insight-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--surface); border: 1.5px solid var(--hair);
+  border-radius: 8px; padding: 12px 14px;
+}
+.insight-row .ir-icon { font-size: 16px; flex: 0 0 auto; }
+.insight-row .ir-text { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+.insight-row .ir-text strong { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="client-tag">Hershey's (HSY) × Accenture · New Product Introduction</div>
+  <h1>NPI — True Agent Architecture</h1>
+  <div class="subtitle">
+    <strong>5 reasoning agents · 1 orchestrator · 8 process steps</strong>
+    &nbsp;·&nbsp; click any agent to see tools &nbsp;·&nbsp; rough v2E
+  </div>
+</div>
+
+<!-- Insight numbers -->
+<div class="insight-strip">
+  <div class="insight-chip"><div class="ic-num">5</div><div class="ic-label">True reasoning agents</div></div>
+  <div class="insight-chip"><div class="ic-num">1</div><div class="ic-label">Orchestration agent</div></div>
+  <div class="insight-chip"><div class="ic-num">8</div><div class="ic-label">NPI process steps owned</div></div>
+  <div class="insight-chip"><div class="ic-num">3</div><div class="ic-label">Steps collapsed (1+2, 3+4, 5+6 = same decision)</div></div>
+  <div class="insight-chip"><div class="ic-num">3</div><div class="ic-label">Human review gates remain</div></div>
+</div>
+
+<!-- Orchestrator -->
+<div class="orchestrator">
+  <div class="orc-icon">🧠</div>
+  <div class="orc-text">
+    <div class="orc-title">NPI Control Tower Orchestrator</div>
+    <div class="orc-desc">Maintains the NPI decision graph — which decisions are pending, approved, or blocked. Routes work to sub-agents. Re-triggers downstream when an upstream decision changes materially. Not a pipeline runner.</div>
+    <div class="orc-props">
+      <span class="orc-prop">State machine</span>
+      <span class="orc-prop">Dependency routing</span>
+      <span class="orc-prop">Re-trigger logic</span>
+      <span class="orc-prop">Human escalation</span>
+    </div>
+  </div>
+</div>
+
+<!-- Agent rail -->
+<div class="agent-rail" id="agentRail"></div>
+
+<!-- Feedback loops -->
+<div class="feedback-note">
+  <div class="fn-pill"><span class="fn-icon">↺</span> Demand Intelligence → Inventory Agent: material forecast revision automatically re-triggers inventory optimization — no meeting required</div>
+  <div class="fn-pill"><span class="fn-icon">↺</span> Learning Agent → Orchestrator: recalibrated models update the decision graph for the next NPI cycle</div>
+</div>
+
+<!-- Automation layer -->
+<div class="automation-layer">
+  <div class="auto-header">
+    <div class="auto-badge">Not Agents</div>
+    <div class="auto-title">Automation Layer — deterministic pipelines and tools the agents call</div>
+  </div>
+  <div class="auto-items">
+    <div class="auto-item"><div class="auto-dot"></div>Signal Ingestion (POS · EDI · Digital)</div>
+    <div class="auto-item"><div class="auto-dot"></div>ERP / System Handoffs</div>
+    <div class="auto-item"><div class="auto-dot"></div>Replenishment Triggers</div>
+    <div class="auto-item"><div class="auto-dot"></div>Metrics Calculation (MAPE · WMAPE · Bias)</div>
+    <div class="auto-item"><div class="auto-dot"></div>Data Harmonization</div>
+    <div class="auto-item"><div class="auto-dot"></div>Dashboard Population</div>
+    <div class="auto-item"><div class="auto-dot"></div>Threshold Alerts</div>
+  </div>
+</div>
+
+<!-- Key insights -->
+<div class="insight-footer">
+  <h3>Why the 8 steps collapse into 5 agents</h3>
+  <div class="insight-grid">
+    <div class="insight-row">
+      <div class="ir-icon">📦</div>
+      <div class="ir-text"><strong>Steps 1 + 2 → one agent.</strong> You can't decide <em>which</em> products without deciding <em>where</em> they go first. Portfolio selection and market sequencing are one decision, not two.</div>
+    </div>
+    <div class="insight-row">
+      <div class="ir-icon">📈</div>
+      <div class="ir-text"><strong>Steps 3 + 4 → one agent.</strong> The forecast and the signal sensing loop are the same continuous function. Separating them creates artificial handoffs in what should be a live feedback loop.</div>
+    </div>
+    <div class="insight-row">
+      <div class="ir-icon">🏭</div>
+      <div class="ir-text"><strong>Steps 5 + 6 → one agent.</strong> Planning a quantity without knowing where it's going is an incomplete optimization. Both steps solve the same problem with the same data.</div>
+    </div>
+    <div class="insight-row">
+      <div class="ir-icon">⚠️</div>
+      <div class="ir-text"><strong>Step 7 → separate agent.</strong> Exception handling requires a distinct authority model — the agent reasons about whether it can act autonomously or must escalate. Different decision type.</div>
+    </div>
+    <div class="insight-row">
+      <div class="ir-icon">🔁</div>
+      <div class="ir-text"><strong>Step 8 → separate agent.</strong> Learning is a meta-decision: what is worth keeping in the like-product library? Requires reasoning about knowledge quality, not just cycle outputs.</div>
+    </div>
+    <div class="insight-row">
+      <div class="ir-icon">🧠</div>
+      <div class="ir-text"><strong>The original design's error:</strong> treating each process step as its own agent. That maps tasks to agents. True agent architecture maps <em>decisions</em> to agents — fewer boundaries, richer reasoning.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const AGENTS = [
+  {
+    num: "Agent 1",
+    name: "Portfolio\nIntelligence",
+    color: "--a1", bg: "--a1-bg", border: "--a1-border",
+    steps: [
+      { badge: "Step 1", label: "Portfolio Selection" },
+      { badge: "Step 2", label: "Market Sequencing" }
+    ],
+    decision: "Which SKUs go to market, in what sequence, at what risk?",
+    agentic: "Decides how deep to research. Consistent analogues → stops. High variance → runs 5,000 scenarios. A pipeline always runs the same sequence.",
+    connector: "portfolio\napproved →",
+    tools: ["search_like_products(criteria)", "run_milp_scoring(candidates)", "run_monte_carlo(product, n)", "get_market_signals(category)", "write_recommendation(shortlist)"]
+  },
+  {
+    num: "Agent 2",
+    name: "Demand\nIntelligence",
+    color: "--a2", bg: "--a2-bg", border: "--a2-border",
+    steps: [
+      { badge: "Step 3", label: "NPI Demand Forecast" },
+      { badge: "Step 4", label: "Signal Capture & Sensing" }
+    ],
+    decision: "What will demand look like, how confident, and when does the forecast need updating?",
+    agentic: "Picks the model family from data shape. Self-triggers on drift — not a scheduled batch. Only agent with a continuous monitoring loop.",
+    connector: "forecast\napproved →",
+    tools: ["get_pos_data(sku, window)", "get_digital_signals(sku)", "search_analogues(profile)", "run_time_series(data, model)", "run_ensemble(models)", "flag_uncertainty(dims)"]
+  },
+  {
+    num: "Agent 3",
+    name: "Inventory &\nDeployment",
+    color: "--a3", bg: "--a3-bg", border: "--a3-border",
+    steps: [
+      { badge: "Step 5", label: "Inventory Planning" },
+      { badge: "Step 6", label: "Inventory Deployment" }
+    ],
+    decision: "How much to make, where to position it, and how to allocate within the approved envelope?",
+    agentic: "Selects the OR model based on problem structure — Newsvendor for simple buys, multi-echelon for complex networks. Reasons before picking.",
+    connector: "plan live →",
+    tools: ["get_network_state()", "run_newsvendor(demand, costs)", "run_multi_echelon(network)", "run_network_flow(nodes)", "run_scenario_comparison(opts)"]
+  },
+  {
+    num: "Agent 4",
+    name: "Exception\n& Risk",
+    color: "--a4", bg: "--a4-bg", border: "--a4-border",
+    steps: [
+      { badge: "Step 7", label: "Launch Execution & Adjustments" }
+    ],
+    decision: "Is this exception within my authority to resolve, or does it need a human?",
+    agentic: "Reasons about its own decision authority. 200-unit reallocation → auto-resolves. $400K expedite → escalates. The boundary is dynamic, not hardcoded.",
+    connector: "outcomes →",
+    tools: ["get_active_exceptions()", "score_impact(id)", "run_reallocation(from, to, qty)", "check_decision_authority(action)", "escalate_to_planner(id)", "log_resolution(id, action)"]
+  },
+  {
+    num: "Agent 5",
+    name: "Learning &\nCalibration",
+    color: "--a5", bg: "--a5-bg", border: "--a5-border",
+    steps: [
+      { badge: "Step 8", label: "Post-Launch Optimization" }
+    ],
+    decision: "What is worth adding to the like-product library, and what was cycle-specific noise?",
+    agentic: "Meta-reasoning on knowledge quality. Decides which learnings are durable patterns vs. anomalies. Recalibrates weights for the next NPI cycle.",
+    connector: null,
+    tools: ["run_attribution_analysis(cycle)", "write_to_library(learnings)", "recalibrate_model_weights()", "query_model_registry()"]
+  }
+];
+
+function el(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html !== undefined) e.innerHTML = html;
+  return e;
+}
+
+function buildRail() {
+  const rail = document.getElementById("agentRail");
+
+  AGENTS.forEach(agent => {
+    // Card
+    const card = el("div", "agent-card");
+    const c = `var(${agent.color})`;
+    const bg = `var(${agent.bg})`;
+    const bd = `var(${agent.border})`;
+
+    // Top colour bar
+    const bar = el("div", "ac-top-bar");
+    bar.style.background = c;
+    card.appendChild(bar);
+
+    // Header
+    const header = el("div", "ac-header");
+    const numEl = el("div", "ac-num", agent.num);
+    numEl.style.color = c;
+    const nameEl = el("div", "ac-name", agent.name.replace("\n", "<br>"));
+    header.appendChild(numEl);
+    header.appendChild(nameEl);
+    card.appendChild(header);
+
+    // Step badges
+    const steps = el("div", "ac-steps");
+    agent.steps.forEach(s => {
+      const badge = el("span", "step-badge", s.badge);
+      badge.title = s.label;
+      badge.style.color = c;
+      badge.style.borderColor = bd;
+      badge.style.background = bg;
+      steps.appendChild(badge);
+    });
+    card.appendChild(steps);
+
+    // Step labels
+    const slabel = el("div", "step-label", agent.steps.map(s => s.label).join(" · "));
+    card.appendChild(slabel);
+
+    // Divider
+    card.appendChild(el("div", "ac-divider"));
+
+    // Decision
+    const dec = el("div", "ac-decision");
+    dec.innerHTML = `<div class="lbl">Decision owned</div><div class="val">${agent.decision}</div>`;
+    card.appendChild(dec);
+
+    // Agentic reason
+    const ag = el("div", "ac-agentic");
+    ag.style.borderColor = c;
+    ag.innerHTML = `<div class="lbl" style="color:${c}">Agentic because</div><div class="val">${agent.agentic}</div>`;
+    card.appendChild(ag);
+
+    // Expand hint
+    card.appendChild(el("div", "ac-expand-hint", "click to see tools ↓"));
+
+    // Detail
+    const detail = el("div", "ac-detail");
+    detail.innerHTML = `<div class="lbl">Tools</div>
+      <div class="tool-chips">${agent.tools.map(t => `<span class="tool-chip">${t}</span>`).join("")}</div>`;
+    card.appendChild(detail);
+
+    card.addEventListener("click", () => card.classList.toggle("open"));
+    rail.appendChild(card);
+
+    // Connector
+    if (agent.connector) {
+      const conn = el("div", "connector");
+      const lbl = el("div", "conn-label", agent.connector.replace("\n", "<br>"));
+      const line = el("div", "conn-line");
+      conn.appendChild(lbl);
+      conn.appendChild(line);
+      rail.appendChild(conn);
+    }
+  });
+}
+
+buildRail();
+</script>
+</body>
+</html>
