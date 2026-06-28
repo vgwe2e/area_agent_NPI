@@ -485,6 +485,21 @@
   .rfbadge .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.85); }
 
   .card h3 { margin: 0 0 3px; font-size: 14px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
+  /* ── true-agent card face ── */
+  .card.true-agent { border-left: 4px solid var(--ta-color, #A100FF); }
+  .card.true-agent .ta-num {
+    font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .card.true-agent h3 { font-size: 15px; margin: 0 0 8px; }
+  .card.true-agent .ta-hook {
+    font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 8px;
+  }
+  .card.true-agent .ta-metric {
+    font-size: 10px; font-weight: 700; color: var(--ink-soft);
+    border: 1px solid var(--hair); border-radius: 4px;
+    padding: 2px 8px; display: inline-block; margin-top: 2px;
+  }
   .card .desc {
     margin: 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.45;
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
@@ -1062,259 +1077,84 @@ const JOURNEY = {
 
   agents: [
     {
-      id: "portfolio-optimization", phaseId: "portfolio-launch-planning",
-      title: "Portfolio Optimization Agent", type: "agent", status: "planned",
-      description: "Scores and ranks the SKU launch shortlist and generates an evidence-based demand range. Two decisions: which SKUs/channels to launch, and the expected demand range + initial confidence interval.",
-      capabilities: ["predictive","ai-augment","logic","statistical"], metric: "Launch hit rate & portfolio ROI", optional: false, /* MECE fix: classic-ai merged into logic */
-      refineryClass: "FlowSuperAgent",
-      orchestration: {
-        role: "flow-super-agent",
-        nodes: ["LikeProductResearcher","PortfolioOptimizer","MarketSegmenter","DemandRangeSimulator","PortfolioScoreWriter","LaunchPlanGate"],
-        edges: [
-          { from: "LikeProductResearcher", to: "PortfolioOptimizer" },
-          { from: "PortfolioOptimizer", to: "MarketSegmenter" },
-          { from: "MarketSegmenter", to: "DemandRangeSimulator" },
-          { from: "DemandRangeSimulator", to: "PortfolioScoreWriter" },
-          { from: "PortfolioScoreWriter", to: "LaunchPlanGate" },
-        ],
-        subAgents: [
-          { agent_name: "LikeProductResearcher", agent_class: "ResearchAgent", agent_description: "RAG over the like-product performance library." },
-          { agent_name: "PortfolioOptimizer", agent_class: "ToolUseAgent", agent_description: "MILP + weighted scoring of SKU/channel options." },
-          { agent_name: "MarketSegmenter", agent_class: "ToolUseAgent", agent_description: "ML clustering / segmentation for launch timing & sequencing." },
-          { agent_name: "DemandRangeSimulator", agent_class: "ToolUseAgent", agent_description: "Monte Carlo + like-product regression for the demand range & confidence interval." },
-          { agent_name: "PortfolioScoreWriter", agent_class: "UtilityAgent", agent_description: "Evidence-grounded portfolio recommendation (magic_prompt, anti-hallucination)." },
-          { agent_name: "LaunchPlanGate", agent_class: "HumanAgent", agent_description: "Planner approves the launch shortlist (Touchpoint 1)." },
-        ],
-      },
-      tooling: "MILP · weighted scoring · like-product regression · Monte Carlo",
-      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Brand-team picks become AI scores across like-products performance and shelf velocity, which the planner approves. (Demand-range decision is ENABLED·AUTOMATED.)" },
-      aera: "Placeholder",
+      id: "agent-portfolio-intelligence",
+      phaseId: "portfolio-launch-planning",
+      trueAgent: true, trueAgentId: "portfolio-intelligence",
+      title: "Portfolio Intelligence Agent",
+      type: "agent", status: "planned",
+      hook: "Turns brand team gut-feel into an evidence-scored shortlist ready to approve.",
+      decision: "Which SKUs advance to launch, in what channel sequence, and at what demand range?",
+      outcome: "Planners spend 15 minutes approving a ranked shortlist instead of 3 days building one. SKU launch hit rate improves when picks are grounded in analogue performance, not intuition.",
+      replaces: "3-day manual portfolio review across brand, finance, and supply teams working off disconnected spreadsheets.",
+      humanApproval: "Planner reviews the ranked shortlist with confidence intervals and any data gaps — approves or adjusts before the plan locks for supply planning.",
+      description: "Every launch cycle begins with brand teams submitting a list of SKU candidates. This agent searches every comparable launch in the like-product library, scores each candidate across shelf velocity, margin potential, and channel fit, runs demand simulations to produce a confidence range, and writes the recommendation in plain English — ready for the planner to approve or adjust in a single session.\n\nWhat makes it an agent: it decides how deep to research. When analogues are highly consistent, it stops early. When it finds high variance across past launches, it runs more scenarios before committing to a recommendation. A pipeline always runs the same fixed steps regardless of the data.",
+      capabilities: ["genai","logic","predictive"],
+      metric: "SKU launch hit rate",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Brand-team picks become AI-scored recommendations grounded in analogue performance. Planner approves a ranked shortlist, not a gut-feel list." },
     },
     {
-      id: "market-segmentation", phaseId: "portfolio-launch-planning",
-      title: "Market Segmentation Agent", type: "agent", status: "planned",
-      description: "Clusters channels/customers and ranks launch timing & sequencing by launch readiness and demand potential.",
-      capabilities: ["predictive","ai-augment","ml"], metric: "Launch timing & sequencing accuracy", optional: false,
-      refineryClass: "ToolUseAgent",
-      orchestration: { role: "worker", parent: "PortfolioPlanningPipeline", nodeName: "MarketSegmenter" },
-      tooling: "ML clustering · segmentation models",
-      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Marketing-calendar dates give way to channels and customers ranked by launch readiness and demand potential." },
-      aera: null,
+      id: "agent-demand-intelligence",
+      phaseId: "demand-forecasting",
+      trueAgent: true, trueAgentId: "demand-intelligence",
+      title: "Demand Intelligence Agent",
+      type: "agent", status: "planned",
+      hook: "Replaces the static 12-week forecast with a live demand curve that recalibrates every day.",
+      decision: "What is the demand curve, how confident are we, and has reality diverged enough to re-trigger inventory?",
+      outcome: "Forecast accuracy improves 20–40% cycle-over-cycle. Supply chain reacts in hours, not weeks. Planners see a live number each morning instead of a stale quarterly update.",
+      replaces: "One static 12-week forecast built in a spreadsheet, updated quarterly, and wrong by the time launch week arrives.",
+      humanApproval: "Planner reviews the demand curve, the key assumptions, and any uncertainty flags — then approves the forecast that flows into inventory planning.",
+      description: "A traditional NPI forecast is built once and rarely updated — by week three it is already wrong. This agent builds a demand curve from the first day a product goes live: pulling store scans, retailer orders, and digital signals; matching the product to comparable past launches; and selecting the right forecasting model based on how much data is available.\n\nThe moment real in-market data arrives, the curve recalibrates automatically. If the deviation is material enough to change an inventory decision, it re-triggers planning downstream — no meeting required.\n\nWhat makes it an agent: it selects the model based on data maturity — sparse early-launch data means a structural analog model; sufficient history means an XGBoost ensemble. It monitors continuously and decides when drift is large enough to act.",
+      capabilities: ["genai","ml","predictive","statistical"],
+      metric: "Forecast accuracy (MAPE / WMAPE)",
+      transformation: { badge: "TRANSFORMED·CONTINUOUS", note: "A static quarterly forecast becomes a live, self-recalibrating demand curve that catches reality instead of chasing it." },
     },
     {
-      id: "npi-forecast", phaseId: "demand-forecasting",
-      title: "NPI Forecast Agent", type: "agent", status: "planned",
-      description: "Generates a live multi-level (brand → SKU → customer) demand curve and flags model drift.",
-      capabilities: ["predictive","ai-augment","logic","statistical","ml"], metric: "Forecast accuracy (MAPE / WMAPE)", optional: false,
-      refineryClass: "FlowSuperAgent",
-      orchestration: {
-        role: "flow-super-agent",
-        nodes: ["SignalCapture","LikeProductResearcher","ForecastModeler","DemandSensing","ForecastNarrator","ForecastGate"],
-        edges: [
-          { from: "SignalCapture", to: "LikeProductResearcher" },
-          { from: "LikeProductResearcher", to: "ForecastModeler" },
-          { from: "ForecastModeler", to: "DemandSensing" },
-          { from: "DemandSensing", to: "ForecastNarrator" },
-          { from: "ForecastNarrator", to: "ForecastGate" },
-        ],
-        subAgents: [
-          { agent_name: "SignalCapture", agent_class: "ToolUseAgent", agent_description: "Signal Capture Agent (SHARED with step 7) — ingests POS/orders/digital signals." },
-          { agent_name: "LikeProductResearcher", agent_class: "ResearchAgent", agent_description: "RAG over the like-product library for analogs." },
-          { agent_name: "ForecastModeler", agent_class: "ToolUseAgent", agent_description: "ARIMA / XGBoost / prophet multi-level forecast engine." },
-          { agent_name: "DemandSensing", agent_class: "ToolUseAgent", agent_description: "Sell-through curve model — refines the demand forecast from live signals (shared with step 7)." },
-          { agent_name: "ForecastNarrator", agent_class: "UtilityAgent", agent_description: "Writes the explainable multi-level demand-curve narrative (magic_prompt)." },
-          { agent_name: "ForecastGate", agent_class: "HumanAgent", agent_description: "Planner approves/overrides the forecast (Touchpoint 1)." },
-        ],
-      },
-      tooling: "Statistical models (ARIMA, time series) · ML (XGBoost, prophet) · like-product analogy",
-      transformation: { badge: "TRANSFORMED·CONTINUOUS", note: "One static 12-week baseline becomes a live multi-level sales curve that captures product life cycle sales forecast." },
-      aera: null,
+      id: "agent-inventory-deployment",
+      phaseId: "inventory-planning",
+      trueAgent: true, trueAgentId: "inventory-deployment",
+      title: "Inventory & Deployment Agent",
+      type: "agent", status: "planned",
+      hook: "From approved forecast to stock on shelf — one agent, no manual handoffs across four teams.",
+      decision: "How much to build, when to build it, where to position it across the DC network, and how to replenish within the approved envelope?",
+      outcome: "Eliminates 10+ manual handoffs across sourcing, supply, and logistics. Cuts pre-build over-build write-offs. Launch week fill rates improve when allocation reflects live demand signals.",
+      replaces: "10+ planners across four teams manually coordinating launch quantity, supplier commitments, DC allocation, and retailer fulfilment through spreadsheets and email.",
+      humanApproval: "Planner reviews the full pre-build and deployment plan — quantity, DC positions, and retailer allocations — in one view. Nothing ships until there is explicit sign-off.",
+      description: "Once the demand forecast is approved, four sequential planning steps traditionally pass through four separate teams: someone calculates the launch quantity, someone sizes the pre-build, someone positions it across DCs, someone allocates to retailers. Each handoff takes days and introduces error.\n\nThis agent owns all four steps as a single optimization problem. It calculates the launch quantity by modeling the cost of running short against the cost of being long. It sizes and positions the pre-build across the DC network. It allocates to each retailer respecting commitments and safety stock floors. When the planner approves, replenishment triggers automatically within the approved envelope.\n\nWhat makes it an agent: it selects the right optimization model based on the problem structure — a simple one-time buy gets the Newsvendor model; a complex multi-DC network gets multi-echelon optimization. It reasons about which tool fits before picking one.",
+      capabilities: ["logic","predictive","api"],
+      metric: "Case fill rate & over-build write-off reduction",
+      transformation: { badge: "ENABLED·AUTOMATED", note: "Four manual planning handoffs across sourcing, supply, DC, and retail collapse into one agent-orchestrated optimization with a single planner approval gate." },
     },
     {
-      id: "signal-capture", phaseId: "demand-forecasting",
-      title: "Signal Capture Agent", type: "agent", status: "planned",
-      description: "Ingests and weights POS, retailer orders, and digital/unstructured signals in near real time; harmonizes & validates the demand dataset. Shared across steps 2 and 7.",
-      capabilities: ["api","ai-augment","genai"], metric: "Demand-signal latency (days → hours)", optional: false,
-      refineryClass: "ToolUseAgent",
-      orchestration: { role: "worker", parent: "DemandForecastPipeline", alsoParent: "InMarketMonitoringAdvisor", nodeName: "SignalCapture", shared: true },
-      tooling: "Data engineering tools · GenAI for unstructured signal extraction",
-      transformation: { badge: "ENABLED·AUTOMATED", note: "POS, retailer orders and digital signals are ingested and weighted in near real time, not pulled weekly by hand." },
-      aera: null,
+      id: "agent-exception-risk",
+      phaseId: "launch-execution-adjustments",
+      trueAgent: true, trueAgentId: "exception-risk",
+      title: "Exception & Risk Agent",
+      type: "agent", status: "planned",
+      hook: "Turns an inbox of raw alerts into a prioritized action list — and resolves what it can without a call.",
+      decision: "Is this exception within my authority to resolve autonomously, or does it need a human? If escalating, what is the recommended resolution and what is at stake?",
+      outcome: "Exception resolution time drops from days to hours. Planners deal with 3 structured decisions instead of 25+ raw alerts. Every resolution feeds the learning agent.",
+      replaces: "A planner manually triaging an email inbox of supply and demand alerts, responding reactively to whatever surfaced last — not to what matters most.",
+      humanApproval: "For high-magnitude decisions — expedite fees, large reallocations, customer commitments — the agent presents a scored recommendation and waits for explicit approval before acting.",
+      description: "During a live launch, supply gaps, demand spikes, and retailer shortfalls generate a constant stream of alerts. Planners triage this manually — which means the most critical issues do not always get addressed first, and small problems become expensive ones.\n\nThis agent monitors every signal continuously. When an exception appears, it scores the business impact, ranks it against everything else in the queue, and generates the best resolution. For exceptions within its authority — a 200-unit reallocation between DCs — it acts automatically. For decisions above its threshold — a $400K expedite order — it surfaces a one-click approval to the planner with the full reasoning.\n\nWhat makes it an agent: it reasons about its own decision authority. The boundary between act and escalate is dynamic, based on magnitude and risk type — not a hardcoded rule.",
+      capabilities: ["genai","logic","predictive"],
+      metric: "Exception resolution time & service-level preservation",
+      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "A raw alert inbox becomes a prioritized, AI-scored action queue. Small decisions are auto-resolved; big ones arrive as structured approvals, not noise." },
     },
     {
-      id: "demand-sensing", phaseId: "demand-forecasting",
-      title: "Demand Sensing", type: "agent", status: "deployed",
-      aeraSkill: true, skillType: "deterministic",
-      description: "Aera skill (deterministic). Reads demand and builds the sell-through curves that show what is happening at the shelf — mapping point-of-sale scans up to cases — and continuously recalibrates the in-market forecast curve. Shared across steps 2 and 7.",
-      capabilities: ["predictive","ai-augment","ml","statistical"], metric: "Shelf-level demand visibility", optional: false,
-      refineryClass: "CustomAgent",
-      orchestration: { role: "worker", parent: "DemandForecastPipeline", alsoParent: "InMarketMonitoringAdvisor", nodeName: "DemandSensing", shared: true },
-      tooling: "ML time-series · real-time signal models",
-      transformation: { badge: "ENABLED·AUTOMATED", note: "The sales curve is recalibrated automatically from detected demand signals — running continuously, not recomputed by hand on demand." },
-      aera: null,
-    },
-    {
-      id: "demand-signal-reconciliation", phaseId: "demand-forecasting",
-      title: "Demand Signal Reconciliation", type: "service", status: "deployed",
-      aeraSkill: true, skillType: "deterministic",
-      description: "Aera skill (deterministic). Reconciles the PlanX, Kinaxis and Commercial demand signals into a single aligned demand view so operations plan against one agreed number instead of three competing ones.",
-      capabilities: ["logic","api","ai-augment"], metric: "One aligned demand number across systems", optional: false, /* MECE fix: classic-ai merged into logic */
-      refineryClass: "CustomAgent",
-      tooling: "Cross-system signal reconciliation · alignment rules (PlanX · Kinaxis · Commercial)",
-      transformation: { badge: "ENABLED·AUTOMATED", note: "PlanX, Kinaxis and commercial demand signals are reconciled into one aligned demand view automatically, instead of being cross-checked by hand." },
-      aera: null,
-    },
-    {
-      id: "inventory-optimization-planning", phaseId: "inventory-planning",
-      title: "Inventory Optimization and Planning Agent", type: "agent", status: "planned",
-      description: "Computes the optimal launch quantity from the underage/overage trade-off (newsvendor one-time-buy) and publishes it as the target for downstream planning systems.",
-      capabilities: ["predictive","logic","api","statistical"], metric: "Stockout vs. write-off cost balance", optional: false, /* MECE fix: classic-ai merged into logic */
-      refineryClass: "FlowSuperAgent",
-      orchestration: {
-        role: "flow-super-agent",
-        nodes: ["InventoryDataFetcher","NewsvendorOptimizer","QuantityRecommendationWriter","LaunchQtyGate","DownstreamPublisher"],
-        edges: [
-          { from: "InventoryDataFetcher", to: "NewsvendorOptimizer" },
-          { from: "NewsvendorOptimizer", to: "QuantityRecommendationWriter" },
-          { from: "QuantityRecommendationWriter", to: "LaunchQtyGate" },
-          { from: "LaunchQtyGate", to: "DownstreamPublisher" },
-        ],
-        subAgents: [
-          { agent_name: "InventoryDataFetcher", agent_class: "ToolUseAgent", agent_description: "Pulls inventory/cost/service-level state from planning systems." },
-          { agent_name: "NewsvendorOptimizer", agent_class: "ToolUseAgent", agent_description: "Newsvendor one-time-buy model balancing underage vs. overage cost." },
-          { agent_name: "QuantityRecommendationWriter", agent_class: "UtilityAgent", agent_description: "Evidence-grounded optimal-quantity recommendation (magic_prompt)." },
-          { agent_name: "LaunchQtyGate", agent_class: "HumanAgent", agent_description: "Planner approves the optimized launch quantity (Touchpoint 1)." },
-          { agent_name: "DownstreamPublisher", agent_class: "ToolUseAgent", agent_description: "Publishes the approved target quantity to downstream planning systems (feeds step 4)." },
-        ],
-      },
-      tooling: "Newsvendor type of one-time buy model",
-      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Launch quantity becomes an optimized recommendation balancing stockout and write-off cost for planner sign-off. (Publish-to-downstream decision is ENABLED·AUTOMATED.)" },
-      aera: "Placeholder",
-    },
-    {
-      id: "inventory-deployment-replenishing", phaseId: "inventory-positioning-deployment",
-      title: "Inventory deployment and replenishing agent", type: "agent", status: "planned",
-      description: "Sizes pre-build, positions stock across DCs/regions, allocates to customers/channels with risk buffers, and triggers replenishment within the approved envelope.",
-      capabilities: ["predictive","logic","api"], metric: "Case fill rate & inventory turns", optional: false, /* MECE fix: classic-ai merged into logic */
-      refineryClass: "FlowSuperAgent",
-      orchestration: {
-        role: "flow-super-agent",
-        nodes: ["NetworkDataFetcher","MultiEchelonOptimizer","AllocationPlanner","DeploymentPlanWriter","DeploymentGate","ReplenishmentExecutor"],
-        edges: [
-          { from: "NetworkDataFetcher", to: "MultiEchelonOptimizer" },
-          { from: "MultiEchelonOptimizer", to: "AllocationPlanner" },
-          { from: "AllocationPlanner", to: "DeploymentPlanWriter" },
-          { from: "DeploymentPlanWriter", to: "DeploymentGate" },
-          { from: "DeploymentGate", to: "ReplenishmentExecutor" },
-        ],
-        subAgents: [
-          { agent_name: "NetworkDataFetcher", agent_class: "ToolUseAgent", agent_description: "Pulls DC network state and current inventory positions." },
-          { agent_name: "MultiEchelonOptimizer", agent_class: "ToolUseAgent", agent_description: "Multi-echelon inventory optimization for pre-build sizing & DC positioning." },
-          { agent_name: "AllocationPlanner", agent_class: "ToolUseAgent", agent_description: "Allocates across customers/channels respecting commitment, priority, and safety-stock constraints." },
-          { agent_name: "DeploymentPlanWriter", agent_class: "UtilityAgent", agent_description: "Writes the pre-build + DC + allocation plan for sign-off (magic_prompt)." },
-          { agent_name: "DeploymentGate", agent_class: "HumanAgent", agent_description: "Planner approves the pre-build and DC plan (Touchpoint 1)." },
-          { agent_name: "ReplenishmentExecutor", agent_class: "ToolUseAgent", agent_description: "Auto-replenishes within the approved envelope." },
-        ],
-      },
-      tooling: "Multi-echelon inventory optimization and replenishment models",
-      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "A static pre-build plan becomes an agent recommendation sized to demand confidence intervals for planner sign-off. (Positioning is TRANSFORMED·CONTINUOUS; channel allocation is ENABLED·AUTOMATED.)" },
-      aera: "Placeholder",
-    },
-    {
-      id: "lifecycle-management", phaseId: "launch-execution-adjustments",
-      title: "Lifecycle Management Agent", type: "agent", status: "planned",
-      description: "Updates the demand curve via phase-in/phase-out lifecycle models and flags required supply/inventory/distribution actions for the planner.",
-      capabilities: ["predictive","ai-augment","genai","statistical","ml"], metric: "Phase-in / phase-out timing accuracy", optional: false,
-      refineryClass: "ToolUseAgent",
-      orchestration: { role: "worker", parent: "InMarketMonitoringAdvisor", nodeName: "LifecycleManager" },
-      tooling: "LLM · statistical & ML lifecycle forecast models (phase-in / phase-out)",
-      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "The demand curve updates and required supply and distribution actions are flagged for the planner to act on." },
-      aera: null,
-    },
-    {
-      id: "exception-handler", phaseId: "launch-execution-adjustments",
-      title: "Exception Handler Agent", type: "agent", status: "planned",
-      description: "Scores and routes exceptions (shortages, delays, demand spikes) by severity and generates a proposed next-best-action resolution.",
-      capabilities: ["predictive","genai","logic"], metric: "Exception resolution time", optional: false, /* MECE fix: classic-ai merged into logic */
-      refineryClass: "FlowSuperAgent",
-      orchestration: {
-        role: "flow-super-agent", parent: "InMarketMonitoringAdvisor",
-        nodes: ["ExceptionDetector","SeverityScorer","NextBestActionWriter","ExceptionGate"],
-        edges: [
-          { from: "ExceptionDetector", to: "SeverityScorer" },
-          { from: "SeverityScorer", to: "NextBestActionWriter" },
-          { from: "NextBestActionWriter", to: "ExceptionGate" },
-        ],
-        subAgents: [
-          { agent_name: "ExceptionDetector", agent_class: "ToolUseAgent", agent_description: "Exception alerting tools — detects shortages, delays, demand spikes." },
-          { agent_name: "SeverityScorer", agent_class: "ToolUseAgent", agent_description: "Scores and ranks exceptions by severity." },
-          { agent_name: "NextBestActionWriter", agent_class: "UtilityAgent", agent_description: "Generates the proposed next-best-action / resolution (magic_prompt)." },
-          { agent_name: "ExceptionGate", agent_class: "HumanAgent", agent_description: "Planner works the scored exception queue, accepts/overrides (Touchpoint 2)." },
-        ],
-      },
-      tooling: "LLM · exception alerting tools · next-best-action generation",
-      transformation: { badge: "ENABLED·AUTOMATED", note: "Exceptions are scored and routed by severity with a proposed resolution, instead of manual firefighting." },
-      aera: null,
-    },
-    {
-      id: "performance-monitoring", phaseId: "post-launch-optimization",
-      title: "Performance Monitoring Agent", type: "agent", status: "planned",
-      description: "Tracks KPIs (MAPE, WMAPE, Bias), performs root-cause analysis, and auto-flags model degradation vs. plan.",
-      capabilities: ["predictive","ai-augment","logic","statistical"], metric: "Forecast accuracy & bias vs. plan", optional: false,
-      refineryClass: "AnalyticsAgent",
-      orchestration: { role: "worker", parent: "PostLaunchScalingAdvisor", nodeName: "PerformanceMonitor" },
-      tooling: "KPI metrics · accuracy & bias formulas (MAPE, WMAPE, Bias)",
-      transformation: { badge: "ENABLED·AUTOMATED", note: "MAPE, sell-through and margin are tracked against plan automatically, with model degradation auto-flagged." },
-      aera: "Placeholder",
-    },
-    {
-      id: "scaling", phaseId: "post-launch-optimization",
-      title: "Scaling Agent", type: "agent", status: "planned",
-      description: "Identifies expansion opportunities, simulates scaling scenarios, and triggers replenishment in high-velocity markets for planner approval.",
-      capabilities: ["predictive","logic","statistical"], metric: "Time-to-scale in high-velocity markets", optional: false,
-      refineryClass: "ToolUseAgent",
-      orchestration: { role: "worker", parent: "PostLaunchScalingAdvisor", nodeName: "ScalingSimulator" },
-      tooling: "Scenario simulator · forecasting models on simulated parameters",
-      transformation: { badge: "TRANSFORMED·AUGMENTED", note: "Expansion opportunities are identified and replenishment triggered in high-velocity markets for planner approval." },
-      aera: "Placeholder",
-    },
-    {
-      id: "learning-loop", phaseId: "post-launch-optimization",
-      title: "Learning Loop Agent", type: "agent", status: "planned",
-      description: "Writes NPI actuals back into the like-product library and forecast models, closing the loop each cycle. Backed by Distiller MemTree persistent memory.",
-      capabilities: ["predictive","ai-augment","ml"], metric: "Forecast improvement cycle-over-cycle", optional: false,
-      refineryClass: "ToolUseAgent",
-      orchestration: { role: "worker", parent: "PostLaunchScalingAdvisor", nodeName: "LearningLoop", memory: "MemTree" },
-      tooling: "ML · feedback loop models · like-product library updates",
-      transformation: { badge: "TRANSFORMED·CONTINUOUS", note: "NPI actuals are written back into the like-product library and forecast models, closing the loop each cycle." },
-      aera: "Placeholder",
-    },
-
-    /* --- Aera skills placed UP in the timeline alongside the agents.
-           OSA and Frozen-Period Cut populate the two placeholder steps
-           (6 = shelf availability, 4 = production scheduling) with the
-           deterministic Aera skills that run there today. --- */
-    {
-      id: "osa", phaseId: "distribution-fulfillment",
-      title: "On-Shelf Availability", type: "service", status: "deployed",
-      aeraSkill: true, skillType: "deterministic",
-      description: "Aera skill (deterministic). Reaches into distributor and customer shelf and warehouse data to see what is on-shelf and in the warehouse; when service levels slip, pushes out corrective actions. Running today — fills this step's shelf-availability gap ahead of the future agentic version.",
-      capabilities: ["api","logic","ai-augment"], metric: "Protects launch-week service levels", optional: false, /* MECE fix: classic-ai merged into logic */
-      refineryClass: "ToolUseAgent",
-      tooling: "Retailer/distributor data connectors · service-level rules · push alerts",
-      transformation: { badge: "ENABLED·AUTOMATED", note: "Shelf and warehouse positions are read continuously and service-level gaps trigger corrective pushes, instead of manual account-by-account checks." },
-      aera: null,
-    },
-    {
-      id: "sclp", phaseId: "downstream-planning-systems",
-      title: "Supply Chain Loss Prevention", type: "service", status: "deployed",
-      aeraSkill: true, skillType: "deterministic",
-      description: "Aera skill (deterministic). Prevents supply-chain loss by cutting production during the frozen period when demand is not manifesting — protecting against over-build and write-off. Drives supply planning and inventory pre-builds in Kinaxis. Running today within this otherwise-placeholder step.",
-      capabilities: ["logic","predictive"], metric: "Prevents over-build write-off loss", optional: false, /* MECE fix: classic-ai merged into logic */
-      refineryClass: "CustomAgent",
-      tooling: "Frozen-period plan vs. live demand · production-cut decision logic",
-      transformation: { badge: "ENABLED·AUTOMATED", note: "Frozen-period production is cut automatically when demand fails to manifest — no manual per-cycle review, instead of building to a stale plan." },
-      aera: null,
+      id: "agent-learning-calibration",
+      phaseId: "post-launch-optimization",
+      trueAgent: true, trueAgentId: "learning-calibration",
+      title: "Learning & Calibration Agent",
+      type: "agent", status: "planned",
+      hook: "Every launch makes the next one smarter — automatically, not in a slide deck no one reads.",
+      decision: "What drove forecast accuracy this cycle? Which learnings belong in the library? Which model weights need recalibrating?",
+      outcome: "Forecast accuracy compounds cycle-over-cycle. New NPI teams start with real launch performance as their baseline. Institutional knowledge becomes a living system instead of a quarterly slide deck.",
+      replaces: "A quarterly post-mortem slide deck that summarises what went wrong, gets filed, and is not consulted before the next launch.",
+      humanApproval: "Calibration changes that affect future planning parameters are surfaced for sign-off before they take effect — no silent model updates that shift behaviour without planner awareness.",
+      description: "At the end of every NPI cycle, someone needs to answer: what did we learn? Traditionally this produces a quarterly slide deck that is filed and forgotten. By the next launch, the insights are gone.\n\nThis agent reconciles the full cycle actuals against every forecast and plan — SKU by SKU, market by market. It identifies the specific factors that drove accuracy and the factors that caused misses. It decides which learnings are durable patterns worth adding to the like-product library, and which were cycle-specific noise not worth encoding. It recalibrates model weights so the next cycle starts from a better prior.\n\nWhat makes it an agent: it reasons about the quality of knowledge. Adding a noisy signal to the library degrades future forecasts — the agent judges whether a learning is signal or noise before committing it.",
+      capabilities: ["genai","ml","statistical"],
+      metric: "Forecast improvement cycle-over-cycle",
+      transformation: { badge: "TRANSFORMED·CONTINUOUS", note: "A quarterly retrospective becomes a continuous learning loop. Every launch automatically improves the next one." },
     },
   ],
 
@@ -1779,6 +1619,23 @@ function buildCard(a) {
     return '<span class="ic" title="' + esc(c.label) + '">' + glyph(id, c.color) + '</span>';
   }).join("");
 
+  // true-agent cards get a business-focused face
+  if (a.trueAgent) {
+    const ta = TRUE_AGENTS[a.trueAgentId] || {};
+    card.classList.add("true-agent");
+    card.style.setProperty("--ta-color", ta.color || "#A100FF");
+    card.innerHTML =
+      '<div class="ta-num" style="color:' + (ta.color || '#A100FF') + '">Agent ' + (ta.num || '') + ' · ' + (ta.steps || []).join(", ") + '</div>' +
+      '<h3>' + esc(a.title) + '</h3>' +
+      '<div class="ta-hook">' + esc(a.hook || '') + '</div>' +
+      (a.metric ? '<div class="ta-metric">&#8593; ' + esc(a.metric) + '</div>' : '');
+    card.addEventListener("click", () => openDrawer(a));
+    card.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDrawer(a); }
+    });
+    return card;
+  }
+
   // top-row badges: Aera skills lead with AERA SKILL + skill-type, others with node-type
   const topBadges = a.aeraSkill
     ? '<span class="badge skill">Aera Skill</span>' + skillBadge(a.skillType) + rfBadge(a.refineryClass)
@@ -1866,6 +1723,38 @@ let lastFocused = null;
 
 function openDrawer(a) {
   lastFocused = document.activeElement;
+
+  // true-agent cards get a business-focused drawer
+  if (a.trueAgent) {
+    const ta = TRUE_AGENTS[a.trueAgentId] || {};
+    const phase = JOURNEY.phases.find(p => p.id === a.phaseId);
+    const body = $("#drawerBody");
+    const c = ta.color || "#A100FF";
+    body.innerHTML =
+      '<div style="border-left:4px solid ' + c + ';padding-left:12px;margin-bottom:20px">' +
+        '<div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:' + c + ';margin-bottom:3px">Agent ' + (ta.num||'') + (phase ? ' · ' + esc(phase.label) : '') + '</div>' +
+        '<h2 id="drawerTitle" style="font-size:22px;font-weight:800;margin:0">' + esc(a.title) + '</h2>' +
+      '</div>' +
+      '<p class="d-desc">' + esc(a.hook || '') + '</p>' +
+      '<div class="d-section-title">What it decides</div>' +
+      '<div style="font-size:13px;line-height:1.6;margin-bottom:16px">' + esc(a.decision || '') + '</div>' +
+      '<div class="d-section-title">How it works</div>' +
+      '<div style="font-size:13px;line-height:1.7;color:var(--ink-soft);white-space:pre-line;margin-bottom:16px">' + esc(a.description || '') + '</div>' +
+      '<div class="d-section-title">What the planner approves</div>' +
+      '<div style="font-size:13px;line-height:1.6;margin-bottom:16px">' + esc(a.humanApproval || '') + '</div>' +
+      '<div class="d-section-title">Business outcome</div>' +
+      '<div style="font-size:13px;line-height:1.6;margin-bottom:16px">' + esc(a.outcome || '') + '</div>' +
+      '<div class="d-section-title">What it replaces</div>' +
+      '<div style="font-size:13px;line-height:1.6;color:var(--ink-soft);margin-bottom:16px">' + esc(a.replaces || '') + '</div>' +
+      (a.transformation ? '<div class="d-section-title">Transformation</div>' + tBadge(a.transformation.badge) + '<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">' + esc(a.transformation.note || '') + '</div>' : '');
+    const drawer = $("#drawer");
+    drawer.classList.add("open");
+    $("#scrim").classList.add("open");
+    setBackgroundInert(true);
+    drawer.focus();
+    return;
+  }
+
   const t = NODE_TYPES[a.type] || { label: a.type, color: "#6b7280" };
   const phase = JOURNEY.phases.find(p => p.id === a.phaseId);
   const rf = REFINERY_CLASSES[a.refineryClass];
