@@ -501,15 +501,15 @@
   /* ── true-agent card face ── */
   .card.true-agent { border-left: 4px solid var(--ta-color, #A100FF); }
   .card.true-agent .ta-num {
-    font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
     margin-bottom: 4px;
   }
-  .card.true-agent h3 { font-size: 15px; margin: 0 0 8px; }
+  .card.true-agent h3 { font-size: 17px; margin: 0 0 6px; }
   .card.true-agent .ta-hook {
-    font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 8px;
+    font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 6px;
   }
   .card.true-agent .ta-metric {
-    font-size: 10px; font-weight: 700; color: var(--ink-soft);
+    font-size: 11px; font-weight: 700; color: var(--ink-soft);
     border: 1px solid var(--hair); border-radius: 4px;
     padding: 2px 8px; display: inline-block; margin-top: 2px;
   }
@@ -1121,7 +1121,7 @@ const JOURNEY = {
         { skill: "Demand Sensing", role: "signal", note: "Demand Sensing runs continuously — pulling POS scans, retailer EDI, and digital signals and computing the deviation from the current plan. Agent 2 reads that deviation signal and makes the reasoning call: is this drift large enough to revise the demand curve? Does the revision cross a threshold that should re-trigger Agent 3 on inventory? The skill produces the observation; the agent decides what it means and what to do next." },
         { skill: "Demand Plan Reconciliation", role: "baseline", note: "Before Agent 2 can reason about the demand curve, the commercial promotional plan (PlanX) and the Kinaxis statistical demand plan need to be reconciled — resolving the SKU-by-channel variance between what sales committed to retailers and what the supply model says demand will be. Agent 2 uses the reconciled output as its working baseline. Where the two plans still diverge materially after reconciliation, Agent 2 flags those lines for planner review rather than passing a false-confident number into inventory planning." },
       ],
-      description: "Kinaxis handles demand planning for established SKUs well — but new product launches have no prior sales history to draw from. This agent fills that gap by pulling every comparable launch from the like-product library, matching the new product on category, pack, and channel profile, and selecting the right forecasting model based on how much real data is available.\n\nThe moment in-market data starts arriving — POS scans, retailer orders, digital signals — the demand curve recalibrates automatically. If the deviation is material enough to change an inventory decision, it re-triggers planning downstream — no coordination meeting required.\n\nWhat makes it an agent: it selects the model based on data maturity — sparse early-launch data means a structural analog model; sufficient history means an XGBoost ensemble. It monitors continuously and decides when drift is large enough to act.",
+      description: "Kinaxis demand planning is built for established SKUs with history. New launches have none. This agent fills that gap by matching the new product to comparable past launches and building a demand curve from the first day the product is live.\n\nAs real in-market data arrives — store scans, retailer orders, digital signals — the curve updates automatically. When the gap between the plan and reality crosses a threshold that would change an inventory decision, the agent re-triggers downstream planning without a coordination meeting.\n\nWhat makes it an agent: it chooses the forecasting approach based on how much data exists. Thin early-launch data means leaning on analogue history. As real data accumulates, it shifts to a data-driven model. It monitors continuously and decides when drift is large enough to act — a pipeline would run on a fixed schedule regardless.",
       capabilities: ["genai","ml","predictive","statistical"],
       metric: "Forecast accuracy (MAPE / WMAPE)",
       transformation: { badge: "TRANSFORMED·CONTINUOUS", note: "A static quarterly forecast becomes a live, self-recalibrating demand curve that catches reality instead of chasing it." },
@@ -1137,7 +1137,7 @@ const JOURNEY = {
       outcome: "Eliminates 10+ manual handoffs across sourcing, supply, and logistics. Cuts pre-build over-build write-offs. Launch week fill rates improve when allocation reflects live demand signals.",
       replaces: "Kinaxis handles the supply plan and SAP executes it — but NPI pre-builds sit outside the standard replenishment cycle. Launch quantity, pre-build sizing, DC positioning, and initial retailer allocation each require a separate intervention: a supply planner in Kinaxis, a logistics planner checking DC capacity, a customer service rep managing commitments. The handoffs between these steps take days, and the coordination that doesn't fit the standard Kinaxis workflow gets handled in email or offline.",
       humanApproval: "Planner reviews the full pre-build and deployment plan — quantity, DC positions, and retailer allocations — in one view. Nothing ships until there is explicit sign-off.",
-      description: "NPI pre-builds don't follow the standard replenishment cycle that Kinaxis is optimized for. Once the demand forecast is approved, four planning steps that would normally run in sequence across separate teams need to resolve simultaneously: launch quantity, pre-build sizing, DC positioning, and retailer allocation.\n\nThis agent pulls the approved forecast from Kinaxis and solves all four as a single optimization problem. It calculates the launch quantity by modeling the cost of running short against the cost of being long. It sizes and positions the pre-build across the DC network. It allocates to each retailer respecting commitments and safety stock floors. When the planner approves, the plan writes back to Kinaxis and triggers SAP execution — no re-entry, no handoff email.\n\nWhat makes it an agent: it selects the right optimization model based on the problem structure — a simple one-time buy gets the Newsvendor model; a complex multi-DC network gets multi-echelon optimization. It reasons about which tool fits before picking one.",
+      description: "NPI pre-builds don't follow the standard replenishment cycle that Kinaxis is optimized for. Once the demand forecast is approved, four planning steps that would normally pass through four separate teams need to resolve as one: launch quantity, pre-build sizing, DC positioning, and retailer allocation.\n\nThis agent treats them as a single optimization problem. It calculates the launch quantity by weighing the cost of running short against the cost of carrying excess. It positions stock across the DC network based on where demand is developing. It allocates to each retailer within committed service levels and safety stock floors. When the planner approves, the plan writes back to Kinaxis and triggers SAP execution — no re-entry, no handoff email.\n\nWhat makes it an agent: it selects the right optimization approach based on the complexity of the problem. A straightforward buy gets a cost model. A complex multi-DC network gets a network-wide solver that optimizes across all distribution points simultaneously. It reasons about which approach fits before running anything.",
       capabilities: ["logic","predictive","api"],
       metric: "Case fill rate & over-build write-off reduction",
       transformation: { badge: "ENABLED·AUTOMATED", note: "Four manual planning handoffs across sourcing, supply, DC, and retail collapse into one agent-orchestrated optimization with a single planner approval gate." },
@@ -1865,10 +1865,17 @@ function openDrawer(a) {
             '<div style="font-size:12.5px;line-height:1.6;color:var(--ink)">' + esc(inp.note) + '</div>' +
           '</div>'
         ).join('') : '');
+    if (FLOW_AGENTS_BY_ID[a.id]) {
+      body.innerHTML += '<button class="d-flow-btn" id="drawerFlowBtn2" type="button" style="margin-top:20px">&#9654; Process Flow</button>';
+    }
     const drawer = $("#drawer");
     drawer.classList.add("open");
     $("#scrim").classList.add("open");
     setBackgroundInert(true);
+    if (FLOW_AGENTS_BY_ID[a.id]) {
+      const fb = body.querySelector('#drawerFlowBtn2');
+      if (fb) fb.addEventListener('click', () => openFlowOverlay(a.id));
+    }
     drawer.focus();
     return;
   }
@@ -2208,6 +2215,91 @@ function openSourceDrawer(sourceId) {
    ================================================================= */
 
 const FLOW_AGENTS = [
+  /* ── True agent process flows — agentic, decision-graph style ── */
+  {
+    id: "agent-portfolio-intelligence",
+    title: "Portfolio Intelligence Agent",
+    phase: "Portfolio & Launch Planning · Step 1",
+    trueAgent: true,
+    execIntro: "The agent searches past launches, scores every candidate, and decides when it has enough evidence to recommend — committing early when analogues are consistent, running more scenarios when they're not.",
+    steps: [
+      { label: "SKU candidates arrive", note: "Brand teams stage their shortlist in the NPI product management tool. This is the raw list the agent will evaluate.", type: "automation", tech: "NPI SaaS / Structured intake" },
+      { label: "Comparable launches researched", note: "The agent searches the like-product library for past launches that match on category, channel, and timing — building the evidence base for scoring.", type: "genai", tech: "RAG · Like-Product Library" },
+      { label: "Every option scored and ranked", note: "Each candidate is rated across shelf velocity, margin potential, and channel fit — compared against each other and against analogue performance.", type: "trad-ai", tech: "Weighted scoring model" },
+      { label: "Enough evidence to commit?", note: "Agent decision: if analogue evidence is consistent, it commits to the recommendation. If variance across past launches is high, it runs demand scenarios before calling it. This is the step a pipeline skips — it always runs the same path.", type: "reason", tech: "Agent reasoning · evidence threshold" },
+      { label: "Demand scenarios simulated", note: "For candidates where analogue evidence was inconsistent, the agent runs scenarios to bound the demand risk. This step only runs when the evidence warrants it.", type: "trad-ai", tech: "Scenario simulation" },
+      { label: "Ranked shortlist written", note: "A plain-English recommendation with confidence ranges and key assumptions — the planner receives a ready-to-approve document, not a model output.", type: "genai", tech: "LLM narrative generation" },
+      { label: "Planner approves or adjusts", note: "The planner reviews and confirms the lineup or adjusts it. Nothing advances without an explicit decision.", type: "human", tech: "Human-in-the-loop gate" },
+      { label: "Approved plan flows to Kinaxis", note: "The moment the planner signs off, the approved lineup publishes automatically to demand and inventory planning in Kinaxis.", type: "automation", tech: "Kinaxis system write-back" },
+    ],
+  },
+  {
+    id: "agent-demand-intelligence",
+    title: "Demand Intelligence Agent",
+    phase: "Demand Forecasting · Step 2",
+    trueAgent: true,
+    execIntro: "The agent builds a demand curve from analogue history before any real data exists, then continuously recalibrates as the market signals arrive — and decides when the drift is large enough to re-trigger inventory planning.",
+    steps: [
+      { label: "New product matched to analogues", note: "The agent searches comparable past launches and builds a like-product profile — the starting point for the demand curve before any real sales data exists.", type: "genai", tech: "RAG · Like-Product Library" },
+      { label: "How much real data exists?", note: "Agent decision: thin or no in-market data means building the forecast from analogue history. As real data accumulates, the agent shifts to a data-driven approach. The model selection is not fixed — it adapts to the data available.", type: "reason", tech: "Agent reasoning · data maturity" },
+      { label: "Demand curve built", note: "A week-by-week demand forecast is constructed at brand, SKU, and customer level — using whichever approach the agent selected at the prior step.", type: "trad-ai", tech: "Analogue or data-driven model" },
+      { label: "Planner approves the forecast", note: "The planner reviews the curve, the confidence bands, and any uncertainty flags before it flows into inventory planning.", type: "human", tech: "Human-in-the-loop gate" },
+      { label: "Live signals arrive continuously", note: "POS scans, retailer orders, and digital signals flow in from the first day the product is live. The agent monitors these in real time against the approved curve. This loop runs every day.", type: "automation", tech: "POS / EDI / Demand Sensing" },
+      { label: "Actuals vs. forecast compared", note: "The agent measures the gap between what is actually happening in market and what the plan said would happen — at every SKU and channel.", type: "trad-ai", tech: "Variance analysis" },
+      { label: "Is the gap material?", note: "Agent decision: small variance gets monitored and noted. A deviation large enough to change an inventory decision triggers a forecast update and re-triggers downstream planning automatically.", type: "reason", tech: "Agent reasoning · materiality threshold" },
+      { label: "Updated forecast published", note: "The revised demand curve flows into Kinaxis and re-triggers the Inventory & Deployment Agent if the revision crosses the plan's approved envelope. The loop continues until the product reaches steady state.", type: "automation", tech: "Kinaxis system write-back" },
+    ],
+  },
+  {
+    id: "agent-inventory-deployment",
+    title: "Inventory & Deployment Agent",
+    phase: "Inventory Planning · Steps 3–6",
+    trueAgent: true,
+    execIntro: "The agent treats launch quantity, pre-build sizing, DC positioning, and retailer allocation as one optimization problem — selecting the right approach for the network complexity, then writing the plan back to Kinaxis when the planner approves.",
+    steps: [
+      { label: "Approved demand curve received", note: "The approved forecast from the Demand Intelligence Agent arrives in Kinaxis — this is the input that drives every quantity and positioning decision that follows.", type: "automation", tech: "Kinaxis data read" },
+      { label: "What kind of problem is this?", note: "Agent decision: a straightforward one-time buy gets a cost model that weighs running short against holding excess. A complex multi-DC network gets a network-wide solver. The agent selects the approach before running anything.", type: "reason", tech: "Agent reasoning · problem structure" },
+      { label: "Launch quantity calculated", note: "The optimal launch quantity is determined by modeling the cost of being short against the cost of carrying too much, within the demand confidence interval.", type: "trad-ai", tech: "Cost optimization model" },
+      { label: "Stock positioned across DCs", note: "Inventory is distributed across the DC network based on where demand is developing — not last year's regional patterns.", type: "trad-ai", tech: "Network positioning model" },
+      { label: "Retailer allocation determined", note: "Each retailer receives its allocation within committed service levels and safety stock floors — respecting existing contractual obligations.", type: "trad-ai", tech: "Constrained allocation model" },
+      { label: "Planner reviews full plan", note: "The planner sees launch quantity, DC positions, and retailer allocations in one view. Nothing commits until explicit sign-off.", type: "human", tech: "Human-in-the-loop gate" },
+      { label: "If adjusted — re-optimizes", note: "Planner adjustments flow back through the optimization. The agent recalculates and rebalances the full plan before re-presenting it — this loop runs until the planner approves.", type: "reason", tech: "Iterative re-optimization" },
+      { label: "Plan writes to Kinaxis / SAP", note: "The approved plan flows into Kinaxis and triggers SAP execution automatically — supplier commitments, production scheduling, and replenishment orders raise without manual re-entry.", type: "automation", tech: "Kinaxis + SAP write-back" },
+    ],
+  },
+  {
+    id: "agent-exception-risk",
+    title: "Exception & Risk Agent",
+    phase: "Launch Execution · Step 7",
+    trueAgent: true,
+    execIntro: "The agent monitors every signal continuously, scores each exception by business impact, and decides in real time whether to resolve it automatically or escalate it to the planner as a structured decision — never as a raw alert.",
+    steps: [
+      { label: "Monitoring signals continuously", note: "Kinaxis shortage alerts, SAP order holds, SCLP loss-exposure events, and retailer EDI gaps are monitored in real time. This loop runs throughout the entire launch execution phase.", type: "automation", tech: "Kinaxis / SAP / SCLP monitoring" },
+      { label: "Exception detected", note: "A supply gap, demand spike, or delivery delay crosses the monitoring threshold and enters the exception queue as a structured event — not a raw alert.", type: "automation", tech: "Alerting and exception capture" },
+      { label: "Business impact scored", note: "The agent scores the potential cost of the exception — lost revenue, service-level failure, margin erosion — and ranks it against everything else in the queue.", type: "trad-ai", tech: "Impact scoring model" },
+      { label: "Within authority to act?", note: "Agent decision: the boundary between act and escalate is not a hardcoded rule. It depends on the magnitude of the decision and the type of risk. Small DC reallocation → auto-resolved. Large expedite fee or customer commitment → escalated to planner.", type: "reason", tech: "Agent reasoning · decision authority" },
+      { label: "Auto-resolved within authority", note: "The agent executes the resolution — a reallocation, a timing adjustment — and logs the action with the full reasoning. The planner sees it in the resolution log, not as a live interrupt.", type: "automation", tech: "Automated resolution + audit log" },
+      { label: "Escalation written for planner", note: "For decisions above the agent's authority: a plain-English recommendation — the exception, the impact, the proposed fix, and what it costs to do nothing — delivered as a single structured decision.", type: "genai", tech: "LLM recommendation generation" },
+      { label: "Planner approves or overrides", note: "The planner reviews the recommendation and acts — accept, adjust, or override. Each decision is logged with rationale and feeds the Learning Agent.", type: "human", tech: "Human-in-the-loop gate" },
+      { label: "Resolution feeds Learning Agent", note: "Every outcome — auto-resolved or planner-decided — is recorded and flows to the Learning & Calibration Agent at cycle close to improve future authority thresholds.", type: "automation", tech: "Feedback loop / cycle memory" },
+    ],
+  },
+  {
+    id: "agent-learning-calibration",
+    title: "Learning & Calibration Agent",
+    phase: "Post-Launch Optimization · Step 8",
+    trueAgent: true,
+    execIntro: "The agent reconciles what actually happened against what was planned, decides which learnings are durable enough to encode, updates the like-product library, and recalibrates the models — so the next NPI cycle starts smarter.",
+    steps: [
+      { label: "Cycle actuals reconciled", note: "Final shipment, sell-through, and inventory data from SAP and Kinaxis are pulled and reconciled against the original NPI plan — SKU by SKU, market by market.", type: "automation", tech: "SAP + Kinaxis data reconciliation" },
+      { label: "Variance attributed", note: "The agent identifies what drove each accuracy gap — demand volatility, a supply disruption, a model assumption, or a data quality issue — so the learning is specific and actionable.", type: "trad-ai", tech: "Attribution analysis model" },
+      { label: "Signal or noise?", note: "Agent decision: the key reasoning step. Is this variance a durable pattern that should inform future launches, or a one-off anomaly that would distort the model if encoded? Only durable signals get written to the library.", type: "reason", tech: "Agent reasoning · knowledge quality" },
+      { label: "Like-product library updated", note: "Durable learnings are written into the reference database — future launches that resemble this one start with real performance as their baseline, not assumptions.", type: "automation", tech: "Like-product library write" },
+      { label: "Model weights recalibrated", note: "Forecast model assumptions are adjusted based on what actually drove accuracy this cycle. The models improve with each completed launch rather than resetting.", type: "trad-ai", tech: "Model recalibration" },
+      { label: "Calibration sign-off", note: "The planner reviews the proposed library updates and model changes before they take effect. No silent updates to planning assumptions.", type: "human", tech: "Human-in-the-loop gate" },
+      { label: "Next cycle starts smarter", note: "The recalibrated system loops back to inform the next Portfolio Intelligence cycle. Forecast accuracy compounds rather than resetting with each new NPI.", type: "automation", tech: "Baseline calibration for next cycle" },
+    ],
+  },
   {
     id: "portfolio-optimization",
     title: "Portfolio Optimization Agent",
@@ -2379,10 +2471,10 @@ FLOW_AGENTS.forEach(a => { FLOW_AGENTS_BY_ID[a.id] = a; });
 
 /* ---- Flow racetrack engine ---- */
 const FLOW_TYPE_COLORS = {
-  automation: "#6B7280", "trad-ai": "#2563EB", genai: "#A100FF", human: "#00A3E0",
+  automation: "#6B7280", "trad-ai": "#2563EB", genai: "#A100FF", human: "#00A3E0", reason: "#7c3aed",
 };
-const FLOW_TYPE_ICONS = { automation: "⬇", "trad-ai": "⚙", genai: "✦", human: "👤" };
-const FLOW_TYPE_LABELS = { automation: "Automation", "trad-ai": "Traditional AI", genai: "GenAI", human: "Human" };
+const FLOW_TYPE_ICONS = { automation: "⬇", "trad-ai": "⚙", genai: "✦", human: "👤", reason: "◆" };
+const FLOW_TYPE_LABELS = { automation: "Automation", "trad-ai": "Traditional AI", genai: "GenAI", human: "Human", reason: "Agent Decision" };
 function flowTypeColor(t) { return FLOW_TYPE_COLORS[t] || "#888"; }
 function flowTypeIcon(t)  { return FLOW_TYPE_ICONS[t] || "○"; }
 
@@ -2572,9 +2664,11 @@ function openFlowOverlay(agentId) {
 
   /* prev / next nav */
   const idx   = FLOW_AGENTS.findIndex(a => a.id === agentId);
+  const navGroup = fa.trueAgent ? FLOW_AGENTS.filter(a => a.trueAgent) : FLOW_AGENTS.filter(a => !a.trueAgent);
+  const gIdx  = navGroup.findIndex(a => a.id === agentId);
   const navEl = document.getElementById("flowOverlayNav");
   navEl.innerHTML = "";
-  const prev = FLOW_AGENTS[idx - 1], next = FLOW_AGENTS[idx + 1];
+  const prev = navGroup[gIdx - 1], next = navGroup[gIdx + 1];
   if (prev) { const btn = document.createElement("button"); btn.textContent = "← " + prev.title; btn.addEventListener("click", () => openFlowOverlay(prev.id)); navEl.appendChild(btn); }
   if (next) { const btn = document.createElement("button"); btn.textContent = next.title + " →"; btn.addEventListener("click", () => openFlowOverlay(next.id)); navEl.appendChild(btn); }
 
