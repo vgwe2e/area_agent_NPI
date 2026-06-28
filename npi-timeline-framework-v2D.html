@@ -2040,13 +2040,13 @@ const FLOW_AGENTS = [
     phase: "Portfolio & Launch Planning",
     execIntro: "Every week, the brand team submits a shortlist of SKU candidates. The agent takes that list, researches comparable launches, scores every option against each other, simulates demand risk, and hands the planner a ranked recommendation with confidence ranges ready to approve.",
     steps: [
-      { label: "Brand team submits shortlist", note: "The brand team's initial SKU candidates arrive — this list is the raw material the entire evaluation will work from.", type: "data", tech: "Structured Data Intake" },
-      { label: "AI researches similar launches", note: "Taking that shortlist, the system looks up how comparable products performed at launch — velocity, sell-through, margin — to build an evidence base for scoring.", type: "transform", tech: "RAG · Like-Product Library" },
-      { label: "AI scores every option", note: "With that research in hand, each SKU is rated across shelf velocity, margin potential, and channel fit using a weighted model, so options can be compared objectively.", type: "transform", tech: "MILP · Weighted Scoring" },
-      { label: "Demand ranges simulated", note: "For the top-scoring candidates, the AI runs thousands of scenarios to produce low, mid, and high demand estimates — so the recommendation comes with a quantified risk range.", type: "transform", tech: "Monte Carlo Simulation" },
-      { label: "Launch plan drafted", note: "From those simulation results, a ranked shortlist with confidence intervals is written in plain language — the planner receives a ready-to-review recommendation, not raw data.", type: "boundary", tech: "LLM Narrative Generation" },
+      { label: "Brand team submits shortlist", note: "The brand team's initial SKU candidates arrive — this list is the raw material the entire evaluation will work from.", type: "automation", tech: "Structured Data Intake" },
+      { label: "AI researches similar launches", note: "Taking that shortlist, the system looks up how comparable products performed at launch — velocity, sell-through, margin — to build an evidence base for scoring.", type: "genai", tech: "RAG · Like-Product Library" },
+      { label: "AI scores every option", note: "With that research in hand, each SKU is rated across shelf velocity, margin potential, and channel fit using a weighted model, so options can be compared objectively.", type: "trad-ai", tech: "MILP · Weighted Scoring" },
+      { label: "Demand ranges simulated", note: "For the top-scoring candidates, the AI runs thousands of scenarios to produce low, mid, and high demand estimates — so the recommendation comes with a quantified risk range.", type: "trad-ai", tech: "Monte Carlo Simulation" },
+      { label: "Launch plan drafted", note: "From those simulation results, a ranked shortlist with confidence intervals is written in plain language — the planner receives a ready-to-review recommendation, not raw data.", type: "genai", tech: "LLM Narrative Generation" },
       { label: "Planner approves the lineup", note: "The planner reviews that recommendation and confirms or adjusts which products move forward — nothing advances without an explicit human decision.", type: "human", tech: "Human-in-the-Loop Gate" },
-      { label: "Plan locked for supply", note: "The moment the planner approves, that lineup is published automatically to inventory and supply planning — downstream systems update without a manual handoff.", type: "data", tech: "Automated System Handoff" },
+      { label: "Plan locked for supply", note: "The moment the planner approves, that lineup is published automatically to inventory and supply planning — downstream systems update without a manual handoff.", type: "automation", tech: "Automated System Handoff" },
     ],
   },
   {
@@ -2055,11 +2055,11 @@ const FLOW_AGENTS = [
     phase: "Portfolio & Launch Planning",
     execIntro: "Once the product lineup is set, this agent takes all retailer and channel data, clusters the market by readiness, ranks the rollout sequence, and hands the portfolio plan a channel-by-channel launch order ready to execute.",
     steps: [
-      { label: "Channel & customer data pulled", note: "Sales velocity, inventory capacity, and historical readiness scores are gathered for every retail channel — this is the raw picture the segmentation model will sort.", type: "data", tech: "Data Pipeline / ETL" },
-      { label: "AI clusters the market", note: "Taking that data, the AI groups channels and customers by how ready they are to receive and move the new product — separating early movers from channels that need more time.", type: "transform", tech: "ML Clustering (K-Means)" },
-      { label: "Launch timing ranked", note: "From those clusters, each group is scored and ranked by demand potential and logistical readiness — producing a clear, evidence-backed sequence.", type: "transform", tech: "Demand Readiness Scoring" },
-      { label: "Sequence recommendation written", note: "With that ranking in hand, the AI writes a phased rollout order — which channels go first, which follow, and the specific reasoning behind each placement.", type: "boundary", tech: "LLM Narrative Generation" },
-      { label: "Sequence feeds portfolio plan", note: "That ranked channel order flows automatically into the broader launch plan and drives allocation decisions — no separate meeting or spreadsheet handoff needed.", type: "data", tech: "Automated Integration" },
+      { label: "Channel & customer data pulled", note: "Sales velocity, inventory capacity, and historical readiness scores are gathered for every retail channel — this is the raw picture the segmentation model will sort.", type: "automation", tech: "Data Pipeline / ETL" },
+      { label: "AI clusters the market", note: "Taking that data, the AI groups channels and customers by how ready they are to receive and move the new product — separating early movers from channels that need more time.", type: "trad-ai", tech: "ML Clustering (K-Means)" },
+      { label: "Launch timing ranked", note: "From those clusters, each group is scored and ranked by demand potential and logistical readiness — producing a clear, evidence-backed sequence.", type: "trad-ai", tech: "Demand Readiness Scoring" },
+      { label: "Sequence recommendation written", note: "With that ranking in hand, the AI writes a phased rollout order — which channels go first, which follow, and the specific reasoning behind each placement.", type: "genai", tech: "LLM Narrative Generation" },
+      { label: "Sequence feeds portfolio plan", note: "That ranked channel order flows automatically into the broader launch plan and drives allocation decisions — no separate meeting or spreadsheet handoff needed.", type: "automation", tech: "Automated Integration" },
     ],
   },
   {
@@ -2068,13 +2068,13 @@ const FLOW_AGENTS = [
     phase: "Demand Forecasting",
     execIntro: "This agent takes live market signals and analogous launch history, builds a week-by-week demand curve at every level, refines it the moment real in-market data arrives, and hands the planner an approved forecast ready to drive inventory decisions.",
     steps: [
-      { label: "Live signals collected", note: "Store scans, retailer orders, and digital interest data are ingested automatically — these are the real-world inputs the forecast model will be built on.", type: "data", tech: "Real-Time Data Ingestion" },
-      { label: "Similar launches researched", note: "With those signals in place, the AI finds past products that launched under comparable conditions and uses their performance trajectory as an analog baseline.", type: "transform", tech: "RAG · Like-Product Analogy" },
-      { label: "Demand curve built", note: "Using that baseline plus the live signals, the model constructs a week-by-week sales forecast simultaneously at brand, SKU, and customer level.", type: "transform", tech: "ARIMA / XGBoost / Prophet" },
-      { label: "Curve refined with live data", note: "As early in-market signals arrive, that curve is immediately recalibrated — the forecast reflects what is actually happening, not just what was expected.", type: "transform", tech: "Demand Sensing Model" },
-      { label: "Forecast explained in plain English", note: "With the curve locked, the AI writes a plain-language summary — the forecast numbers, the key assumptions behind them, and what would cause them to be wrong.", type: "boundary", tech: "LLM Narrative Generation" },
+      { label: "Live signals collected", note: "Store scans, retailer orders, and digital interest data are ingested automatically — these are the real-world inputs the forecast model will be built on.", type: "automation", tech: "Real-Time Data Ingestion" },
+      { label: "Similar launches researched", note: "With those signals in place, the AI finds past products that launched under comparable conditions and uses their performance trajectory as an analog baseline.", type: "genai", tech: "RAG · Like-Product Analogy" },
+      { label: "Demand curve built", note: "Using that baseline plus the live signals, the model constructs a week-by-week sales forecast simultaneously at brand, SKU, and customer level.", type: "trad-ai", tech: "ARIMA / XGBoost / Prophet" },
+      { label: "Curve refined with live data", note: "As early in-market signals arrive, that curve is immediately recalibrated — the forecast reflects what is actually happening, not just what was expected.", type: "trad-ai", tech: "Demand Sensing Model" },
+      { label: "Forecast explained in plain English", note: "With the curve locked, the AI writes a plain-language summary — the forecast numbers, the key assumptions behind them, and what would cause them to be wrong.", type: "genai", tech: "LLM Narrative Generation" },
       { label: "Planner reviews and approves", note: "The planner reads that summary, overrides any line where judgment differs from the model, and signs off — only the approved version flows forward.", type: "human", tech: "Human-in-the-Loop Gate" },
-      { label: "Forecast feeds inventory plan", note: "The moment the planner approves, that demand curve automatically drives launch quantity calculations in the next agent — no manual re-entry.", type: "data", tech: "Automated System Handoff" },
+      { label: "Forecast feeds inventory plan", note: "The moment the planner approves, that demand curve automatically drives launch quantity calculations in the next agent — no manual re-entry.", type: "automation", tech: "Automated System Handoff" },
     ],
   },
   {
@@ -2083,12 +2083,12 @@ const FLOW_AGENTS = [
     phase: "Demand Forecasting",
     execIntro: "Every day, this agent pulls in POS scans, retailer orders, and digital signals from every source, validates and weights each one, flags anything suspicious, and hands the forecast engine a single clean, trusted dataset.",
     steps: [
-      { label: "Store sales data arrives", note: "Point-of-sale scans from every retail partner are pulled in automatically — these are the primary demand signals that everything downstream will be built on.", type: "data", tech: "POS Data Pipeline" },
-      { label: "Retailer orders ingested", note: "Those store scans are joined by retailer order files, which are matched against expected volumes to catch fulfillment gaps before they become surprises.", type: "data", tech: "EDI / File Integration" },
-      { label: "Digital signals read", note: "On top of that transactional data, search interest, social mentions, and e-commerce browsing patterns are structured and quantified — giving the model an early-warning layer.", type: "transform", tech: "GenAI Signal Extraction" },
-      { label: "Signals weighted and validated", note: "With all those sources assembled, each one is scored by recency, reliability, and historical accuracy before it enters the demand model — noisy sources carry less weight.", type: "transform", tech: "Source Reliability Scoring" },
-      { label: "Gaps and anomalies flagged", note: "From that weighted dataset, missing feeds, statistical outliers, and implausible values are surfaced — the planner decides whether to fill, exclude, or escalate each one.", type: "decision", tech: "Statistical Anomaly Detection" },
-      { label: "Clean dataset published", note: "Once the planner resolves any flags, a single harmonized demand dataset is delivered to the forecast engine — one trusted input, no further preparation needed.", type: "boundary", tech: "Data Harmonization Layer" },
+      { label: "Store sales data arrives", note: "Point-of-sale scans from every retail partner are pulled in automatically — these are the primary demand signals that everything downstream will be built on.", type: "automation", tech: "POS Data Pipeline" },
+      { label: "Retailer orders ingested", note: "Those store scans are joined by retailer order files, which are matched against expected volumes to catch fulfillment gaps before they become surprises.", type: "automation", tech: "EDI / File Integration" },
+      { label: "Digital signals read", note: "On top of that transactional data, search interest, social mentions, and e-commerce browsing patterns are structured and quantified — giving the model an early-warning layer.", type: "genai", tech: "GenAI Signal Extraction" },
+      { label: "Signals weighted and validated", note: "With all those sources assembled, each one is scored by recency, reliability, and historical accuracy before it enters the demand model — noisy sources carry less weight.", type: "trad-ai", tech: "Source Reliability Scoring" },
+      { label: "Gaps and anomalies flagged", note: "From that weighted dataset, missing feeds, statistical outliers, and implausible values are surfaced — the planner decides whether to fill, exclude, or escalate each one.", type: "trad-ai", tech: "Statistical Anomaly Detection" },
+      { label: "Clean dataset published", note: "Once the planner resolves any flags, a single harmonized demand dataset is delivered to the forecast engine — one trusted input, no further preparation needed.", type: "automation", tech: "Data Harmonization Layer" },
     ],
   },
   {
@@ -2097,11 +2097,11 @@ const FLOW_AGENTS = [
     phase: "Demand Forecasting",
     execIntro: "Every morning, this agent compares yesterday's real sales against the forecast, flags drift that crosses a material threshold, recalibrates the demand curve, and pushes the updated number into inventory planning before the first meeting of the day.",
     steps: [
-      { label: "New signals arrive daily", note: "Fresh in-market data flows in every 24 hours from the Signal Capture Agent — this is the real-world evidence the sensing model will hold against the forecast.", type: "data", tech: "Real-Time Data Feed" },
-      { label: "Actuals vs. forecast compared", note: "Taking those new signals, the AI measures exactly how real-world velocity compares to what was predicted at every SKU and customer — surfacing both over- and underperformance.", type: "transform", tech: "Variance Analysis Model" },
-      { label: "Drift above threshold flagged", note: "Where that gap crosses a material threshold, the planner is automatically alerted — small noise is filtered out; only differences large enough to change a decision surface.", type: "decision", tech: "Threshold Alert Engine" },
-      { label: "Forecast curve recalibrated", note: "Using those flagged deltas, the AI re-weights the demand model with the latest signal data — so the curve reflects what is actually happening in market, not the original plan.", type: "transform", tech: "ML Time-Series Recalibration" },
-      { label: "Updated forecast published", note: "That recalibrated demand curve flows automatically into inventory planning — downstream systems see the updated number the moment it is ready, without a manual re-entry step.", type: "boundary", tech: "Automated System Handoff" },
+      { label: "New signals arrive daily", note: "Fresh in-market data flows in every 24 hours from the Signal Capture Agent — this is the real-world evidence the sensing model will hold against the forecast.", type: "automation", tech: "Real-Time Data Feed" },
+      { label: "Actuals vs. forecast compared", note: "Taking those new signals, the AI measures exactly how real-world velocity compares to what was predicted at every SKU and customer — surfacing both over- and underperformance.", type: "trad-ai", tech: "Variance Analysis Model" },
+      { label: "Drift above threshold flagged", note: "Where that gap crosses a material threshold, the planner is automatically alerted — small noise is filtered out; only differences large enough to change a decision surface.", type: "automation", tech: "Threshold Alert Engine" },
+      { label: "Forecast curve recalibrated", note: "Using those flagged deltas, the AI re-weights the demand model with the latest signal data — so the curve reflects what is actually happening in market, not the original plan.", type: "trad-ai", tech: "ML Time-Series Recalibration" },
+      { label: "Updated forecast published", note: "That recalibrated demand curve flows automatically into inventory planning — downstream systems see the updated number the moment it is ready, without a manual re-entry step.", type: "automation", tech: "Automated System Handoff" },
     ],
   },
   {
@@ -2110,12 +2110,12 @@ const FLOW_AGENTS = [
     phase: "Inventory Planning",
     execIntro: "This agent takes the approved demand forecast, models the cost of running short against the cost of overstocking, calculates the optimal launch quantity, and hands the planner a recommendation with the math explained in plain language and ready for sign-off.",
     steps: [
-      { label: "Inventory state pulled", note: "Current stock levels, unit costs, and service-level targets are read from planning systems — this is the starting context the quantity decision will be built on.", type: "data", tech: "ERP / Planning System API" },
-      { label: "Trade-off calculated", note: "With that context in hand, the AI models both sides of the launch bet: the cost of running out of stock on a new product versus the cost of being left with unsold inventory.", type: "transform", tech: "Newsvendor Problem Model" },
-      { label: "Optimal quantity determined", note: "From that trade-off model, a single recommended launch quantity is generated — anchored to the demand confidence interval and the service-level target.", type: "transform", tech: "One-Time Buy Optimization" },
-      { label: "Recommendation written up", note: "With that number calculated, the AI explains it in plain language: the math behind it, the risk at the low and high ends, and what changes if the planner adjusts it.", type: "boundary", tech: "LLM Narrative Generation" },
+      { label: "Inventory state pulled", note: "Current stock levels, unit costs, and service-level targets are read from planning systems — this is the starting context the quantity decision will be built on.", type: "automation", tech: "ERP / Planning System API" },
+      { label: "Trade-off calculated", note: "With that context in hand, the AI models both sides of the launch bet: the cost of running out of stock on a new product versus the cost of being left with unsold inventory.", type: "trad-ai", tech: "Newsvendor Problem Model" },
+      { label: "Optimal quantity determined", note: "From that trade-off model, a single recommended launch quantity is generated — anchored to the demand confidence interval and the service-level target.", type: "trad-ai", tech: "One-Time Buy Optimization" },
+      { label: "Recommendation written up", note: "With that number calculated, the AI explains it in plain language: the math behind it, the risk at the low and high ends, and what changes if the planner adjusts it.", type: "genai", tech: "LLM Narrative Generation" },
       { label: "Planner approves the quantity", note: "The planner reviews that recommendation and signs off — or adjusts it based on market judgment the model does not have — before anything is committed to supply.", type: "human", tech: "Human-in-the-Loop Gate" },
-      { label: "Quantity published to supply plan", note: "The moment the planner approves, that quantity flows automatically into procurement and production scheduling — downstream systems update without a meeting or an email.", type: "data", tech: "Automated System Handoff" },
+      { label: "Quantity published to supply plan", note: "The moment the planner approves, that quantity flows automatically into procurement and production scheduling — downstream systems update without a meeting or an email.", type: "automation", tech: "Automated System Handoff" },
     ],
   },
   {
@@ -2124,12 +2124,12 @@ const FLOW_AGENTS = [
     phase: "Inventory Positioning & Deployment",
     execIntro: "With the launch quantity approved, this agent reads the full DC network, calculates the pre-build, positions stock across distribution centers, allocates to each retailer, and once the planner signs off, triggers replenishment automatically within the approved envelope.",
     steps: [
-      { label: "DC network state read", note: "Current stock levels at every distribution center and regional warehouse are loaded in real time — this is the network picture the deployment plan will optimize against.", type: "data", tech: "Inventory Management API" },
-      { label: "Pre-build volume sized", note: "From that network snapshot, the AI calculates how much to manufacture before launch day — anchored to the demand confidence interval and existing DC capacity constraints.", type: "transform", tech: "Multi-Echelon Optimization" },
-      { label: "Stock positioned across DCs", note: "With that pre-build quantity set, inventory is distributed across distribution centers according to expected regional velocity and inbound lead times.", type: "transform", tech: "Network Flow Optimization" },
-      { label: "Allocated to customers & channels", note: "From that positioned stock, each retailer and channel receives its allocation — respecting existing commitments, safety stock floors, and priority rules.", type: "transform", tech: "Constrained Allocation Model" },
+      { label: "DC network state read", note: "Current stock levels at every distribution center and regional warehouse are loaded in real time — this is the network picture the deployment plan will optimize against.", type: "automation", tech: "Inventory Management API" },
+      { label: "Pre-build volume sized", note: "From that network snapshot, the AI calculates how much to manufacture before launch day — anchored to the demand confidence interval and existing DC capacity constraints.", type: "trad-ai", tech: "Multi-Echelon Optimization" },
+      { label: "Stock positioned across DCs", note: "With that pre-build quantity set, inventory is distributed across distribution centers according to expected regional velocity and inbound lead times.", type: "trad-ai", tech: "Network Flow Optimization" },
+      { label: "Allocated to customers & channels", note: "From that positioned stock, each retailer and channel receives its allocation — respecting existing commitments, safety stock floors, and priority rules.", type: "trad-ai", tech: "Constrained Allocation Model" },
       { label: "Planner approves the plan", note: "The planner reviews the full pre-build and deployment plan in one view — nothing ships and no purchase orders are raised until there is explicit sign-off.", type: "human", tech: "Human-in-the-Loop Gate" },
-      { label: "Replenishment triggered", note: "The moment the plan is approved, replenishment orders are raised automatically within the approved envelope — no manual purchase orders, no follow-up emails.", type: "boundary", tech: "Automated Replenishment Engine" },
+      { label: "Replenishment triggered", note: "The moment the plan is approved, replenishment orders are raised automatically within the approved envelope — no manual purchase orders, no follow-up emails.", type: "automation", tech: "Automated Replenishment Engine" },
     ],
   },
   {
@@ -2138,10 +2138,10 @@ const FLOW_AGENTS = [
     phase: "Launch Execution & Adjustments",
     execIntro: "Post-launch, this agent watches daily velocity against the original forecast, classifies what lifecycle phase the product has entered, updates the demand curve accordingly, and flags the supply or distribution actions that need a human decision.",
     steps: [
-      { label: "Post-launch velocity monitored", note: "Actual sell-through is tracked daily against the original forecast — this continuous evidence stream is what the lifecycle model reads to detect trend changes early.", type: "data", tech: "Real-Time KPI Tracking" },
-      { label: "Lifecycle phase detected", note: "From those velocity trends, the AI classifies where the product currently sits in its lifecycle: ramping up, at peak, plateauing, or entering decline.", type: "transform", tech: "Phase-In / Phase-Out Model" },
-      { label: "Demand curve updated", note: "With that phase classification in hand, the forecast is revised using models that know how products of this type naturally decay or accelerate at each lifecycle stage.", type: "transform", tech: "Lifecycle Forecast Model" },
-      { label: "Required actions flagged", note: "From that updated curve, the agent surfaces the concrete supply or distribution moves that follow — markdowns, reallocation, or cutbacks — ready for the planner to decide on.", type: "decision", tech: "Rule-Based Exception Logic" },
+      { label: "Post-launch velocity monitored", note: "Actual sell-through is tracked daily against the original forecast — this continuous evidence stream is what the lifecycle model reads to detect trend changes early.", type: "automation", tech: "Real-Time KPI Tracking" },
+      { label: "Lifecycle phase detected", note: "From those velocity trends, the AI classifies where the product currently sits in its lifecycle: ramping up, at peak, plateauing, or entering decline.", type: "trad-ai", tech: "Phase-In / Phase-Out Model" },
+      { label: "Demand curve updated", note: "With that phase classification in hand, the forecast is revised using models that know how products of this type naturally decay or accelerate at each lifecycle stage.", type: "trad-ai", tech: "Lifecycle Forecast Model" },
+      { label: "Required actions flagged", note: "From that updated curve, the agent surfaces the concrete supply or distribution moves that follow — markdowns, reallocation, or cutbacks — ready for the planner to decide on.", type: "automation", tech: "Rule-Based Exception Logic" },
       { label: "Planner acts on flagged items", note: "The planner reviews those flagged actions, decides which to approve, and the system executes the approved moves — closing the loop between the updated forecast and action.", type: "human", tech: "Human-in-the-Loop Gate" },
     ],
   },
@@ -2151,12 +2151,12 @@ const FLOW_AGENTS = [
     phase: "Launch Execution & Adjustments",
     execIntro: "The moment a supply shortage, delivery delay, or demand spike appears, this agent scores its severity, ranks it against everything else in the queue, generates a resolution, and hands the planner a prioritized action list — not an inbox full of alerts.",
     steps: [
-      { label: "Anomaly detected", note: "A supply shortage, a delivery delay, or an unexpected demand spike is flagged the moment the signal appears — this is the raw exception that needs to be triaged.", type: "data", tech: "Alerting & Monitoring Tools" },
-      { label: "Severity scored", note: "Taking that raw anomaly, the AI rates it by likely business impact — potential lost revenue, service-level failure, or margin erosion — so urgency is quantified, not guessed.", type: "transform", tech: "Impact Scoring Model" },
-      { label: "Exceptions ranked by urgency", note: "With all active exceptions now scored, the full queue is sorted — so the planner always works the most business-critical issue first and never has to triage a raw alert list.", type: "transform", tech: "Priority Ranking Algorithm" },
-      { label: "Next-best action generated", note: "For each ranked exception, the AI recommends the single most practical resolution — expedite, reallocate, or defer — with the reasoning, so the planner can approve in one step.", type: "boundary", tech: "LLM Next-Best-Action" },
+      { label: "Anomaly detected", note: "A supply shortage, a delivery delay, or an unexpected demand spike is flagged the moment the signal appears — this is the raw exception that needs to be triaged.", type: "automation", tech: "Alerting & Monitoring Tools" },
+      { label: "Severity scored", note: "Taking that raw anomaly, the AI rates it by likely business impact — potential lost revenue, service-level failure, or margin erosion — so urgency is quantified, not guessed.", type: "trad-ai", tech: "Impact Scoring Model" },
+      { label: "Exceptions ranked by urgency", note: "With all active exceptions now scored, the full queue is sorted — so the planner always works the most business-critical issue first and never has to triage a raw alert list.", type: "trad-ai", tech: "Priority Ranking Algorithm" },
+      { label: "Next-best action generated", note: "For each ranked exception, the AI recommends the single most practical resolution — expedite, reallocate, or defer — with the reasoning, so the planner can approve in one step.", type: "genai", tech: "LLM Next-Best-Action" },
       { label: "Planner works the queue", note: "The planner reviews that prioritized list and acts on each item — accepting the AI recommendation or overriding it with judgment — rather than responding to ad-hoc alerts.", type: "human", tech: "Human-in-the-Loop Gate" },
-      { label: "Resolution logged and learned", note: "That outcome is written to memory — the next time the same class of exception appears, it is scored more accurately, routed faster, and resolved with a better recommendation.", type: "data", tech: "Feedback Loop / Memory" },
+      { label: "Resolution logged and learned", note: "That outcome is written to memory — the next time the same class of exception appears, it is scored more accurately, routed faster, and resolved with a better recommendation.", type: "automation", tech: "Feedback Loop / Memory" },
     ],
   },
   {
@@ -2165,11 +2165,11 @@ const FLOW_AGENTS = [
     phase: "Post-Launch Optimization",
     execIntro: "At period close, this agent pulls the actuals, measures forecast accuracy at every level, identifies what drove each miss, and hands the planner a live dashboard with model health scores and recalibration flags — no manual report build required.",
     steps: [
-      { label: "Actuals collected", note: "Confirmed shipment, sell-through, and margin data are pulled in automatically at period close — this ground truth is what forecast accuracy will be measured against.", type: "data", tech: "Data Pipeline / ETL" },
-      { label: "Accuracy measured", note: "Taking those actuals, the AI calculates forecast error across every SKU and customer simultaneously using MAPE, WMAPE, and Bias — a complete accuracy picture in seconds.", type: "transform", tech: "MAPE / WMAPE / Bias Metrics" },
-      { label: "Root causes identified", note: "From those accuracy numbers, the AI surfaces what drove each miss — demand volatility, a supply disruption, a bad model assumption, or a data quality issue upstream.", type: "transform", tech: "Root-Cause Analysis Model" },
-      { label: "Model health checked", note: "With root causes identified, any forecast model whose accuracy is trending down period-over-period is flagged automatically — before the degradation starts affecting decisions.", type: "decision", tech: "Model Degradation Detection" },
-      { label: "Dashboard updated automatically", note: "All those metrics, root causes, and health flags are surfaced to the planner in a live dashboard — no manual data pulls, no report builds, no waiting for an analyst to run numbers.", type: "boundary", tech: "Automated Reporting Layer" },
+      { label: "Actuals collected", note: "Confirmed shipment, sell-through, and margin data are pulled in automatically at period close — this ground truth is what forecast accuracy will be measured against.", type: "automation", tech: "Data Pipeline / ETL" },
+      { label: "Accuracy measured", note: "Taking those actuals, the AI calculates forecast error across every SKU and customer simultaneously using MAPE, WMAPE, and Bias — a complete accuracy picture in seconds.", type: "trad-ai", tech: "MAPE / WMAPE / Bias Metrics" },
+      { label: "Root causes identified", note: "From those accuracy numbers, the AI surfaces what drove each miss — demand volatility, a supply disruption, a bad model assumption, or a data quality issue upstream.", type: "trad-ai", tech: "Root-Cause Analysis Model" },
+      { label: "Model health checked", note: "With root causes identified, any forecast model whose accuracy is trending down period-over-period is flagged automatically — before the degradation starts affecting decisions.", type: "trad-ai", tech: "Model Degradation Detection" },
+      { label: "Dashboard updated automatically", note: "All those metrics, root causes, and health flags are surfaced to the planner in a live dashboard — no manual data pulls, no report builds, no waiting for an analyst to run numbers.", type: "automation", tech: "Automated Reporting Layer" },
     ],
   },
   {
@@ -2178,10 +2178,10 @@ const FLOW_AGENTS = [
     phase: "Post-Launch Optimization",
     execIntro: "Once the product is live, this agent scans every market for velocity outpacing the forecast, surfaces the strongest expansion candidates, runs scenario simulations, and hands the planner ready-to-approve scaling options with quantified upside and risk.",
     steps: [
-      { label: "High-velocity markets identified", note: "The AI scans all markets and flags those where sell-through is significantly outpacing the forecast — these are the candidates where adding stock could capture incremental revenue.", type: "data", tech: "Velocity Anomaly Detection" },
-      { label: "Expansion opportunities surfaced", note: "From those flagged markets, the strongest expansion candidates are ranked by evidence — velocity delta, margin upside, and logistical risk — so the planner works the best options first.", type: "transform", tech: "Opportunity Scoring Model" },
-      { label: "Scaling scenarios simulated", note: "For each top candidate, the AI models multiple scenarios: what happens if we add stock here, what is the expected incremental sell-through, and what does it cost to act versus not act.", type: "transform", tech: "Scenario Simulation Engine" },
-      { label: "Scenarios written for review", note: "With those simulations complete, a concise plain-language summary of each option — the opportunity, the risk, and what it costs to act — is prepared for planner review.", type: "boundary", tech: "LLM Narrative Generation" },
+      { label: "High-velocity markets identified", note: "The AI scans all markets and flags those where sell-through is significantly outpacing the forecast — these are the candidates where adding stock could capture incremental revenue.", type: "automation", tech: "Velocity Anomaly Detection" },
+      { label: "Expansion opportunities surfaced", note: "From those flagged markets, the strongest expansion candidates are ranked by evidence — velocity delta, margin upside, and logistical risk — so the planner works the best options first.", type: "trad-ai", tech: "Opportunity Scoring Model" },
+      { label: "Scaling scenarios simulated", note: "For each top candidate, the AI models multiple scenarios: what happens if we add stock here, what is the expected incremental sell-through, and what does it cost to act versus not act.", type: "trad-ai", tech: "Scenario Simulation Engine" },
+      { label: "Scenarios written for review", note: "With those simulations complete, a concise plain-language summary of each option — the opportunity, the risk, and what it costs to act — is prepared for planner review.", type: "genai", tech: "LLM Narrative Generation" },
       { label: "Planner approves or adjusts", note: "The planner selects which markets to scale into, by how much, and on what timeline — the system executes the approved plan automatically within the supply envelope.", type: "human", tech: "Human-in-the-Loop Gate" },
     ],
   },
@@ -2191,11 +2191,11 @@ const FLOW_AGENTS = [
     phase: "Post-Launch Optimization",
     execIntro: "When the launch cycle closes, this agent reconciles the full actuals against the plan, extracts what drove accuracy and what caused misses, writes the findings into the like-product library, and recalibrates the models — so the next NPI team starts smarter.",
     steps: [
-      { label: "Launch cycle closes", note: "Final actuals are confirmed against the original plan — this complete, reconciled picture of what happened is the raw material every learning downstream depends on.", type: "data", tech: "Data Reconciliation" },
-      { label: "Learnings extracted", note: "Taking that full-cycle dataset, the AI identifies what the forecast got right, what it missed, and the specific factors — market, model, or data — that drove each difference.", type: "transform", tech: "LLM Analysis · Distillation" },
-      { label: "Like-product library updated", note: "Those learnings are written into the reference database — so any future product that resembles this one starts with this launch's real performance as its analog baseline.", type: "data", tech: "MemTree Persistent Memory" },
-      { label: "Forecast models recalibrated", note: "With the library updated, model weights are adjusted based on what actually drove accuracy this cycle — the models get quantifiably smarter with each completed launch.", type: "transform", tech: "Online Model Retraining" },
-      { label: "Next launch starts smarter", note: "Because of that recalibration, every future NPI opens with a baseline already shaped by real experience — accuracy compounds cycle over cycle rather than restarting from scratch.", type: "boundary", tech: "Baseline Calibration" },
+      { label: "Launch cycle closes", note: "Final actuals are confirmed against the original plan — this complete, reconciled picture of what happened is the raw material every learning downstream depends on.", type: "automation", tech: "Data Reconciliation" },
+      { label: "Learnings extracted", note: "Taking that full-cycle dataset, the AI identifies what the forecast got right, what it missed, and the specific factors — market, model, or data — that drove each difference.", type: "genai", tech: "LLM Analysis · Distillation" },
+      { label: "Like-product library updated", note: "Those learnings are written into the reference database — so any future product that resembles this one starts with this launch's real performance as its analog baseline.", type: "automation", tech: "MemTree Persistent Memory" },
+      { label: "Forecast models recalibrated", note: "With the library updated, model weights are adjusted based on what actually drove accuracy this cycle — the models get quantifiably smarter with each completed launch.", type: "trad-ai", tech: "Online Model Retraining" },
+      { label: "Next launch starts smarter", note: "Because of that recalibration, every future NPI opens with a baseline already shaped by real experience — accuracy compounds cycle over cycle rather than restarting from scratch.", type: "trad-ai", tech: "Baseline Calibration" },
     ],
   },
 ];
@@ -2205,11 +2205,10 @@ FLOW_AGENTS.forEach(a => { FLOW_AGENTS_BY_ID[a.id] = a; });
 
 /* ---- Flow racetrack engine ---- */
 const FLOW_TYPE_COLORS = {
-  data: "#A100FF", transform: "#7B00CC", human: "#00A3E0",
-  boundary: "#00875A", decision: "#FF6900",
+  automation: "#6B7280", "trad-ai": "#2563EB", genai: "#A100FF", human: "#00A3E0",
 };
-const FLOW_TYPE_ICONS = { data: "⬇", transform: "⚙", human: "👤", boundary: "↗", decision: "◆" };
-const FLOW_TYPE_LABELS = { data: "Automation", transform: "Traditional AI", boundary: "GenAI", decision: "Agentic" };
+const FLOW_TYPE_ICONS = { automation: "⬇", "trad-ai": "⚙", genai: "✦", human: "👤" };
+const FLOW_TYPE_LABELS = { automation: "Automation", "trad-ai": "Traditional AI", genai: "GenAI", human: "Human" };
 function flowTypeColor(t) { return FLOW_TYPE_COLORS[t] || "#888"; }
 function flowTypeIcon(t)  { return FLOW_TYPE_ICONS[t] || "○"; }
 
@@ -2243,7 +2242,7 @@ const FTT = (() => {
       ftTech.textContent = step.tech || "";
       ftTech.style.display = step.tech ? "" : "none";
       const ftType = g("ftType");
-      ftType.textContent = step.type;
+      ftType.textContent = FLOW_TYPE_LABELS[step.type] || step.type;
       ftType.style.background = flowTypeColor(step.type);
       g("ftNote").textContent = step.note || "";
       ttEl.classList.add("visible");
