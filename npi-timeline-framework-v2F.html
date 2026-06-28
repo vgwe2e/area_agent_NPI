@@ -291,6 +291,21 @@
   .groupseg[data-group="LAUNCH"] .gbar { background: var(--launch-purple); }
   .groupseg[data-group="POST-LAUNCH"] .gbar { background: var(--post-green); }
 
+  /* ── orchestrator banner (above agent band, spans full timeline width) ── */
+  .orchband {
+    flex: 0 0 auto; padding: 0 8px; margin-top: 6px;
+  }
+  .orchbar {
+    border-radius: 6px; padding: 5px 14px; background: #A100FF; color: #fff;
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; line-height: 1.2;
+    cursor: pointer; display: flex; align-items: center; gap: 10px;
+    transition: filter .15s; white-space: nowrap; overflow: hidden;
+  }
+  .orchbar:hover { filter: brightness(1.1); }
+  .orchbar .orc-label { opacity: .75; font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  .orchbar .orc-title { flex: 1; }
+  .orchbar .orc-hint { font-size: 10px; opacity: .65; margin-left: auto; }
+
   /* ── true-agent band (below group band, above stage bars) ── */
   .agentband { flex: 0 0 auto; display: flex; gap: 0; padding: 0; margin-top: 4px; }
   .agentseg {
@@ -891,6 +906,7 @@
         <div class="hc-bandclip"><div class="hc-band" id="headcountBand"></div></div>
       </div>
       <div class="groupband" id="groupband"></div>
+      <div class="orchband" id="orchband"></div>
       <div class="agentband" id="agentband"></div>
       <div class="timeline" id="timeline"></div>
     </div>
@@ -1360,6 +1376,7 @@ function init() {
   if (JOURNEY.hsy) $("#hsyName").textContent = JOURNEY.hsy;
 
   buildGroupBand();
+  buildOrchBand();
   buildAgentBand();
   buildHeadcount();
   buildTimeline();
@@ -1394,6 +1411,51 @@ function buildGroupBand() {
     seg.innerHTML = '<div class="gbar"><span class="gsub">' + esc(g.sub || g.id) + '</span>' + esc(g.label || "") + '</div>';
     band.appendChild(seg);
   });
+}
+
+/* ---- Orchestrator banner ---- */
+function buildOrchBand() {
+  const wrap = $("#orchband");
+  wrap.innerHTML = "";
+  const totalCols = JOURNEY.phases.length;
+  const bar = el("div", "orchbar");
+  bar.style.width = "calc(var(--col-w) * " + totalCols + " - 16px)";
+  bar.innerHTML =
+    '<span class="orc-label">Orchestrator</span>' +
+    '<span class="orc-title">NPI Control Tower — routes decisions across all 8 steps · maintains state · re-triggers on material change</span>' +
+    '<span class="orc-hint">What is this? ▸</span>';
+  bar.addEventListener("click", openOrchestratorPanel);
+  wrap.appendChild(bar);
+}
+
+function openOrchestratorPanel() {
+  const body = $("#agentPanelBody");
+  body.innerHTML =
+    '<div class="ap-num" style="color:#A100FF">Orchestrator · Spans All 8 Steps</div>' +
+    '<div class="ap-name">NPI Control Tower</div>' +
+    '<div class="ap-sect">' +
+      '<div class="ap-label">What it is — in plain English</div>' +
+      '<div class="ap-val">An orchestrator is the one component that knows the full picture. It does not do the analytical work itself — the five agents do that. What it does is decide: which agent goes next, what context to pass it, and whether the answer coming back is good enough to move forward or whether something needs to re-run. Think of it as the project manager that never goes home.</div>' +
+    '</div>' +
+    '<div class="ap-agentic" style="border-color:#A100FF">' +
+      '<div class="ap-label" style="color:#A100FF">What makes it a decision graph, not a pipeline</div>' +
+      '<div class="ap-val">A pipeline always runs the same steps in the same order. A decision graph asks a question at every junction. When the Demand Intelligence Agent returns a forecast with high uncertainty, the orchestrator routes back to Portfolio Intelligence to narrow the SKU list — a pipeline would just pass the uncertain number downstream and hope for the best. When the Exception Agent escalates a $400K expedite, the orchestrator pauses the plan until a human approves it — a pipeline would process it automatically or fail silently.</div>' +
+    '</div>' +
+    '<div class="ap-sect">' +
+      '<div class="ap-label">What it keeps track of</div>' +
+      '<div class="ap-val">Decision state: which agents have run, what they returned, what was approved by a planner, and what is still outstanding. If demand revises materially after the inventory plan was approved, the orchestrator detects the divergence and re-triggers the Inventory & Deployment Agent — without a planner having to notice and manually kick off a replanning cycle.</div>' +
+    '</div>' +
+    '<div class="ap-sect">' +
+      '<div class="ap-label">The three things it decides</div>' +
+      '<div class="ap-tools">' +
+        '<span class="ap-tool">Route — which agent goes next</span>' +
+        '<span class="ap-tool">Validate — is the answer good enough to proceed</span>' +
+        '<span class="ap-tool">Re-trigger — has upstream changed enough to re-run downstream</span>' +
+      '</div>' +
+    '</div>';
+  const panel = $("#agentPanel");
+  panel.classList.add("open");
+  panel.focus();
 }
 
 /* ---- True-agent band ---- */
