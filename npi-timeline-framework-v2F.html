@@ -460,9 +460,7 @@
 
   .lane { display: flex; flex-direction: column; gap: 9px; padding-top: 10px; }
   .lane.empty::after {
-    content: "No agents in this step yet"; color: var(--ink-faint); text-align: center;
-    font-size: 12px; padding: 14px 8px; border: 1px solid var(--hair); border-radius: var(--radius);
-    background: #fbfbfd; line-height: 1.4;
+    content: ""; display: none;
   }
   /* placeholder steps already list their decisions in the FROM→TO note above —
      point there instead of repeating "no named agents on slide". */
@@ -1223,15 +1221,18 @@ const JOURNEY = {
   /* The 3 planner governance gates — HumanAgent. Rendered as gate bands. */
   touchpoints: [
     { id: "touchpoint-1-launch-plan-approval", title: "Touchpoint 1 · Pre-Launch Plan Approval", type: "gate", refineryClass: "HumanAgent",
-      description: "One structured planner session — three agent recommendations reviewed and approved before any inventory commits or supplier engagements execute.\n\n① SKU Shortlist (Agent 1) — the ranked portfolio with analogue evidence and confidence ranges. Planner approves the list or adjusts before demand planning begins.\n\n② Demand Curve (Agent 2) — the multi-level forecast with model selection rationale and uncertainty flags. Planner approves the curve that flows into inventory sizing.\n\n③ Pre-Build & Deployment Plan (Agent 3) — launch quantity, DC positioning, and retailer allocation. Planner approves the full plan before Kinaxis and SAP execute against it.\n\nNothing moves until this gate clears. Steps 4–6 are Kinaxis and SAP executing the approved plan.",
+      summary: "Three agent sign-offs in one session before any inventory commits or supplier engagements execute.",
+      description: "One structured planner session covering all three pre-launch agent recommendations. Nothing executes in Kinaxis or SAP until this gate clears.\n\n1. SKU Shortlist — Portfolio Intelligence Agent\nRanked portfolio with analogue evidence and demand confidence ranges. Approve the list or adjust before demand planning begins.\n\n2. Demand Curve — Demand Intelligence Agent\nMulti-level forecast with model selection rationale and uncertainty flags. Approve the curve that flows into inventory sizing.\n\n3. Pre-Build & Deployment Plan — Inventory & Deployment Agent\nLaunch quantity, DC positioning, and retailer allocation. Approve the full plan before Kinaxis and SAP execute against it.",
       gates: ["PortfolioGate","ForecastGate","DeploymentPlanGate"],
       phaseIds: ["portfolio-launch-planning","demand-forecasting","inventory-planning","downstream-planning-systems"] },
     { id: "touchpoint-2-exception-review", title: "Touchpoint 2 · Exception Review", type: "gate", refineryClass: "HumanAgent",
-      description: "Review the scored and ranked NPI exception queue; decide accept agent recommendation or override with judgment.",
+      summary: "Review the scored exception queue; approve, adjust, or override the agent's recommended resolutions.",
+      description: "Exceptions have been scored, ranked by business impact, and routed by the Exception & Risk Agent. The agent has already auto-resolved what fell within its authority — what reaches the planner requires a judgment call.\n\n1. Review the Priority Exception Queue\nEach escalated exception shows impact magnitude, urgency, and the agent's proposed resolution — reallocation, expedite fee, or monitor. Ordered by cost of inaction.\n\n2. Approve, Adjust, or Override\nAccept the agent recommendation, modify the parameters (quantity, timing, routing), or override with planner judgment. Each decision is logged with rationale.\n\n3. Confirm Resolution Log\nEvery decision — approved, adjusted, or overridden — feeds the Learning & Calibration Agent at cycle close to improve future exception authority thresholds.",
       gates: ["ExceptionGate"], phaseIds: ["launch-execution-adjustments"] },
     { id: "touchpoint-3-post-launch-recalibration", title: "Touchpoint 3 · Post-Launch Recalibration", type: "gate", refineryClass: "HumanAgent",
-      description: "Review sell-through vs. forecast; approve scaling or wind-down; confirm updated supply plan for the next launch window.",
-      gates: ["ScalingGate"], phaseIds: ["post-launch-optimization"] },
+      summary: "Review sell-through vs. forecast; approve scaling, wind-down, or carry-over for the next cycle.",
+      description: "Post-launch reconciliation: actual sell-through compared against the original forecast and plan. The Learning & Calibration Agent surfaces the full variance analysis before this session.\n\n1. Sell-Through vs. Forecast Review\nFull variance analysis by SKU and market — what sold, where, how fast, vs. the plan. Approve the actuals as the basis for recalibration and next-cycle planning.\n\n2. Scaling or Wind-Down Decision\nBased on sell-through trajectory: approve scale-up (increase supply commitment), steady state, or wind-down with a markdown timing and inventory clearance plan.\n\n3. Next-Cycle Calibration Sign-Off\nApprove the updated model weights and like-product library entries the Learning Agent has proposed. No silent updates — calibration changes are visible and require explicit sign-off before they affect the next NPI cycle.",
+      gates: ["ScalingGate","CalibrationGate"], phaseIds: ["post-launch-optimization"] },
   ],
 
   synthesis: {
@@ -1777,7 +1778,7 @@ function buildTouchband(t) {
       '<span class="gtitle">' + esc(t.title) + '</span>' +
       rfGateChip(t.refineryClass) +
     '</div>' +
-    '<div class="gdesc">' + esc(t.description || "") + '</div>';
+    '<div class="gdesc">' + esc(t.summary || t.description || "") + '</div>';
   band.addEventListener("click", () => openTouchpointDrawer(t));
   band.addEventListener("keydown", e => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTouchpointDrawer(t); }
@@ -2013,7 +2014,7 @@ function openTouchpointDrawer(t) {
       '<span class="badge" style="background:' + (NODE_TYPES.gate.color) + '">Gate</span>' +
       rfBadge(t.refineryClass) +
     '</div>' +
-    '<p class="d-desc">' + esc(t.description || "") + '</p>' +
+    '<p class="d-desc" style="white-space:pre-line">' + esc(t.description || "") + '</p>' +
     '<div class="d-section-title">AI Refinery class</div>' +
     '<div class="d-rfclass"><div class="rf-name">' + esc(rf.label) + '</div>' +
       '<div class="rf-mean">' + esc(rf.meaning) + '</div></div>' +
