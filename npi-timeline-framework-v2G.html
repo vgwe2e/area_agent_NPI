@@ -876,6 +876,8 @@
     background: #fafafd;
   }
   #pane-detail { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+  /* The [hidden] attribute is overridden by display:flex — enforce display:none explicitly */
+  #pane-overview[hidden], #pane-detail[hidden] { display: none !important; }
 
   /* ---- Overview pane layout ---- */
   .ov-headline { display: flex; flex-direction: column; gap: 6px; }
@@ -891,7 +893,7 @@
   .ov-stmt-problem  { background: #fff3f3; border-left: 3px solid #E2231A; }
   .ov-stmt-solution { background: var(--accent-soft); border-left: 3px solid var(--accent); }
 
-  .ov-cols { display: flex; gap: 14px; flex: 1 1 auto; min-height: 0; }
+  .ov-cols { display: flex; gap: 14px; flex: 1 1 auto; min-height: 180px; }
   .ov-card {
     background: #fff; border-radius: var(--radius); border: 1px solid var(--hair);
     box-shadow: var(--shadow); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
