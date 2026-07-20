@@ -961,17 +961,21 @@
   .ov-value-icon { color: var(--accent); font-size: 16px; }
   .ov-value-sub  { font-size: 11.5px; color: var(--ink-soft); padding-left: 24px; }
 
-  /* macro phase cards */
-  .ov-macros { display: flex; gap: 14px; flex: 0 0 auto; }
+  /* macro phase cards — sit INSIDE the chain box, under the circles.
+     Full colored header band (matches the group bars above) — no left-accent styling. */
+  .ov-macros { display: flex; gap: 12px; margin-top: 16px; }
   .ov-macro {
-    flex: 1; background: #fff; border-radius: var(--radius); border: 1px solid var(--hair);
-    box-shadow: var(--shadow); padding: 12px 16px;
-    border-left: 4px solid currentColor;
-    display: flex; flex-direction: column; gap: 5px;
+    flex: 1; background: #fff; border-radius: 10px; border: 1px solid var(--hair);
+    overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 1px 2px rgba(20,20,40,.05);
   }
-  .ov-macro-num  { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; opacity: .8; }
-  .ov-macro-label { font-size: 14px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
-  .ov-macro-body  { font-size: 12px; color: var(--ink-soft); line-height: 1.45; margin: 0; }
+  .ov-macro-head {
+    padding: 9px 14px 10px; color: #fff;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .ov-macro-num  { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; opacity: .92; }
+  .ov-macro-label { font-size: 15px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+  .ov-macro-body  { font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin: 0; padding: 11px 14px 13px; flex: 1; }
 
   /* ── Login overlay ── */
   #loginOverlay {
@@ -3188,11 +3192,13 @@ function renderOverview() {
         '</div>';
     }).join('');
 
-  /* ---- Build macro-phase cards ---- */
+  /* ---- Build macro-phase cards (full colored header band, no left accent) ---- */
   const macrosHtml = o.macroPhases.map(function(mp) {
-    return '<div class="ov-macro" style="color:' + mp.color + ';">' +
-      '<div class="ov-macro-num">Phase ' + mp.n + ' · ' + esc(mp.group) + '</div>' +
-      '<div class="ov-macro-label">' + esc(mp.label) + '</div>' +
+    return '<div class="ov-macro">' +
+      '<div class="ov-macro-head" style="background:' + mp.color + ';">' +
+        '<div class="ov-macro-num">Phase ' + mp.n + ' · ' + esc(mp.group) + '</div>' +
+        '<div class="ov-macro-label">' + esc(mp.label) + '</div>' +
+      '</div>' +
       '<p class="ov-macro-body">' + esc(mp.body) + '</p>' +
       '</div>';
   }).join('');
@@ -3216,12 +3222,12 @@ function renderOverview() {
           '<div class="ov-card-title">' + esc(chain.title) + '</div>' +
           '<div style="font-size:11px;color:var(--ink-soft);">' + esc(chain.subtitle) + '</div>' +
           chainHtml +
+          /* the three phase summaries now live inside the chain box, under the circles */
+          '<div class="ov-macros">' + macrosHtml + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="ov-card value">' + valueHtml + '</div>' +
-    '</div>' +
-    /* Row 3 — macro phase cards */
-    '<div class="ov-macros">' + macrosHtml + '</div>';
+    '</div>';
 }
 
 /* ---- Tab switching ---- */
