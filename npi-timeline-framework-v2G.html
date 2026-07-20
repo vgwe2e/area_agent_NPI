@@ -880,73 +880,86 @@
   #pane-overview[hidden], #pane-detail[hidden] { display: none !important; }
 
   /* ---- Overview pane layout ---- */
-  .ov-headline { display: flex; flex-direction: column; gap: 6px; }
+  .ov-headline { display: flex; flex-direction: column; gap: 3px; }
   .ov-title-row { display: flex; align-items: baseline; gap: 8px; }
-  .ov-chev { color: var(--accent); font-size: 22px; font-weight: 900; line-height: 1; }
-  .ov-title { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
+  .ov-chev  { color: var(--accent); font-size: 24px; font-weight: 900; line-height: 1; }
+  .ov-title { font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
   .ov-sub   { font-size: 13px; color: var(--ink-soft); margin: 0; font-style: italic; }
-  .ov-stmt  { display: flex; gap: 12px; align-items: flex-start; }
-  .ov-stmt-problem, .ov-stmt-solution {
-    flex: 1; font-size: 12.5px; line-height: 1.5; color: var(--ink);
-    padding: 10px 14px; border-radius: 8px;
-  }
-  .ov-stmt-problem  { background: #fff3f3; border-left: 3px solid #E2231A; }
-  .ov-stmt-solution { background: var(--accent-soft); border-left: 3px solid var(--accent); }
+  /* Single narrative paragraph replaces the two-card layout */
+  .ov-intro { font-size: 13px; line-height: 1.55; color: var(--ink); margin: 2px 0 0; }
 
   .ov-cols { display: flex; gap: 14px; flex: 1 1 auto; min-height: 180px; }
   .ov-card {
-    background: #fff; border-radius: var(--radius); border: 1px solid var(--hair);
-    box-shadow: var(--shadow); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+    border-radius: var(--radius); border: 1px solid var(--hair);
+    box-shadow: var(--shadow); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;
     overflow: hidden;
   }
+  /* Side panels tinted — matches reference SIGNALS IN / COMMITTED PLAN OUT style */
+  .ov-card.signals { flex: 0 0 210px; background: var(--neutral-100); }
+  .ov-card.chain   { flex: 2; background: #fff; }
+  .ov-card.value   { flex: 0 0 230px; background: #f0eaff; }
+  /* Purple caps for panel titles — matches reference */
   .ov-card-title {
-    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em;
-    color: var(--ink-faint);
+    font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--accent);
   }
-  .ov-card.signals { flex: 0 0 200px; }
-  .ov-card.chain   { flex: 2; }
-  .ov-card.value   { flex: 0 0 220px; }
-
-  .ov-signal-item { display: flex; flex-direction: column; gap: 1px; padding: 5px 0; border-bottom: 1px solid var(--neutral-100); }
+  .ov-signal-desc { font-size: 11.5px; color: var(--ink-soft); margin: 0; }
+  .ov-signal-item { display: flex; flex-direction: column; gap: 1px; padding: 5px 0; border-bottom: 1px solid var(--neutral-200); }
   .ov-signal-item:last-child { border-bottom: 0; }
-  .ov-signal-top  { display: flex; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 700; }
-  .ov-signal-icon { color: var(--accent); font-size: 10px; }
-  .ov-signal-sub  { font-size: 11px; color: var(--ink-soft); padding-left: 18px; }
+  .ov-signal-top  { display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 700; }
+  .ov-signal-icon { color: var(--accent); font-size: 12px; }
+  .ov-signal-sub  { font-size: 11px; color: var(--ink-faint); padding-left: 22px; }
 
-  /* chain */
-  .ov-chain-groups { display: flex; margin-bottom: 4px; }
+  /* ── chain ─────────────────────────────────────────── */
+  .ov-chain-groups { display: flex; margin-bottom: 8px; gap: 3px; }
   .ov-group-label {
     font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
-    color: #fff; padding: 2px 8px; border-radius: 3px; text-align: center;
+    color: #fff; padding: 4px 0; border-radius: 4px; text-align: center;
   }
-  .ov-chain-row { display: flex; align-items: center; gap: 0; }
+  .ov-orch-note {
+    font-size: 11px; color: var(--ink-faint); font-style: italic;
+    text-align: center; margin-bottom: 4px;
+  }
+  /* Three layers per item: seq-num above, big circle, label below */
+  .ov-chain-row  { display: flex; align-items: flex-start; }
+  .ov-chain-item { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 0 0 64px; }
+  .ov-step-num { font-size: 10px; font-weight: 700; color: var(--ink-faint); letter-spacing: .05em; }
+  .ov-gate-num { font-size: 10px; font-weight: 800; color: #2563EB; letter-spacing: .05em; }
   .ov-step {
-    width: 30px; height: 30px; border-radius: 50%; flex: 0 0 30px;
+    width: 60px; height: 60px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 800; background: #fff; border: 2.5px solid currentColor;
-    position: relative; z-index: 1;
+    font-size: 22px; color: #fff;
+    box-shadow: 0 3px 14px rgba(0,0,0,.2); position: relative; z-index: 1;
   }
   .ov-gate {
-    width: 30px; height: 30px; border-radius: 50%; flex: 0 0 30px;
+    width: 60px; height: 60px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 9px; font-weight: 800; background: #2563EB; color: #fff;
-    position: relative; z-index: 1;
+    font-size: 22px; background: #2563EB; color: #fff;
+    box-shadow: 0 3px 14px rgba(0,0,0,.2); position: relative; z-index: 1;
   }
-  .ov-connector { flex: 1; height: 2px; }
-  .ov-chain-labels { display: flex; align-items: flex-start; margin-top: 2px; }
-  .ov-step-label { flex: 0 0 30px; }
-  .ov-gate-label { flex: 0 0 30px; font-size: 8.5px; text-align: center; color: #2563EB; font-weight: 700; line-height: 1.2; }
-  .ov-chain-legend { display: flex; gap: 18px; margin-top: 6px; flex-wrap: wrap; }
-  .ov-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-soft); }
-  .ov-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-  .ov-chain-note { font-size: 10.5px; color: var(--ink-faint); font-style: italic; margin-top: 2px; }
+  .ov-step-name {
+    font-size: 9.5px; font-weight: 700; text-align: center; line-height: 1.3;
+    color: var(--ink-soft); width: 66px;
+  }
+  .ov-gate-name {
+    font-size: 9.5px; font-weight: 700; text-align: center; line-height: 1.3;
+    color: #2563EB; width: 66px;
+  }
+  /* Connector margin-top: seq-num(~16px) + gap(5px) + half-circle(30px) - half-connector(1.5) ≈ 49px */
+  .ov-connector  { flex: 1; height: 3px; margin-top: 49px; flex-shrink: 1; min-width: 6px; }
+  .ov-chain-arrow { color: var(--ink-faint); font-size: 24px; margin-top: 41px; flex-shrink: 0; }
+  .ov-chain-legend { display: flex; gap: 24px; margin-top: 14px; flex-wrap: wrap; }
+  .ov-legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-soft); }
+  .ov-legend-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .ov-chain-note { font-size: 11px; color: var(--ink-faint); font-style: italic; }
+  .ov-chain-inner { width: 100%; display: flex; flex-direction: column; gap: 8px; margin: auto 0; }
 
-  /* value out */
-  .ov-value-item { display: flex; flex-direction: column; gap: 2px; padding: 6px 0; border-bottom: 1px solid var(--neutral-100); }
+  /* ── value out ─────────────────────────────────────── */
+  .ov-value-item { display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid rgba(161,0,255,.12); }
   .ov-value-item:last-child { border-bottom: 0; }
-  .ov-value-top  { display: flex; gap: 7px; align-items: center; font-size: 12.5px; font-weight: 700; }
-  .ov-value-icon { color: var(--accent); font-size: 14px; }
-  .ov-value-sub  { font-size: 11px; color: var(--ink-soft); padding-left: 22px; }
+  .ov-value-top  { display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 700; }
+  .ov-value-icon { color: var(--accent); font-size: 16px; }
+  .ov-value-sub  { font-size: 11.5px; color: var(--ink-soft); padding-left: 24px; }
 
   /* macro phase cards */
   .ov-macros { display: flex; gap: 14px; flex: 0 0 auto; }
@@ -1228,20 +1241,21 @@ const OVERVIEW = {
     title: "THE AGENT CHAIN",
     subtitle: "8 decisions, run in sequence",
     steps: [
-      { n: 1, group: "PRE-LAUNCH",  color: "#E2231A" },
-      { n: 2, group: "PRE-LAUNCH",  color: "#E2231A" },
-      { n: 3, group: "PRE-LAUNCH",  color: "#E2231A" },
-      { n: 4, group: "PRE-LAUNCH",  color: "#E2231A" },
-      { n: 5, group: "LAUNCH",      color: "#7500C0" },
-      { n: 6, group: "LAUNCH",      color: "#7500C0" },
-      { n: 7, group: "LAUNCH",      color: "#7500C0" },
-      { n: 8, group: "POST-LAUNCH", color: "#0F9D8C" },
+      { n: 1, group: "PRE-LAUNCH",  color: "#E2231A", label: "Portfolio\nPlanning",      symbol: "◆" },
+      { n: 2, group: "PRE-LAUNCH",  color: "#E2231A", label: "Demand\nForecasting",      symbol: "↑" },
+      { n: 3, group: "PRE-LAUNCH",  color: "#E2231A", label: "Inventory\nPlanning",      symbol: "■" },
+      { n: 4, group: "PRE-LAUNCH",  color: "#E2231A", label: "Supply\nExecution",        symbol: "⚙" },
+      { n: 5, group: "LAUNCH",      color: "#7500C0", label: "DC\nPositioning",          symbol: "◎" },
+      { n: 6, group: "LAUNCH",      color: "#7500C0", label: "Distribution\n& Fulfillment", symbol: "▶" },
+      { n: 7, group: "LAUNCH",      color: "#7500C0", label: "Exception\nMgmt",          symbol: "⚡" },
+      { n: 8, group: "POST-LAUNCH", color: "#0F9D8C", label: "Post-Launch\nLearning",    symbol: "↺" },
     ],
     gates: [
-      { afterStep: 3, label: "Plan\nApproval",    short: "H1" },
-      { afterStep: 6, label: "Exception\nReview", short: "H2" },
-      { afterStep: 7, label: "Scale\nDecision",   short: "H3" },
+      { afterStep: 3, label: "Plan Approval",    short: "H1" },
+      { afterStep: 6, label: "Exception Review", short: "H2" },
+      { afterStep: 7, label: "Scale Decision",   short: "H3" },
     ],
+    orchestratorNote: "NPI Control Tower orchestrates across all 8 decisions",
     legendAutomated: "Automated agent (5)",
     legendHuman:     "Human checkpoint (3) — planner decides & signs off",
     reductionNote:   "25+ planner touchpoints today → 3 structured approvals",
@@ -3097,50 +3111,57 @@ function renderOverview() {
   });
   groupsHtml += '</div>';
 
-  // Build circle row + label row below
-  // Full sequence: steps + gates interleaved
+  // Full sequence: steps interleaved with gates
   const sequence = [];
   chain.steps.forEach(function(step) {
     sequence.push({ type: 'step', data: step });
     if (gateMap[step.n]) sequence.push({ type: 'gate', data: gateMap[step.n] });
   });
 
+  // Each item is a flex column: big circle + name label below.
+  // Connectors align to circle mid-height via margin-top on .ov-connector.
   let rowHtml = '<div class="ov-chain-row">';
-  let labelsHtml = '<div class="ov-chain-labels">';
 
   sequence.forEach(function(item, idx) {
-    // Add connector before each element except the first
     if (idx > 0) {
-      // Connector color: use the color of the previous step's group
-      const prevStep = sequence[idx - 1];
-      const prevColor = prevStep.type === 'step' ? prevStep.data.color : groupColors[sequence[idx - 2] ? sequence[idx - 2].data.group : sequence[idx - 1].data.group] || '#888';
-      rowHtml += '<div class="ov-connector" style="background:' + prevColor + ';opacity:.35;"></div>';
-      labelsHtml += '<div style="flex:1;"></div>';
+      const prev = sequence[idx - 1];
+      const prevColor = prev.type === 'step'
+        ? prev.data.color
+        : (groupColors[(sequence[idx - 2] || prev).data.group] || '#aaa');
+      rowHtml += '<div class="ov-connector" style="background:' + prevColor + ';opacity:.4;"></div>';
     }
 
     if (item.type === 'step') {
-      const step = item.data;
-      rowHtml += '<div class="ov-step" style="color:' + step.color + ';">' + step.n + '</div>';
-      labelsHtml += '<div class="ov-step-label"></div>';
+      const s = item.data;
+      const lines = (s.label || String(s.n)).split('\n').map(function(l) { return esc(l); }).join('<br>');
+      const seq = String(s.n).padStart(2, '0');
+      rowHtml +=
+        '<div class="ov-chain-item">' +
+          '<div class="ov-step-num">' + seq + '</div>' +
+          '<div class="ov-step" style="background:' + s.color + ';">' + (s.symbol || s.n) + '</div>' +
+          '<div class="ov-step-name">' + lines + '</div>' +
+        '</div>';
     } else {
-      const gate = item.data;
-      const labelLines = gate.label.split('\n');
-      rowHtml += '<div class="ov-gate">' + gate.short + '</div>';
-      labelsHtml += '<div class="ov-gate-label">' + labelLines.map(function(l) { return esc(l); }).join('<br>') + '</div>';
+      const g = item.data;
+      const lines = (g.label || g.short).split('\n').map(function(l) { return esc(l); }).join('<br>');
+      rowHtml +=
+        '<div class="ov-chain-item">' +
+          '<div class="ov-gate-num">' + esc(g.short) + '</div>' +
+          '<div class="ov-gate">' + '👤' + '</div>' +
+          '<div class="ov-gate-name">' + lines + '</div>' +
+        '</div>';
     }
   });
 
-  // Arrowhead at end
-  rowHtml += '<div style="margin-left:2px;color:var(--ink-soft);font-size:16px;font-weight:700;flex:0 0 auto;">›</div>';
+  rowHtml += '<div class="ov-chain-arrow">›</div>';
   rowHtml += '</div>';
-  labelsHtml += '</div>';
 
   const chainHtml =
+    (chain.orchestratorNote ? '<div class="ov-orch-note">' + esc(chain.orchestratorNote) + '</div>' : '') +
     groupsHtml +
     rowHtml +
-    labelsHtml +
     '<div class="ov-chain-legend">' +
-      '<div class="ov-legend-item"><div class="ov-legend-dot" style="background:var(--accent);border:2px solid var(--accent);background:#fff;outline:2px solid var(--accent);"></div>' + esc(chain.legendAutomated) + '</div>' +
+      '<div class="ov-legend-item"><div class="ov-legend-dot" style="background:var(--accent);"></div>' + esc(chain.legendAutomated) + '</div>' +
       '<div class="ov-legend-item"><div class="ov-legend-dot" style="background:#2563EB;"></div>' + esc(chain.legendHuman) + '</div>' +
     '</div>' +
     '<div class="ov-chain-note">' + esc(chain.reductionNote) + '</div>';
@@ -3148,6 +3169,7 @@ function renderOverview() {
   /* ---- Build signals HTML ---- */
   const signalsHtml =
     '<div class="ov-card-title">' + esc(o.signalsIn.title) + '</div>' +
+    '<p class="ov-signal-desc">' + esc(o.signalsIn.label) + '</p>' +
     o.signalsIn.items.map(function(item) {
       return '<div class="ov-signal-item">' +
         '<div class="ov-signal-top"><span class="ov-signal-icon">' + item.icon + '</span>' + esc(item.label) + '</div>' +
@@ -3158,6 +3180,7 @@ function renderOverview() {
   /* ---- Build value-out HTML ---- */
   const valueHtml =
     '<div class="ov-card-title">' + esc(o.valueOut.title) + '</div>' +
+    '<p class="ov-signal-desc">An approved, traceable launch plan</p>' +
     o.valueOut.items.map(function(item) {
       return '<div class="ov-value-item">' +
         '<div class="ov-value-top"><span class="ov-value-icon">' + item.icon + '</span>' + esc(item.label) + '</div>' +
@@ -3183,18 +3206,17 @@ function renderOverview() {
         '<h1 class="ov-title">' + esc(o.title) + '</h1>' +
       '</div>' +
       '<p class="ov-sub">' + esc(o.subtitle) + '</p>' +
-      '<div class="ov-stmt">' +
-        '<div class="ov-stmt-problem">' + esc(o.problem) + '</div>' +
-        '<div class="ov-stmt-solution">' + esc(o.solution) + '</div>' +
-      '</div>' +
+      '<p class="ov-intro">' + esc(o.problem) + ' ' + esc(o.solution) + '</p>' +
     '</div>' +
     /* Row 2 — three columns */
     '<div class="ov-cols">' +
       '<div class="ov-card signals">' + signalsHtml + '</div>' +
       '<div class="ov-card chain">' +
-        '<div class="ov-card-title">' + esc(chain.title) + '</div>' +
-        '<div style="font-size:11px;color:var(--ink-soft);margin-bottom:6px;">' + esc(chain.subtitle) + '</div>' +
-        chainHtml +
+        '<div class="ov-chain-inner">' +
+          '<div class="ov-card-title">' + esc(chain.title) + '</div>' +
+          '<div style="font-size:11px;color:var(--ink-soft);">' + esc(chain.subtitle) + '</div>' +
+          chainHtml +
+        '</div>' +
       '</div>' +
       '<div class="ov-card value">' + valueHtml + '</div>' +
     '</div>' +
