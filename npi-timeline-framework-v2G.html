@@ -3159,7 +3159,7 @@ function renderOverview() {
       if (s.agents || s.aera || s.system) {
         tally += '<div class="ov-step-tally">';
         if (s.agents) tally += '<div class="ov-tally-line ov-tally-agent"><span class="ov-tally-dot" style="background:var(--accent);"></span>' + s.agents + (s.agents > 1 ? ' Agents' : ' Agent') + '</div>';
-        if (s.aera)   tally += '<div class="ov-tally-line ov-tally-aera"><span class="ov-tally-dot" style="background:var(--teal);"></span>' + s.aera + ' Aera</div>';
+        if (s.aera)   tally += '<div class="ov-tally-line ov-tally-aera"><span class="ov-tally-dot" style="background:var(--teal);"></span>' + s.aera + (s.aera > 1 ? ' Aera Skills' : ' Aera Skill') + '</div>';
         if (s.system) tally += '<div class="ov-tally-line ov-tally-system"><span class="ov-tally-dot" style="background:var(--ink-faint);"></span>' + esc(s.system) + '</div>';
         tally += '</div>';
       }
