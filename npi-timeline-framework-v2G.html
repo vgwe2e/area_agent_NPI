@@ -916,8 +916,10 @@
     font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
     color: #fff; padding: 4px 0; border-radius: 4px; text-align: center;
   }
+  /* THE AGENT CHAIN title — larger than the side-panel titles */
+  .ov-card.chain .ov-card-title { font-size: 14px; }
   .ov-orch-note {
-    font-size: 11px; color: var(--ink-faint); font-style: italic;
+    font-size: 12.5px; color: var(--ink-faint); font-style: italic;
     text-align: center; margin-bottom: 4px;
   }
   /* Three layers per item: seq-num above, big circle, label below */
@@ -938,12 +940,12 @@
     box-shadow: 0 3px 14px rgba(0,0,0,.2); position: relative; z-index: 1;
   }
   .ov-step-name {
-    font-size: 10px; font-weight: 700; text-align: center; line-height: 1.3;
-    color: var(--ink-soft); width: 60px;
+    font-size: 11.5px; font-weight: 700; text-align: center; line-height: 1.3;
+    color: var(--ink-soft); width: 62px;
   }
   .ov-gate-name {
-    font-size: 10px; font-weight: 700; text-align: center; line-height: 1.3;
-    color: #2563EB; width: 60px;
+    font-size: 11.5px; font-weight: 700; text-align: center; line-height: 1.3;
+    color: #2563EB; width: 62px;
   }
   /* Connector margin-top: seq-num(~13px) + gap(5px) + half-circle(26px) - half-connector(1.5) ≈ 43px */
   .ov-connector  { flex: 1; height: 3px; margin-top: 43px; flex-shrink: 1; min-width: 5px; }
@@ -975,7 +977,7 @@
   }
   .ov-macro-num  { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; opacity: .92; }
   .ov-macro-label { font-size: 16.5px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
-  .ov-macro-body  { font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0; padding: 11px 14px 13px; flex: 1; }
+  .ov-macro-body  { font-size: 14.5px; color: var(--ink-soft); line-height: 1.5; margin: 0; padding: 11px 14px 13px; flex: 1; }
 
   /* ── Login overlay ── */
   #loginOverlay {
@@ -3220,7 +3222,7 @@ function renderOverview() {
       '<div class="ov-card chain">' +
         '<div class="ov-chain-inner">' +
           '<div class="ov-card-title">' + esc(chain.title) + '</div>' +
-          '<div style="font-size:12.5px;color:var(--ink-soft);">' + esc(chain.subtitle) + '</div>' +
+          '<div style="font-size:14px;color:var(--ink-soft);">' + esc(chain.subtitle) + '</div>' +
           chainHtml +
           /* the three phase summaries now live inside the chain box, under the circles */
           '<div class="ov-macros">' + macrosHtml + '</div>' +
