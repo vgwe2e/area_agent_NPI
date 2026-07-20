@@ -947,6 +947,16 @@
     font-size: 11.5px; font-weight: 700; text-align: center; line-height: 1.3;
     color: #2563EB; width: 62px;
   }
+  /* per-node component tally, rendered under the caption */
+  .ov-step-tally {
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    width: 64px; margin-top: 4px; padding-top: 5px; border-top: 1px solid var(--hair);
+  }
+  .ov-tally-line { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; line-height: 1.3; }
+  .ov-tally-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .ov-tally-agent  { color: var(--accent); }
+  .ov-tally-aera   { color: var(--teal); }
+  .ov-tally-system { color: var(--ink-faint); }
   /* Connector margin-top: seq-num(~13px) + gap(5px) + half-circle(26px) - half-connector(1.5) ≈ 43px */
   .ov-connector  { flex: 1; height: 3px; margin-top: 43px; flex-shrink: 1; min-width: 5px; }
   .ov-chain-arrow { color: var(--ink-faint); font-size: 22px; margin-top: 34px; flex-shrink: 0; }
@@ -1246,15 +1256,17 @@ const OVERVIEW = {
   chain: {
     title: "THE AGENT CHAIN",
     subtitle: "8 decisions, run in sequence",
+    /* agents / aera = per-node component tallies rendered under each caption.
+       system = deterministic system-execution nodes (Kinaxis/SAP), no agent reasoning. */
     steps: [
-      { n: 1, group: "PRE-LAUNCH",  color: "#E2231A", label: "Portfolio\nPlanning",      symbol: "◆" },
-      { n: 2, group: "PRE-LAUNCH",  color: "#E2231A", label: "Demand\nForecasting",      symbol: "↑" },
-      { n: 3, group: "PRE-LAUNCH",  color: "#E2231A", label: "Inventory\nPlanning",      symbol: "■" },
-      { n: 4, group: "PRE-LAUNCH",  color: "#E2231A", label: "Supply\nExecution",        symbol: "⚙" },
-      { n: 5, group: "LAUNCH",      color: "#7500C0", label: "DC\nPositioning",          symbol: "◎" },
-      { n: 6, group: "LAUNCH",      color: "#7500C0", label: "Distribution\n& Fulfillment", symbol: "▶" },
-      { n: 7, group: "LAUNCH",      color: "#7500C0", label: "Exception\nMgmt",          symbol: "⚡" },
-      { n: 8, group: "POST-LAUNCH", color: "#0F9D8C", label: "Post-Launch\nLearning",    symbol: "↺" },
+      { n: 1, group: "PRE-LAUNCH",  color: "#E2231A", label: "Portfolio\nPlanning",      symbol: "◆", agents: 1 },
+      { n: 2, group: "PRE-LAUNCH",  color: "#E2231A", label: "Demand\nForecasting",      symbol: "↑", agents: 1, aera: 2 },
+      { n: 3, group: "PRE-LAUNCH",  color: "#E2231A", label: "Inventory\nPlanning",      symbol: "■", agents: 1 },
+      { n: 4, group: "PRE-LAUNCH",  color: "#E2231A", label: "Supply\nExecution",        symbol: "⚙", system: "Kinaxis" },
+      { n: 5, group: "LAUNCH",      color: "#7500C0", label: "DC\nPositioning",          symbol: "◎", system: "SAP" },
+      { n: 6, group: "LAUNCH",      color: "#7500C0", label: "Distribution\n& Fulfillment", symbol: "▶", aera: 1 },
+      { n: 7, group: "LAUNCH",      color: "#7500C0", label: "Exception\nMgmt",          symbol: "⚡", agents: 1 },
+      { n: 8, group: "POST-LAUNCH", color: "#0F9D8C", label: "Post-Launch\nLearning",    symbol: "↺", agents: 1 },
     ],
     gates: [
       { afterStep: 3, label: "Plan Approval",    short: "H1" },
@@ -1262,8 +1274,9 @@ const OVERVIEW = {
       { afterStep: 7, label: "Scale Decision",   short: "H3" },
     ],
     orchestratorNote: "NPI Control Tower orchestrates across all 8 decisions",
-    legendAutomated: "Automated agent (5)",
-    legendHuman:     "Human checkpoint (3) — planner decides & signs off",
+    legendAutomated: "Agent (5)",
+    legendAera:      "Aera component (3)",
+    legendHuman:     "Human checkpoint (3) — planner signs off",
     reductionNote:   "25+ planner touchpoints today → 3 structured approvals",
   },
 
@@ -3141,11 +3154,21 @@ function renderOverview() {
       const s = item.data;
       const lines = (s.label || String(s.n)).split('\n').map(function(l) { return esc(l); }).join('<br>');
       const seq = String(s.n).padStart(2, '0');
+      // per-node component tally (agents / aera / system execution)
+      let tally = '';
+      if (s.agents || s.aera || s.system) {
+        tally += '<div class="ov-step-tally">';
+        if (s.agents) tally += '<div class="ov-tally-line ov-tally-agent"><span class="ov-tally-dot" style="background:var(--accent);"></span>' + s.agents + (s.agents > 1 ? ' Agents' : ' Agent') + '</div>';
+        if (s.aera)   tally += '<div class="ov-tally-line ov-tally-aera"><span class="ov-tally-dot" style="background:var(--teal);"></span>' + s.aera + ' Aera</div>';
+        if (s.system) tally += '<div class="ov-tally-line ov-tally-system"><span class="ov-tally-dot" style="background:var(--ink-faint);"></span>' + esc(s.system) + '</div>';
+        tally += '</div>';
+      }
       rowHtml +=
         '<div class="ov-chain-item">' +
           '<div class="ov-step-num">' + seq + '</div>' +
           '<div class="ov-step" style="background:' + s.color + ';">' + (s.symbol || s.n) + '</div>' +
           '<div class="ov-step-name">' + lines + '</div>' +
+          tally +
         '</div>';
     } else {
       const g = item.data;
@@ -3168,6 +3191,7 @@ function renderOverview() {
     rowHtml +
     '<div class="ov-chain-legend">' +
       '<div class="ov-legend-item"><div class="ov-legend-dot" style="background:var(--accent);"></div>' + esc(chain.legendAutomated) + '</div>' +
+      (chain.legendAera ? '<div class="ov-legend-item"><div class="ov-legend-dot" style="background:var(--teal);"></div>' + esc(chain.legendAera) + '</div>' : '') +
       '<div class="ov-legend-item"><div class="ov-legend-dot" style="background:#2563EB;"></div>' + esc(chain.legendHuman) + '</div>' +
     '</div>' +
     '<div class="ov-chain-note">' + esc(chain.reductionNote) + '</div>';
