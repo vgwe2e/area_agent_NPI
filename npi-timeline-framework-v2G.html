@@ -886,7 +886,7 @@
   .ov-title { font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
   .ov-sub   { font-size: 13px; color: var(--ink-soft); margin: 0; font-style: italic; }
   /* Single narrative paragraph replaces the two-card layout */
-  .ov-intro { font-size: 13px; line-height: 1.55; color: var(--ink); margin: 2px 0 0; }
+  .ov-intro { font-size: 14.5px; line-height: 1.55; color: var(--ink); margin: 2px 0 0; }
 
   .ov-cols { display: flex; gap: 14px; flex: 1 1 auto; min-height: 180px; }
   .ov-card {
@@ -895,20 +895,20 @@
     overflow: hidden;
   }
   /* Side panels tinted — matches reference SIGNALS IN / COMMITTED PLAN OUT style */
-  .ov-card.signals { flex: 0 0 210px; background: var(--neutral-100); }
+  .ov-card.signals { flex: 0 0 270px; background: var(--neutral-100); }
   .ov-card.chain   { flex: 2; background: #fff; }
-  .ov-card.value   { flex: 0 0 230px; background: #f0eaff; }
+  .ov-card.value   { flex: 0 0 290px; background: #f0eaff; }
   /* Purple caps for panel titles — matches reference */
   .ov-card-title {
-    font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em;
+    font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em;
     color: var(--accent);
   }
-  .ov-signal-desc { font-size: 11.5px; color: var(--ink-soft); margin: 0; }
-  .ov-signal-item { display: flex; flex-direction: column; gap: 1px; padding: 5px 0; border-bottom: 1px solid var(--neutral-200); }
+  .ov-signal-desc { font-size: 13px; color: var(--ink-soft); margin: 0; }
+  .ov-signal-item { display: flex; flex-direction: column; gap: 2px; padding: 7px 0; border-bottom: 1px solid var(--neutral-200); }
   .ov-signal-item:last-child { border-bottom: 0; }
-  .ov-signal-top  { display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 700; }
-  .ov-signal-icon { color: var(--accent); font-size: 12px; }
-  .ov-signal-sub  { font-size: 11px; color: var(--ink-faint); padding-left: 22px; }
+  .ov-signal-top  { display: flex; gap: 8px; align-items: center; font-size: 15px; font-weight: 700; }
+  .ov-signal-icon { color: var(--accent); font-size: 13px; }
+  .ov-signal-sub  { font-size: 12.5px; color: var(--ink-faint); padding-left: 24px; }
 
   /* ── chain ─────────────────────────────────────────── */
   .ov-chain-groups { display: flex; margin-bottom: 8px; gap: 3px; }
@@ -922,32 +922,32 @@
   }
   /* Three layers per item: seq-num above, big circle, label below */
   .ov-chain-row  { display: flex; align-items: flex-start; }
-  .ov-chain-item { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 0 0 64px; }
+  .ov-chain-item { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 0 0 56px; }
   .ov-step-num { font-size: 10px; font-weight: 700; color: var(--ink-faint); letter-spacing: .05em; }
   .ov-gate-num { font-size: 10px; font-weight: 800; color: #2563EB; letter-spacing: .05em; }
   .ov-step {
-    width: 60px; height: 60px; border-radius: 50%; flex-shrink: 0;
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px; color: #fff;
+    font-size: 20px; color: #fff;
     box-shadow: 0 3px 14px rgba(0,0,0,.2); position: relative; z-index: 1;
   }
   .ov-gate {
-    width: 60px; height: 60px; border-radius: 50%; flex-shrink: 0;
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px; background: #2563EB; color: #fff;
+    font-size: 20px; background: #2563EB; color: #fff;
     box-shadow: 0 3px 14px rgba(0,0,0,.2); position: relative; z-index: 1;
   }
   .ov-step-name {
-    font-size: 9.5px; font-weight: 700; text-align: center; line-height: 1.3;
-    color: var(--ink-soft); width: 66px;
+    font-size: 10px; font-weight: 700; text-align: center; line-height: 1.3;
+    color: var(--ink-soft); width: 60px;
   }
   .ov-gate-name {
-    font-size: 9.5px; font-weight: 700; text-align: center; line-height: 1.3;
-    color: #2563EB; width: 66px;
+    font-size: 10px; font-weight: 700; text-align: center; line-height: 1.3;
+    color: #2563EB; width: 60px;
   }
-  /* Connector margin-top: seq-num(~16px) + gap(5px) + half-circle(30px) - half-connector(1.5) ≈ 49px */
-  .ov-connector  { flex: 1; height: 3px; margin-top: 49px; flex-shrink: 1; min-width: 6px; }
-  .ov-chain-arrow { color: var(--ink-faint); font-size: 24px; margin-top: 41px; flex-shrink: 0; }
+  /* Connector margin-top: seq-num(~13px) + gap(5px) + half-circle(26px) - half-connector(1.5) ≈ 43px */
+  .ov-connector  { flex: 1; height: 3px; margin-top: 43px; flex-shrink: 1; min-width: 5px; }
+  .ov-chain-arrow { color: var(--ink-faint); font-size: 22px; margin-top: 34px; flex-shrink: 0; }
   .ov-chain-legend { display: flex; gap: 24px; margin-top: 14px; flex-wrap: wrap; }
   .ov-legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-soft); }
   .ov-legend-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
@@ -955,11 +955,11 @@
   .ov-chain-inner { width: 100%; display: flex; flex-direction: column; gap: 8px; margin: auto 0; }
 
   /* ── value out ─────────────────────────────────────── */
-  .ov-value-item { display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid rgba(161,0,255,.12); }
+  .ov-value-item { display: flex; flex-direction: column; gap: 3px; padding: 10px 0; border-bottom: 1px solid rgba(161,0,255,.12); }
   .ov-value-item:last-child { border-bottom: 0; }
-  .ov-value-top  { display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 700; }
-  .ov-value-icon { color: var(--accent); font-size: 16px; }
-  .ov-value-sub  { font-size: 11.5px; color: var(--ink-soft); padding-left: 24px; }
+  .ov-value-top  { display: flex; gap: 8px; align-items: center; font-size: 15px; font-weight: 700; }
+  .ov-value-icon { color: var(--accent); font-size: 18px; }
+  .ov-value-sub  { font-size: 12.5px; color: var(--ink-soft); padding-left: 26px; }
 
   /* macro phase cards — sit INSIDE the chain box, under the circles.
      Full colored header band (matches the group bars above) — no left-accent styling. */
@@ -973,9 +973,9 @@
     padding: 9px 14px 10px; color: #fff;
     display: flex; flex-direction: column; gap: 2px;
   }
-  .ov-macro-num  { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; opacity: .92; }
-  .ov-macro-label { font-size: 15px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
-  .ov-macro-body  { font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin: 0; padding: 11px 14px 13px; flex: 1; }
+  .ov-macro-num  { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; opacity: .92; }
+  .ov-macro-label { font-size: 16.5px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+  .ov-macro-body  { font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0; padding: 11px 14px 13px; flex: 1; }
 
   /* ── Login overlay ── */
   #loginOverlay {
@@ -3220,7 +3220,7 @@ function renderOverview() {
       '<div class="ov-card chain">' +
         '<div class="ov-chain-inner">' +
           '<div class="ov-card-title">' + esc(chain.title) + '</div>' +
-          '<div style="font-size:11px;color:var(--ink-soft);">' + esc(chain.subtitle) + '</div>' +
+          '<div style="font-size:12.5px;color:var(--ink-soft);">' + esc(chain.subtitle) + '</div>' +
           chainHtml +
           /* the three phase summaries now live inside the chain box, under the circles */
           '<div class="ov-macros">' + macrosHtml + '</div>' +
