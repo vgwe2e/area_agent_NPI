@@ -1794,7 +1794,7 @@ const HORMEL_AGENTS = {
 
 const AGENT_LED_DEMAND = {
   title: "Agent-Led Demand Planning",
-  orchestrator: { id: "orch", label: "DP Orchestrator\nAgent", x: 50, y: 48 },
+  orchestrator: { id: "orch", label: "DP Orchestrator\nAgent", x: 50, y: 47 },
   dataSources: [
     { label: "ERP Systems" },
     { label: "GCP Database" },
@@ -1803,23 +1803,35 @@ const AGENT_LED_DEMAND = {
     { label: "External Data" },
   ],
   agents: [
-    { id: "a1", label: "1. Data Integration\n& Correction Agent",  x: 29, y: 18 },
-    { id: "a2", label: "2. Model Calibration\n& Monitoring Agent", x: 29, y: 45 },
-    { id: "a3", label: "3. Forecast Performance\nAgent",           x: 29, y: 72 },
-    { id: "a4", label: "4. Exception Handler",                     x: 71, y: 25 },
-    { id: "a5", label: "5. Lifecycle Management\nAgent",           x: 71, y: 72 },
+    { id: "a1", label: "1. Data Integration\n& Correction Agent",  x: 27, y: 13 },
+    { id: "a2", label: "2. Model Calibration\n& Monitoring Agent", x: 27, y: 47 },
+    { id: "a3", label: "3. Forecast Performance\nAgent",           x: 27, y: 81 },
+    { id: "a4", label: "4. Exception Handler",                     x: 73, y: 13 },
+    { id: "a5", label: "5. Lifecycle Management\nAgent",           x: 73, y: 81 },
   ],
-  demandPlanner: { id: "dp", label: "👤 Demand\nPlanner", x: 88, y: 48 },
+  demandPlanner: { id: "dp", label: "👤 Demand\nPlanner", x: 87, y: 47 },
+  /* SVG node centers in 1000×560 viewBox — keep in sync with % positions above */
+  nodeCoords: {
+    datasrc: { x: 140, y: 280 },
+    a1:      { x: 270, y: 73  },
+    a2:      { x: 270, y: 263 },
+    a3:      { x: 270, y: 454 },
+    orch:    { x: 500, y: 263 },
+    a4:      { x: 730, y: 73  },
+    a5:      { x: 730, y: 454 },
+    dp:      { x: 870, y: 263 },
+  },
+  /* cp = quadratic-bezier control point in viewBox coords; label placed at cp */
   arrows: [
-    { from: "datasrc", to: "a1",   label: "",                                         color: "#9ca3af" },
-    { from: "a1",      to: "orch", label: "harmonized & validated\ndemand dataset",   color: "#A100FF" },
-    { from: "orch",    to: "a1",   label: "Triggers data extraction\n& harmonization",color: "#0F9D8C", offset: 10 },
-    { from: "orch",    to: "a2",   label: "Sends forecast adjustments\n& RCA insights",color: "#0F9D8C" },
-    { from: "orch",    to: "a3",   label: "Shares forecast adjustments\n& quality report", color: "#0F9D8C" },
-    { from: "a3",      to: "a4",   label: "Monitors KPI &\nperforms RCA",             color: "#6B7280" },
-    { from: "a4",      to: "dp",   label: "Reviews exceptions &\nprioritize actions", color: "#2563EB" },
-    { from: "a5",      to: "dp",   label: "Reviews new SKU\nadjustments",             color: "#2563EB" },
-    { from: "dp",      to: "orch", label: "Business unit shares\ndemand signals",     color: "#2563EB" },
+    { from: "datasrc", to: "a1",   cp: { x: 182, y: 125 }, label: "",                                           color: "#9ca3af" },
+    { from: "a1",      to: "orch", cp: { x: 358, y: 16  }, label: "harmonized & validated\ndemand dataset",     color: "#A100FF" },
+    { from: "orch",    to: "a1",   cp: { x: 388, y: 372 }, label: "Triggers data extraction\n& harmonization",  color: "#0F9D8C" },
+    { from: "orch",    to: "a2",   cp: { x: 380, y: 182 }, label: "Sends forecast adjustments\n& RCA insights", color: "#0F9D8C" },
+    { from: "orch",    to: "a3",   cp: { x: 352, y: 434 }, label: "Shares forecast\nadjustments",               color: "#0F9D8C" },
+    { from: "a3",      to: "a4",   cp: { x: 500, y: 520 }, label: "Monitors KPI &\nperforms RCA",               color: "#6B7280" },
+    { from: "a4",      to: "dp",   cp: { x: 812, y: 48  }, label: "Reviews exceptions &\nprioritize actions",   color: "#2563EB" },
+    { from: "a5",      to: "dp",   cp: { x: 812, y: 486 }, label: "Reviews new SKU\nadjustments",               color: "#2563EB" },
+    { from: "dp",      to: "orch", cp: { x: 685, y: 180 }, label: "Business unit shares\ndemand signals",       color: "#2563EB" },
   ]
 };
 
@@ -3492,7 +3504,7 @@ function renderDrillLevel(id) {
     bc.innerHTML =
       '<span class="drill-back" onclick="drillStack=[];document.getElementById(\'pane-overview-main\').style.display=\'\';document.getElementById(\'drill-container\').hidden=true;">&#8592; Back to Overview</span>' +
       '<span class="drill-sep"> / </span>' +
-      '<span>Hormel Foods &#x2014; AI Agent Framework</span>';
+      '<span>Major CPG Client &#x2014; AI Agent Framework</span>';
     el.innerHTML = buildHormelSlide();
     var planningCompanion = el.querySelector('[data-drill="agent-led-demand"]');
     if (planningCompanion) planningCompanion.addEventListener('click', function() { openDrillLevel('agent-led-demand'); });
@@ -3500,7 +3512,7 @@ function renderDrillLevel(id) {
     bc.innerHTML =
       '<span class="drill-back" onclick="drillStack=[];document.getElementById(\'pane-overview-main\').style.display=\'\';document.getElementById(\'drill-container\').hidden=true;">&#8592; Back to Overview</span>' +
       '<span class="drill-sep"> / </span>' +
-      '<span class="drill-back" onclick="drillStack=[\'hormel-case\'];renderDrillLevel(\'hormel-case\');">Hormel Foods &#x2014; AI Agent Framework</span>' +
+      '<span class="drill-back" onclick="drillStack=[\'hormel-case\'];renderDrillLevel(\'hormel-case\');">Major CPG Client &#x2014; AI Agent Framework</span>' +
       '<span class="drill-sep"> / </span>' +
       '<span>Planning Companion &#x2014; Agent-Led Demand Planning</span>';
     el.innerHTML = buildAgentLedDemandSlide();
@@ -3552,7 +3564,7 @@ function buildHormelSlide() {
   return '<div class="hormel-slide">' +
     '<div class="hormel-header">' +
       '<div class="hormel-title">Built Gen-AI &amp; Agentic Framework for Supply Chain Processes</div>' +
-      '<div class="hormel-subtitle">Delivering value at scale</div>' +
+      '<div class="hormel-subtitle">Major CPG Client &mdash; Delivering value at scale</div>' +
     '</div>' +
     '<div class="hormel-legend">' +
       '<div class="hl-legend-item"><span class="hl-dot-circle" style="background:#A100FF;border:none;"></span> Agents Implemented</div>' +
@@ -3581,17 +3593,8 @@ function buildAgentLedDemandSlide() {
   function vx(pct) { return (pct * 10).toFixed(1); }
   function vy(pct) { return (pct * 5.6).toFixed(1); }
 
-  // Node coordinates in 1000×560 viewBox space
-  var coords = {
-    a1:     { x: 290,  y: 100 },
-    a2:     { x: 290,  y: 252 },
-    a3:     { x: 290,  y: 403 },
-    orch:   { x: 500,  y: 269 },
-    a4:     { x: 710,  y: 140 },
-    a5:     { x: 710,  y: 403 },
-    dp:     { x: 880,  y: 269 },
-    datasrc:{ x: 148,  y: 224 }, // right-ish edge of data sources column
-  };
+  // Node coordinates come from the data object (keeps data/engine in sync)
+  var coords = d.nodeCoords;
 
   // HTML nodes (positioned by original x% / y%)
   function nodeDiv(id, label, cls) {
@@ -3663,21 +3666,28 @@ function buildAgentLedDemandSlide() {
     var sx = dx2 / len2 * 8, sy = dy2 / len2 * 8;
     var ax1 = x1 + sx, ay1 = y1 + sy, ax2 = x2 - sx, ay2 = y2 - sy;
 
-    svgContent += '<line x1="' + ax1.toFixed(1) + '" y1="' + ay1.toFixed(1) + '"' +
-      ' x2="' + ax2.toFixed(1) + '" y2="' + ay2.toFixed(1) + '"' +
-      ' stroke="' + arr.color + '" stroke-width="1.6"' +
-      ' marker-end="url(#' + markerId + ')"/>';
+    if (arr.cp) {
+      // Quadratic bezier — control point bows the line away from the node cluster
+      svgContent += '<path d="M ' + ax1.toFixed(1) + ',' + ay1.toFixed(1) +
+        ' Q ' + arr.cp.x + ',' + arr.cp.y + ' ' + ax2.toFixed(1) + ',' + ay2.toFixed(1) + '"' +
+        ' fill="none" stroke="' + arr.color + '" stroke-width="1.6"' +
+        ' marker-end="url(#' + markerId + ')"/>';
+    } else {
+      svgContent += '<line x1="' + ax1.toFixed(1) + '" y1="' + ay1.toFixed(1) + '"' +
+        ' x2="' + ax2.toFixed(1) + '" y2="' + ay2.toFixed(1) + '"' +
+        ' stroke="' + arr.color + '" stroke-width="1.6"' +
+        ' marker-end="url(#' + markerId + ')"/>';
+    }
 
     if (arr.label) {
-      var mx = (ax1 + ax2) / 2, my = (ay1 + ay2) / 2;
+      // Labels float at the bezier control point — well clear of node boxes and other lines
+      var lx = arr.cp ? arr.cp.x : (ax1 + ax2) / 2;
+      var ly = arr.cp ? arr.cp.y : (ay1 + ay2) / 2;
       var labelLines = arr.label.split('\n');
       var tspans = labelLines.map(function(l, i) {
-        return '<tspan x="' + mx.toFixed(1) + '" dy="' + (i === 0 ? 0 : 11) + '">' + esc(l) + '</tspan>';
+        return '<tspan x="' + lx.toFixed(0) + '" dy="' + (i === 0 ? 0 : 11) + '">' + esc(l) + '</tspan>';
       }).join('');
-      // Offset label slightly perpendicular to avoid overlapping line
-      var perpX = -(ay2 - ay1) / len2 * 14;
-      var perpY =  (ax2 - ax1) / len2 * 14;
-      svgContent += '<text x="' + (mx + perpX).toFixed(1) + '" y="' + (my + perpY - (labelLines.length - 1) * 5).toFixed(1) + '"' +
+      svgContent += '<text x="' + lx.toFixed(0) + '" y="' + (ly - (labelLines.length > 1 ? 6 : 0)).toFixed(0) + '"' +
         ' class="ald-arrow-label" fill="' + arr.color + '">' + tspans + '</text>';
     }
   });
