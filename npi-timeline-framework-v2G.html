@@ -923,7 +923,7 @@
     text-align: center; margin-bottom: 4px;
   }
   /* Three layers per item: seq-num above, big circle, label below */
-  .ov-chain-row  { display: flex; align-items: flex-start; }
+  .ov-chain-row  { display: flex; align-items: flex-start; position: relative; }
   .ov-chain-item { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 0 0 56px; }
   .ov-step-num { font-size: 10px; font-weight: 700; color: var(--ink-faint); letter-spacing: .05em; }
   .ov-gate-num { font-size: 10px; font-weight: 800; color: #2563EB; letter-spacing: .05em; }
@@ -988,6 +988,67 @@
   .ov-macro-num  { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; opacity: .92; }
   .ov-macro-label { font-size: 16.5px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
   .ov-macro-body  { font-size: 14.5px; color: var(--ink-soft); line-height: 1.5; margin: 0; padding: 11px 14px 13px; flex: 1; }
+
+  /* ── Drill-down navigation ──────────────────────────────────── */
+  #drill-container { padding: 16px 24px 28px; }
+  #drill-breadcrumb { font-size: 13px; color: var(--ink-faint); padding: 8px 0 18px; border-bottom: 1px solid var(--hair); margin-bottom: 20px; line-height: 1.6; }
+  .drill-back { color: var(--accent); cursor: pointer; }
+  .drill-back:hover { text-decoration: underline; }
+  .drill-sep { margin: 0 6px; color: var(--ink-faint); }
+  #drill-content { overflow-y: auto; max-height: calc(100vh - 170px); }
+
+  /* Step 2 drill-down affordance */
+  .ov-drill-label { font-size: 10px; color: var(--ink-faint); margin-top: 4px; text-align: center; transition: color .15s; }
+  [data-drill="hormel-case"] { transition: box-shadow .15s; }
+  [data-drill="hormel-case"]:hover .ov-drill-label { color: var(--accent); }
+  [data-drill="hormel-case"]:hover .ov-step { transform: translateY(-2px); box-shadow: 0 0 0 3px rgba(161,0,255,.28) !important; transition: transform .15s, box-shadow .15s; }
+
+  /* ── Hormel slide (Level 2) ──────────────────────────────────── */
+  .hormel-slide { font-family: var(--font); }
+  .hormel-header { margin-bottom: 12px; }
+  .hormel-title { font-size: 21px; font-weight: 800; color: var(--ink); letter-spacing: -.02em; }
+  .hormel-subtitle { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+  .hormel-legend { display: flex; gap: 20px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+  .hl-legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-soft); }
+  .hl-dot-circle { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; box-sizing: border-box; }
+  .hormel-grid { display: grid; grid-template-columns: 26% 74%; grid-template-rows: auto 1fr; border: 1px solid var(--hair); border-radius: 8px; overflow: hidden; }
+  .hormel-col-hdr { padding: 8px 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; background: var(--neutral-100); color: var(--ink-soft); border-bottom: 1px solid var(--hair); }
+  .hormel-col-hdr.conv-hdr { border-right: 1px solid var(--hair); }
+  .hormel-left-col { border-right: 1px solid var(--hair); display: flex; flex-direction: column; }
+  .hl-chatSCO-card { flex: 1; background: linear-gradient(135deg,#f5eeff 0%,#eef5ff 100%); padding: 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .hl-agent-top { display: flex; align-items: center; gap: 6px; }
+  .hl-agent-name { font-size: 11px; font-weight: 800; color: var(--ink); }
+  .hl-agent-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); background: var(--accent-soft); padding: 2px 7px; border-radius: 10px; width: fit-content; }
+  .hl-agent-desc { font-size: 10.5px; color: var(--ink-soft); line-height: 1.45; }
+  .hl-chatSCO-spans { font-size: 10px; color: var(--ink-faint); font-style: italic; margin-top: 4px; }
+  .hormel-right-col { background: #fff; }
+  .hl-domain-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--hair); }
+  .hl-domain-row:last-child { border-bottom: 0; }
+  .hl-domain-label { width: 76px; flex-shrink: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); padding-top: 5px; }
+  .hl-domain-agents { display: flex; flex-wrap: wrap; gap: 7px; flex: 1; }
+  .hl-agent-card { width: 150px; min-height: 75px; background: #fff; border: 1px solid var(--hair); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; position: relative; }
+  .hl-drill-hint { font-size: 9px; color: var(--accent); opacity: 0; transition: opacity .15s; text-align: right; margin-top: auto; }
+  .hl-agent-card[data-drill]:hover .hl-drill-hint { opacity: 1; }
+  .hl-agent-card[data-drill]:hover { background: #fcf8ff; }
+  .hormel-note { font-size: 10.5px; color: var(--ink-faint); margin-top: 14px; font-style: italic; line-height: 1.5; }
+  .hormel-brand { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--hair); }
+  .hormel-logo { font-size: 14px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+  .hormel-logo .hchev { color: var(--accent); margin-right: 1px; }
+  .hormel-copy { font-size: 10px; color: var(--ink-faint); }
+
+  /* ── Agent-Led Demand (Level 3) ──────────────────────────────── */
+  .ald-slide { font-family: var(--font); padding-bottom: 20px; }
+  .ald-title { font-size: 20px; font-weight: 800; color: var(--ink); margin-bottom: 16px; letter-spacing: -.015em; }
+  .ald-diagram { position: relative; height: 560px; width: 100%; background: #fafafa; border: 1px solid var(--hair); border-radius: 10px; overflow: hidden; }
+  .ald-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+  .ald-node { position: absolute; transform: translate(-50%, -50%); border-radius: 8px; padding: 8px 12px; font-size: 11px; font-weight: 700; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.09); line-height: 1.35; }
+  .ald-orch { background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; padding: 12px 16px; border-radius: 10px; box-shadow: 0 4px 18px rgba(161,0,255,.32); }
+  .ald-agent { background: #0F9D8C; color: #fff; width: 128px; white-space: normal; line-height: 1.3; font-size: 10.5px; }
+  .ald-planner { background: #EFF6FF; color: #1d4ed8; border: 2px solid #93c5fd; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .ald-datasrc-panel { position: absolute; transform: translateX(-50%); }
+  .ald-datasrc-label-top, .ald-datasrc-label-bot { font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); text-align: center; padding: 3px 0; }
+  .ald-datasrc-item { background: #f0f4ff; border: 1px solid #c7d7fc; border-radius: 5px; padding: 4px 8px; margin: 2px 0; font-size: 9.5px; color: #1e40af; font-weight: 600; text-align: center; min-width: 105px; }
+  .ald-arrow-label { font-size: 8px; text-anchor: middle; }
 
   /* ── Login overlay ── */
   #loginOverlay {
@@ -1097,7 +1158,13 @@
 </nav>
 
 <div id="pane-overview" role="tabpanel" aria-labelledby="tab-overview">
+  <div id="drill-container" hidden>
+    <div id="drill-breadcrumb"></div>
+    <div id="drill-content"></div>
+  </div>
+  <div id="pane-overview-main">
   <!-- rendered by renderOverview() on DOMContentLoaded -->
+  </div>
 </div>
 
 <div id="pane-detail" role="tabpanel" aria-labelledby="tab-detail" hidden>
@@ -1684,6 +1751,76 @@ const HEADCOUNT = {
     "launch-execution-adjustments":     { today: ["demand-planner","supply-planner","brand-mgr","category-mgr","customer-sc","inventory-analyst","deployment-planner","logistics","data-analyst","revenue-growth","finance-analyst","sop-lead","launch-mgr","sales-account"], withAgents: ["demand-planner","sop-lead","brand-mgr"] },
     "post-launch-optimization":         { today: ["demand-planner","data-analyst","brand-mgr","category-mgr","finance-analyst"], withAgents: ["demand-planner"] },
   },
+};
+
+/* === DRILL-DOWN DATA === */
+
+const HORMEL_AGENTS = {
+  superAgents: [
+    { name: "SupplyChain ChatSCO", status: "implemented", desc: "Coordinates utility agents across all planning domains" }
+  ],
+  rows: [
+    { domain: "Planning", agents: [
+      { name: "Planning Companion", status: "in-progress", desc: "Gen AI-powered solution to provide factor contributions to forecasts, scenario analysis & dynamic model adjustments", drill: "agent-led-demand" },
+      { name: "Distress Inventory Predictor", status: "implemented", desc: "Gen AI agent to predict inventory at risk and suggest corrective actions to reduce inventory" },
+      { name: "Intelligent Order Mgmt.", status: "in-progress", desc: "Digitize order documents (PDF, excel, email), capture details, validate and enter orders in ERP" },
+      { name: "Stock Deployment Assistant", status: "pipeline", desc: "Intelligent deployment & re-deployment of the inventory across the network" },
+      { name: "Cloud Data Ingest Assistant", status: "pipeline", desc: "Enables ingestion of verified and validated data and notifies anomalies" },
+    ]},
+    { domain: "Sourcing", agents: [
+      { name: "Portfolio Optimizer", status: "implemented", desc: "Enable identifying trends, diagnosing SKU performance, to assign action plans and tracking decisions" },
+      { name: "Spend Taxonomy Builder", status: "pipeline", desc: "Update taxonomy tree, map items and upload in Oracle for enhancing spend data analysis" },
+      { name: "Co-Man Contract Manager", status: "pipeline", desc: "GenAI driven clause extraction, contract authoring, health check and amendments" },
+      { name: "SC Segmentation Assistant", status: "pipeline", desc: "Group customers and products with like characteristics to identify most profitable and strategic customers" },
+      { name: "Trade Value Optimizer", status: "pipeline", desc: "Develop optimized promotional plans by analyzing and identifying customer level trade plans" },
+      { name: "Spend Data Analytics", status: "implemented", desc: "Analyze procurement and expense data to uncover cost-saving opportunities & spending patterns" },
+      { name: "Data Extractor", status: "pipeline", desc: "Extract features, data, content & knowledge" },
+    ]},
+    { domain: "Manufacturing", agents: [
+      { name: "Mfg. Supervisor Assistant", status: "implemented", desc: "Monitor equipment performance and real-time production data to detect anomalies & predict potential failures" },
+      { name: "3PL Invoice Auditor", status: "implemented", desc: "Digitize invoices, performs validation and provide visibility into any discrepancy" },
+      { name: "Payment Enrichment", status: "pipeline", desc: "Extract errors in payment processing, identify backup payment documents and validate payment" },
+      { name: "Email Reader", status: "implemented", desc: "Extracts information from email" },
+    ]},
+    { domain: "Distribution", agents: [
+      { name: "Transport Agent", status: "implemented", desc: "One-solution for transport KPIs, route planning, scenario analysis and route optimization" },
+      { name: "Language Translator", status: "implemented", desc: "Real time multi-language Translation / AI services for shop floor shift briefings" },
+    ]},
+    { domain: "Enterprise", agents: [
+      { name: "Presentation Generator", status: "pipeline", desc: "Generates presentations, summaries and supporting content" },
+    ]},
+  ]
+};
+
+const AGENT_LED_DEMAND = {
+  title: "Agent-Led Demand Planning",
+  orchestrator: { id: "orch", label: "DP Orchestrator\nAgent", x: 50, y: 48 },
+  dataSources: [
+    { label: "ERP Systems" },
+    { label: "GCP Database" },
+    { label: "APS" },
+    { label: "Product Master / MDM" },
+    { label: "External Data" },
+  ],
+  agents: [
+    { id: "a1", label: "1. Data Integration\n& Correction Agent",  x: 29, y: 18 },
+    { id: "a2", label: "2. Model Calibration\n& Monitoring Agent", x: 29, y: 45 },
+    { id: "a3", label: "3. Forecast Performance\nAgent",           x: 29, y: 72 },
+    { id: "a4", label: "4. Exception Handler",                     x: 71, y: 25 },
+    { id: "a5", label: "5. Lifecycle Management\nAgent",           x: 71, y: 72 },
+  ],
+  demandPlanner: { id: "dp", label: "👤 Demand\nPlanner", x: 88, y: 48 },
+  arrows: [
+    { from: "datasrc", to: "a1",   label: "",                                         color: "#9ca3af" },
+    { from: "a1",      to: "orch", label: "harmonized & validated\ndemand dataset",   color: "#A100FF" },
+    { from: "orch",    to: "a1",   label: "Triggers data extraction\n& harmonization",color: "#0F9D8C", offset: 10 },
+    { from: "orch",    to: "a2",   label: "Sends forecast adjustments\n& RCA insights",color: "#0F9D8C" },
+    { from: "orch",    to: "a3",   label: "Shares forecast adjustments\n& quality report", color: "#0F9D8C" },
+    { from: "a3",      to: "a4",   label: "Monitors KPI &\nperforms RCA",             color: "#6B7280" },
+    { from: "a4",      to: "dp",   label: "Reviews exceptions &\nprioritize actions", color: "#2563EB" },
+    { from: "a5",      to: "dp",   label: "Reviews new SKU\nadjustments",             color: "#2563EB" },
+    { from: "dp",      to: "orch", label: "Business unit shares\ndemand signals",     color: "#2563EB" },
+  ]
 };
 
 /* =================================================================
@@ -2851,10 +2988,10 @@ FLOW_AGENTS.forEach(a => { FLOW_AGENTS_BY_ID[a.id] = a; });
 
 /* ---- Flow racetrack engine ---- */
 const FLOW_TYPE_COLORS = {
-  automation: "#6B7280", "trad-ai": "#2563EB", genai: "#A100FF", human: "#00A3E0", reason: "#7c3aed",
+  automation: "#6B7280", "trad-ai": "#2563EB", genai: "#A100FF", human: "#00A3E0", reason: "#A100FF",
 };
 const FLOW_TYPE_ICONS = { automation: "⬇", "trad-ai": "⚙", genai: "✦", human: "👤", reason: "◆" };
-const FLOW_TYPE_LABELS = { automation: "Automation", "trad-ai": "Traditional AI", genai: "GenAI", human: "Human", reason: "Agent Decision" };
+const FLOW_TYPE_LABELS = { automation: "Automation", "trad-ai": "Traditional AI", genai: "Agentic AI", human: "Human", reason: "Agentic AI" };
 function flowTypeColor(t) { return FLOW_TYPE_COLORS[t] || "#888"; }
 function flowTypeIcon(t)  { return FLOW_TYPE_ICONS[t] || "○"; }
 
@@ -3031,9 +3168,9 @@ function openFlowOverlay(agentId) {
   /* legend */
   const legendEl = document.getElementById("flowLegend");
   legendEl.innerHTML = "";
-  const seen = new Set();
+  const seenLabels = new Set();
   fa.steps.forEach(s => {
-    const label = FLOW_TYPE_LABELS[s.type]; if (!label || seen.has(s.type)) return; seen.add(s.type);
+    const label = FLOW_TYPE_LABELS[s.type]; if (!label || seenLabels.has(label)) return; seenLabels.add(label);
     const item = document.createElement("div"); item.className = "flow-legend-item";
     const dot  = document.createElement("div"); dot.className = "flow-legend-dot";
     dot.style.background = flowTypeColor(s.type);
@@ -3083,7 +3220,7 @@ function wireFlowOverlay() {
    OVERVIEW TAB — renderOverview() reads 100% from OVERVIEW
    ========================================================= */
 function renderOverview() {
-  const pane = document.getElementById("pane-overview");
+  const pane = document.getElementById("pane-overview-main");
   if (!pane) return;
 
   const o = OVERVIEW;
@@ -3163,12 +3300,16 @@ function renderOverview() {
         if (s.system) tally += '<div class="ov-tally-line ov-tally-system"><span class="ov-tally-dot" style="background:var(--ink-faint);"></span>' + esc(s.system) + '</div>';
         tally += '</div>';
       }
+      const isDrillStep = (s.n === 2);
+      const drillAttrs = isDrillStep ? ' data-drill="hormel-case" style="cursor:pointer;"' : '';
+      const drillLabel = isDrillStep ? '<div class="ov-drill-label">Click to explore &#x2192;</div>' : '';
       rowHtml +=
-        '<div class="ov-chain-item">' +
+        '<div class="ov-chain-item"' + drillAttrs + '>' +
           '<div class="ov-step-num">' + seq + '</div>' +
           '<div class="ov-step" style="background:' + s.color + ';">' + (s.symbol || s.n) + '</div>' +
           '<div class="ov-step-name">' + lines + '</div>' +
           tally +
+          drillLabel +
         '</div>';
     } else {
       const g = item.data;
@@ -3180,6 +3321,7 @@ function renderOverview() {
           '<div class="ov-gate-name">' + lines + '</div>' +
         '</div>';
     }
+
   });
 
   rowHtml += '<div class="ov-chain-arrow">›</div>';
@@ -3254,10 +3396,55 @@ function renderOverview() {
       '</div>' +
       '<div class="ov-card value">' + valueHtml + '</div>' +
     '</div>';
+
+  /* ---- Bracket overlay: dotted box over steps 2–6 at circle height ---- */
+  function _drawChainBracket() {
+    var row = pane.querySelector('.ov-chain-row');
+    if (!row) return;
+    var items = row.querySelectorAll('.ov-chain-item');
+    var s2 = null, s6 = null;
+    items.forEach(function(el) {
+      var num = el.querySelector('.ov-step-num');
+      if (!num) return;
+      if (num.textContent.trim() === '02') s2 = el;
+      if (num.textContent.trim() === '06') s6 = el;
+    });
+    if (!s2 || !s6) return;
+    var rowRect = row.getBoundingClientRect();
+    var s2Rect  = s2.getBoundingClientRect();
+    var s6Rect  = s6.getBoundingClientRect();
+    if (!rowRect.width) return; /* not laid out — bail */
+    var left   = s2Rect.left  - rowRect.left;
+    var right  = rowRect.right - s6Rect.right;
+    var top    = 13;  /* clears the seq-num labels */
+    var height = 54;  /* spans the circle zone only */
+    var box = document.createElement('div');
+    box.style.cssText =
+      'position:absolute;pointer-events:none;z-index:0;' +
+      'left:'   + left   + 'px;' +
+      'right:'  + right  + 'px;' +
+      'top:'    + top    + 'px;' +
+      'height:' + height + 'px;' +
+      'border:1.5px dashed #c0c0d0;border-radius:6px;';
+    row.appendChild(box);
+  }
+  /* double-rAF: first frame commits DOM, second ensures reflow is complete */
+  requestAnimationFrame(function() { requestAnimationFrame(_drawChainBracket); });
+  // Attach drill-down click listener to Step 2
+  var drillStep2 = pane.querySelector('[data-drill="hormel-case"]');
+  if (drillStep2) drillStep2.addEventListener('click', function() { openDrillLevel('hormel-case'); });
 }
 
 /* ---- Tab switching ---- */
 function switchTab(id) {
+  // Reset drill-down state when switching tabs
+  if (typeof drillStack !== 'undefined') {
+    drillStack = [];
+    var _ovMain = document.getElementById('pane-overview-main');
+    var _drillCont = document.getElementById('drill-container');
+    if (_ovMain) _ovMain.style.display = '';
+    if (_drillCont) _drillCont.hidden = true;
+  }
   document.querySelectorAll('.tab').forEach(function(t) {
     const active = t.id === 'tab-' + id;
     t.classList.toggle('active', active);
@@ -3269,6 +3456,239 @@ function switchTab(id) {
 
 document.getElementById('tab-overview').addEventListener('click', function() { switchTab('overview'); });
 document.getElementById('tab-detail').addEventListener('click',   function() { switchTab('detail'); });
+
+/* =========================================================
+   DRILL-DOWN ENGINE
+   ========================================================= */
+var drillStack = [];
+
+function openDrillLevel(id) {
+  drillStack.push(id);
+  var ovMain = document.getElementById('pane-overview-main');
+  var drillCont = document.getElementById('drill-container');
+  if (ovMain) ovMain.style.display = 'none';
+  if (drillCont) drillCont.hidden = false;
+  renderDrillLevel(id);
+}
+
+function closeDrillLevel() {
+  drillStack.pop();
+  if (drillStack.length === 0) {
+    var ovMain = document.getElementById('pane-overview-main');
+    var drillCont = document.getElementById('drill-container');
+    if (ovMain) ovMain.style.display = '';
+    if (drillCont) drillCont.hidden = true;
+  } else {
+    renderDrillLevel(drillStack[drillStack.length - 1]);
+  }
+}
+
+function renderDrillLevel(id) {
+  var bc = document.getElementById('drill-breadcrumb');
+  var el = document.getElementById('drill-content');
+  if (!bc || !el) return;
+
+  if (id === 'hormel-case') {
+    bc.innerHTML =
+      '<span class="drill-back" onclick="drillStack=[];document.getElementById(\'pane-overview-main\').style.display=\'\';document.getElementById(\'drill-container\').hidden=true;">&#8592; Back to Overview</span>' +
+      '<span class="drill-sep"> / </span>' +
+      '<span>Hormel Foods &#x2014; AI Agent Framework</span>';
+    el.innerHTML = buildHormelSlide();
+    var planningCompanion = el.querySelector('[data-drill="agent-led-demand"]');
+    if (planningCompanion) planningCompanion.addEventListener('click', function() { openDrillLevel('agent-led-demand'); });
+  } else if (id === 'agent-led-demand') {
+    bc.innerHTML =
+      '<span class="drill-back" onclick="drillStack=[];document.getElementById(\'pane-overview-main\').style.display=\'\';document.getElementById(\'drill-container\').hidden=true;">&#8592; Back to Overview</span>' +
+      '<span class="drill-sep"> / </span>' +
+      '<span class="drill-back" onclick="drillStack=[\'hormel-case\'];renderDrillLevel(\'hormel-case\');">Hormel Foods &#x2014; AI Agent Framework</span>' +
+      '<span class="drill-sep"> / </span>' +
+      '<span>Planning Companion &#x2014; Agent-Led Demand Planning</span>';
+    el.innerHTML = buildAgentLedDemandSlide();
+  }
+}
+
+/* ---- Level 2: Hormel Client Case slide ---- */
+function buildHormelSlide() {
+  function statusDot(status) {
+    if (status === 'implemented') {
+      return '<span class="hl-dot-circle" style="background:#A100FF;border:none;"></span>';
+    } else if (status === 'in-progress') {
+      return '<span class="hl-dot-circle" style="background:transparent;border:2px solid #0F9D8C;"></span>';
+    }
+    return '<span class="hl-dot-circle" style="background:#d0d0da;border:none;"></span>';
+  }
+
+  var chatSCO = HORMEL_AGENTS.superAgents[0];
+  var chatSCOHtml =
+    '<div class="hl-chatSCO-card">' +
+      '<div class="hl-agent-top">' + statusDot('implemented') + '<span class="hl-agent-name">SupplyChain ChatSCO</span></div>' +
+      '<div class="hl-agent-type">Super Agent</div>' +
+      '<div class="hl-agent-desc">' + esc(chatSCO.desc) + '</div>' +
+      '<div class="hl-chatSCO-spans">Spans all supply chain domains</div>' +
+    '</div>';
+
+  var rowsHtml = HORMEL_AGENTS.rows.map(function(row) {
+    var agentsHtml = row.agents.map(function(agent) {
+      var isDrillable = !!agent.drill;
+      var drillAttr  = isDrillable ? ' data-drill="' + agent.drill + '"' : '';
+      var drillStyle = isDrillable
+        ? ' style="border:2px solid var(--accent);box-shadow:0 0 0 3px rgba(161,0,255,.1);cursor:pointer;"'
+        : '';
+      var drillHover = isDrillable
+        ? '<div class="hl-drill-hint">Click to drill in &#x2192;</div>'
+        : '';
+      return '<div class="hl-agent-card"' + drillAttr + drillStyle + '>' +
+        '<div class="hl-agent-top">' + statusDot(agent.status) + '<span class="hl-agent-name">' + esc(agent.name) + '</span></div>' +
+        '<div class="hl-agent-desc">' + esc(agent.desc) + '</div>' +
+        drillHover +
+        '</div>';
+    }).join('');
+    return '<div class="hl-domain-row">' +
+      '<div class="hl-domain-label">' + esc(row.domain) + '</div>' +
+      '<div class="hl-domain-agents">' + agentsHtml + '</div>' +
+      '</div>';
+  }).join('');
+
+  return '<div class="hormel-slide">' +
+    '<div class="hormel-header">' +
+      '<div class="hormel-title">Built Gen-AI &amp; Agentic Framework for Supply Chain Processes</div>' +
+      '<div class="hormel-subtitle">Delivering value at scale</div>' +
+    '</div>' +
+    '<div class="hormel-legend">' +
+      '<div class="hl-legend-item"><span class="hl-dot-circle" style="background:#A100FF;border:none;"></span> Agents Implemented</div>' +
+      '<div class="hl-legend-item"><span class="hl-dot-circle" style="background:transparent;border:2px solid #0F9D8C;"></span> Agent build in progress</div>' +
+      '<div class="hl-legend-item"><span class="hl-dot-circle" style="background:#d0d0da;border:none;"></span> Agents in pipeline</div>' +
+    '</div>' +
+    '<div class="hormel-grid">' +
+      '<div class="hormel-col-hdr conv-hdr">Conversational / Super Agents</div>' +
+      '<div class="hormel-col-hdr util-hdr">Utility Agents</div>' +
+      '<div class="hormel-left-col">' + chatSCOHtml + '</div>' +
+      '<div class="hormel-right-col">' + rowsHtml + '</div>' +
+    '</div>' +
+    '<div class="hormel-note">Super Agents: Understand and execute the process to mobilize utility agents to achieve the goal&nbsp;&nbsp;|&nbsp;&nbsp;Utility Agents: Execute sets of basic tasks autonomously</div>' +
+    '<div class="hormel-brand">' +
+      '<span class="hormel-logo"><span class="hchev">&gt;</span> accenture</span>' +
+      '<span class="hormel-copy">Copyright &copy; 2025 Accenture. All rights reserved.</span>' +
+    '</div>' +
+    '</div>';
+}
+
+/* ---- Level 3: Agent-Led Demand Planning diagram ---- */
+function buildAgentLedDemandSlide() {
+  var d = AGENT_LED_DEMAND;
+
+  // Convert percentage positions to viewBox 1000×560 coordinates
+  function vx(pct) { return (pct * 10).toFixed(1); }
+  function vy(pct) { return (pct * 5.6).toFixed(1); }
+
+  // Node coordinates in 1000×560 viewBox space
+  var coords = {
+    a1:     { x: 290,  y: 100 },
+    a2:     { x: 290,  y: 252 },
+    a3:     { x: 290,  y: 403 },
+    orch:   { x: 500,  y: 269 },
+    a4:     { x: 710,  y: 140 },
+    a5:     { x: 710,  y: 403 },
+    dp:     { x: 880,  y: 269 },
+    datasrc:{ x: 148,  y: 224 }, // right-ish edge of data sources column
+  };
+
+  // HTML nodes (positioned by original x% / y%)
+  function nodeDiv(id, label, cls) {
+    var lines = label.split('\n').map(function(l) { return '<div>' + esc(l) + '</div>'; }).join('');
+    var nodeId = d.agents.find ? d.agents.find(function(a) { return a.id === id; }) : null;
+    var xPct = nodeId ? nodeId.x : (id === 'orch' ? d.orchestrator.x : d.demandPlanner.x);
+    var yPct = nodeId ? nodeId.y : (id === 'orch' ? d.orchestrator.y : d.demandPlanner.y);
+    return '<div class="ald-node ' + cls + '" style="left:' + xPct + '%;top:' + yPct + '%;">' + lines + '</div>';
+  }
+
+  var nodesHtml = '';
+
+  // Data sources panel (positioned at left ~9%, top ~14%)
+  var srcItems = d.dataSources.map(function(ds) {
+    return '<div class="ald-datasrc-item">' + esc(ds.label) + '</div>';
+  }).join('');
+  nodesHtml += '<div class="ald-datasrc-panel" style="left:9%;top:12%;">' +
+    '<div class="ald-datasrc-label-top">Data Source / System</div>' +
+    srcItems +
+    '<div class="ald-datasrc-label-bot">Knowledge Layer</div>' +
+    '</div>';
+
+  // Sub-agents
+  d.agents.forEach(function(ag) {
+    nodesHtml += '<div class="ald-node ald-agent" style="left:' + ag.x + '%;top:' + ag.y + '%;">' +
+      ag.label.split('\n').map(function(l) { return '<div>' + esc(l) + '</div>'; }).join('') +
+      '</div>';
+  });
+
+  // Orchestrator
+  nodesHtml += '<div class="ald-node ald-orch" style="left:' + d.orchestrator.x + '%;top:' + d.orchestrator.y + '%;">' +
+    d.orchestrator.label.split('\n').map(function(l) { return '<div>' + esc(l) + '</div>'; }).join('') +
+    '</div>';
+
+  // Demand Planner
+  nodesHtml += '<div class="ald-node ald-planner" style="left:' + d.demandPlanner.x + '%;top:' + d.demandPlanner.y + '%;">' +
+    d.demandPlanner.label.split('\n').map(function(l) { return '<div>' + esc(l) + '</div>'; }).join('') +
+    '</div>';
+
+  // SVG arrows
+  var colorToMarker = { '#A100FF': 'arr-purple', '#0F9D8C': 'arr-teal', '#2563EB': 'arr-blue', '#6B7280': 'arr-gray', '#9ca3af': 'arr-gray2' };
+  var markerDefs = [
+    ['arr-purple', '#A100FF'], ['arr-teal', '#0F9D8C'],
+    ['arr-blue',   '#2563EB'], ['arr-gray',  '#6B7280'], ['arr-gray2', '#9ca3af']
+  ].map(function(m) {
+    return '<marker id="' + m[0] + '" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">' +
+      '<path d="M0,0 L0,6 L8,3 z" fill="' + m[1] + '"/>' +
+      '</marker>';
+  }).join('');
+
+  var svgContent = '<defs>' + markerDefs + '</defs>';
+
+  d.arrows.forEach(function(arr) {
+    var from = coords[arr.from];
+    var to   = coords[arr.to];
+    if (!from || !to) return;
+    var markerId = colorToMarker[arr.color] || 'arr-gray';
+    var x1 = from.x, y1 = from.y, x2 = to.x, y2 = to.y;
+    // Apply perpendicular offset for bidirectional pairs
+    if (arr.offset) {
+      var dx = x2 - x1, dy = y2 - y1;
+      var len = Math.sqrt(dx * dx + dy * dy) || 1;
+      var px = -dy / len * arr.offset;
+      var py =  dx / len * arr.offset;
+      x1 += px; y1 += py; x2 += px; y2 += py;
+    }
+    // Shorten line endpoints by 8px toward center to avoid overlap with node boxes
+    var dx2 = x2 - x1, dy2 = y2 - y1, len2 = Math.sqrt(dx2*dx2+dy2*dy2) || 1;
+    var sx = dx2 / len2 * 8, sy = dy2 / len2 * 8;
+    var ax1 = x1 + sx, ay1 = y1 + sy, ax2 = x2 - sx, ay2 = y2 - sy;
+
+    svgContent += '<line x1="' + ax1.toFixed(1) + '" y1="' + ay1.toFixed(1) + '"' +
+      ' x2="' + ax2.toFixed(1) + '" y2="' + ay2.toFixed(1) + '"' +
+      ' stroke="' + arr.color + '" stroke-width="1.6"' +
+      ' marker-end="url(#' + markerId + ')"/>';
+
+    if (arr.label) {
+      var mx = (ax1 + ax2) / 2, my = (ay1 + ay2) / 2;
+      var labelLines = arr.label.split('\n');
+      var tspans = labelLines.map(function(l, i) {
+        return '<tspan x="' + mx.toFixed(1) + '" dy="' + (i === 0 ? 0 : 11) + '">' + esc(l) + '</tspan>';
+      }).join('');
+      // Offset label slightly perpendicular to avoid overlapping line
+      var perpX = -(ay2 - ay1) / len2 * 14;
+      var perpY =  (ax2 - ax1) / len2 * 14;
+      svgContent += '<text x="' + (mx + perpX).toFixed(1) + '" y="' + (my + perpY - (labelLines.length - 1) * 5).toFixed(1) + '"' +
+        ' class="ald-arrow-label" fill="' + arr.color + '">' + tspans + '</text>';
+    }
+  });
+
+  var svgLayer = '<svg class="ald-svg" viewBox="0 0 1000 560" preserveAspectRatio="none">' + svgContent + '</svg>';
+
+  return '<div class="ald-slide">' +
+    '<div class="ald-title">' + esc(d.title) + '</div>' +
+    '<div class="ald-diagram">' + nodesHtml + svgLayer + '</div>' +
+    '</div>';
+}
 
 init();
 renderOverview();
