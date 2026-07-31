@@ -1039,7 +1039,7 @@
   /* ── Agent-Led Demand (Level 3) ──────────────────────────────── */
   .ald-slide { font-family: var(--font); padding-bottom: 20px; }
   .ald-title { font-size: 20px; font-weight: 800; color: var(--ink); margin-bottom: 16px; letter-spacing: -.015em; }
-  .ald-diagram { position: relative; height: 560px; width: 100%; background: #fafafa; border: 1px solid var(--hair); border-radius: 10px; overflow: hidden; }
+  .ald-diagram { position: relative; width: 100%; padding-bottom: 50.5%; background: #fafafa; border: 1px solid var(--hair); border-radius: 10px; overflow: hidden; }
   .ald-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
   .ald-node { position: absolute; transform: translate(-50%, -50%); border-radius: 8px; padding: 8px 12px; font-size: 11px; font-weight: 700; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.09); line-height: 1.35; }
   .ald-orch { background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; padding: 12px 16px; border-radius: 10px; box-shadow: 0 4px 18px rgba(161,0,255,.32); }
@@ -3588,115 +3588,156 @@ function buildHormelSlide() {
 /* ---- Level 3: Agent-Led Demand Planning diagram ---- */
 function buildAgentLedDemandSlide() {
   var d = AGENT_LED_DEMAND;
+  /* Pure-SVG Visio-style layout: orchestrator top center, agents row below,
+     data sources at bottom. ViewBox 1100×555 — aspect ratio matches .ald-diagram
+     padding-bottom:50.5%, so preserveAspectRatio="xMidYMid meet" fills without stretch. */
+  var W=1100, H=555;
 
-  // Convert percentage positions to viewBox 1000×560 coordinates
-  function vx(pct) { return (pct * 10).toFixed(1); }
-  function vy(pct) { return (pct * 5.6).toFixed(1); }
+  /* ── Layout constants ─────────────────────────────────────────── */
+  var OX=205,OY=50,OW=520,OH=50;          /* Orchestrator bar */
+  var DPX=790,DPY=50,DPW=140,DPH=50;     /* Demand Planner box */
+  var DPCX=DPX+DPW/2, DPCY=DPY+DPH/2;
+  var R=28;                                /* agent circle radius */
+  var AG=[                                 /* agent center (x,y) + labels */
+    {x:230,y:285,lbl:['1. Data Integration','& Correction Agent']},
+    {x:385,y:285,lbl:['2. Model Calibration','& Monitoring Agent']},
+    {x:540,y:285,lbl:['3. Forecast Performance','Agent']},
+    {x:695,y:355,lbl:['4. Exception','Handler']},
+    {x:880,y:285,lbl:['5. Lifecycle Management','Agent']},
+  ];
+  var KBx=15,KBy=440,KBw=1070,KBh=30;    /* Knowledge Layer band */
+  var DSy=505;                             /* data-source box center y */
+  var DS=[
+    {lbl:'External Data',         cx:85,  w:145},
+    {lbl:'ERP Systems',           cx:270, w:150},
+    {lbl:'GCP Database',          cx:455, w:155},
+    {lbl:'APS',                   cx:640, w:120},
+    {lbl:'Product Master / MDM',  cx:880, w:190},
+  ];
+  var P='#A100FF',T='#0F9D8C',B='#2563EB',G='#6B7280',D='#374151';
 
-  // Node coordinates come from the data object (keeps data/engine in sync)
-  var coords = d.nodeCoords;
+  var o=[];
 
-  // HTML nodes (positioned by original x% / y%)
-  function nodeDiv(id, label, cls) {
-    var lines = label.split('\n').map(function(l) { return '<div>' + esc(l) + '</div>'; }).join('');
-    var nodeId = d.agents.find ? d.agents.find(function(a) { return a.id === id; }) : null;
-    var xPct = nodeId ? nodeId.x : (id === 'orch' ? d.orchestrator.x : d.demandPlanner.x);
-    var yPct = nodeId ? nodeId.y : (id === 'orch' ? d.orchestrator.y : d.demandPlanner.y);
-    return '<div class="ald-node ' + cls + '" style="left:' + xPct + '%;top:' + yPct + '%;">' + lines + '</div>';
+  /* ── Arrowhead markers ────────────────────────────────────────── */
+  o.push('<defs>');
+  [[P,'ap'],[T,'at'],[B,'ab'],[G,'ag'],[D,'ad'],['#60a5fa','al']].forEach(function(m){
+    o.push('<marker id="'+m[1]+'" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">'+
+      '<path d="M0,0 L0,6 L7,3 z" fill="'+m[0]+'"/></marker>');
+  });
+  o.push('</defs>');
+
+  /* ── Canvas ───────────────────────────────────────────────────── */
+  o.push('<rect width="'+W+'" height="'+H+'" fill="#fafafa"/>');
+
+  /* ── Knowledge Layer band ─────────────────────────────────────── */
+  o.push('<rect x="'+KBx+'" y="'+KBy+'" width="'+KBw+'" height="'+KBh+'" rx="4" fill="#eff6ff" stroke="#bfdbfe"/>');
+  o.push('<text x="'+(KBx+12)+'" y="'+(KBy+20)+'" font-size="10" font-weight="600" fill="'+D+'">Knowledge Layer</text>');
+
+  /* ── Data-source boxes ────────────────────────────────────────── */
+  DS.forEach(function(ds){
+    o.push('<rect x="'+(ds.cx-ds.w/2)+'" y="'+(DSy-17)+'" width="'+ds.w+'" height="30" rx="4" fill="#3b82f6" stroke="#2563eb"/>');
+    o.push('<text x="'+ds.cx+'" y="'+(DSy+2)+'" text-anchor="middle" font-size="9" fill="white" font-weight="600">'+esc(ds.lbl)+'</text>');
+  });
+
+  /* ── Input boxes (dashed border, top-left) ────────────────────── */
+  o.push('<rect x="15" y="45" width="178" height="30" rx="3" fill="white" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,3"/>');
+  o.push('<text x="104" y="64" text-anchor="middle" font-size="10" fill="'+D+'" font-style="italic">External events</text>');
+  o.push('<rect x="15" y="82" width="178" height="42" rx="3" fill="white" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5,3"/>');
+  o.push('<text x="104" y="98" text-anchor="middle" font-size="9.5" fill="'+D+'" font-style="italic">Business unit shares</text>');
+  o.push('<text x="104" y="112" text-anchor="middle" font-size="9.5" fill="'+D+'" font-style="italic">demand signals &amp; inputs</text>');
+
+  /* ── Orchestrator bar (teal) ──────────────────────────────────── */
+  o.push('<rect x="'+OX+'" y="'+OY+'" width="'+OW+'" height="'+OH+'" rx="5" fill="'+T+'"/>');
+  o.push('<text x="'+(OX+OW/2)+'" y="'+(OY+OH/2+5)+'" text-anchor="middle" font-size="14" font-weight="700" fill="white">DP Orchestrator Agent</text>');
+
+  /* ── Demand Planner: person icon + box ───────────────────────── */
+  o.push('<circle cx="'+DPCX+'" cy="24" r="20" fill="none" stroke="'+P+'" stroke-width="2.5"/>');
+  o.push('<circle cx="'+DPCX+'" cy="18" r="7" fill="#e9d5ff"/>');
+  o.push('<path d="M'+(DPCX-11)+',43 Q'+DPCX+',32 '+(DPCX+11)+',43" fill="#e9d5ff"/>');
+  o.push('<rect x="'+DPX+'" y="'+DPY+'" width="'+DPW+'" height="'+DPH+'" rx="5" fill="white" stroke="'+D+'" stroke-width="1.5"/>');
+  o.push('<text x="'+DPCX+'" y="'+(DPCY+5)+'" text-anchor="middle" font-size="12" font-weight="600" fill="'+D+'">Demand Planner</text>');
+
+  /* ── Agent circles + labels ───────────────────────────────────── */
+  AG.forEach(function(ag,i){
+    o.push('<circle cx="'+ag.x+'" cy="'+ag.y+'" r="'+R+'" fill="white" stroke="'+P+'" stroke-width="2"/>');
+    o.push('<text x="'+ag.x+'" y="'+(ag.y+5)+'" text-anchor="middle" font-size="13" fill="'+P+'" font-weight="700">'+(i+1)+'</text>');
+    var lbY=ag.y+R+14;
+    ag.lbl.forEach(function(l,j){
+      o.push('<text x="'+ag.x+'" y="'+(lbY+j*13)+'" text-anchor="middle" font-size="9" fill="'+D+'">'+esc(l)+'</text>');
+    });
+  });
+
+  /* ── Arrow helpers ────────────────────────────────────────────── */
+  function ln(x1,y1,x2,y2,c,mid,dash){
+    o.push('<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="1.5"'+
+      (dash?' stroke-dasharray="5,3"':'')+' marker-end="url(#'+mid+')"/>');
+  }
+  /* vertical-first elbow: M x1,y1 L x1,y2 L x2,y2 */
+  function elbVH(x1,y1,x2,y2,c,mid){
+    o.push('<path d="M'+x1+','+y1+' L'+x1+','+y2+' L'+x2+','+y2+'" fill="none" stroke="'+c+'" stroke-width="1.5" marker-end="url(#'+mid+')"/>');
+  }
+  /* horizontal-first elbow: M x1,y1 L x2,y1 L x2,y2 */
+  function elbHV(x1,y1,x2,y2,c,mid){
+    o.push('<path d="M'+x1+','+y1+' L'+x2+','+y1+' L'+x2+','+y2+'" fill="none" stroke="'+c+'" stroke-width="1.5" marker-end="url(#'+mid+')"/>');
+  }
+  /* 3-segment orthogonal: right/left, then vertical, then right/left */
+  function seg4(x1,y1,mx,my,x2,y2,c,mid){
+    o.push('<path d="M'+x1+','+y1+' L'+mx+','+y1+' L'+mx+','+my+' L'+x2+','+y2+'" fill="none" stroke="'+c+'" stroke-width="1.5" marker-end="url(#'+mid+')"/>');
+  }
+  function tx(x,y,lines,c,anchor,italic,size){
+    lines.forEach(function(l,i){
+      o.push('<text x="'+x+'" y="'+(y+i*12)+'" text-anchor="'+(anchor||'middle')+'" font-size="'+(size||8.5)+
+        '" fill="'+c+'"'+(italic?' font-style="italic"':'')+'>'+esc(l)+'</text>');
+    });
   }
 
-  var nodesHtml = '';
+  var orchBot=OY+OH;            /* y=100 */
+  var midY=(orchBot+AG[0].y)/2; /* y=192, midpoint of orch↔agent gap */
 
-  // Data sources panel (positioned at left ~9%, top ~14%)
-  var srcItems = d.dataSources.map(function(ds) {
-    return '<div class="ald-datasrc-item">' + esc(ds.label) + '</div>';
-  }).join('');
-  nodesHtml += '<div class="ald-datasrc-panel" style="left:9%;top:12%;">' +
-    '<div class="ald-datasrc-label-top">Data Source / System</div>' +
-    srcItems +
-    '<div class="ald-datasrc-label-bot">Knowledge Layer</div>' +
-    '</div>';
+  /* ── Input boxes → Orchestrator ──────────────────────────────── */
+  ln(193,60,OX,60,D,'ad');                    /* External events: straight horizontal */
+  elbVH(193,103,OX,92,D,'ad');               /* BU signals: up then right */
 
-  // Sub-agents
-  d.agents.forEach(function(ag) {
-    nodesHtml += '<div class="ald-node ald-agent" style="left:' + ag.x + '%;top:' + ag.y + '%;">' +
-      ag.label.split('\n').map(function(l) { return '<div>' + esc(l) + '</div>'; }).join('') +
-      '</div>';
+  /* ── Orchestrator ↔ Agents 1-3 (bidirectional vertical, offset ±8) ── */
+  [{ag:AG[0],dn:['Triggers data extraction','& harmonization'],up:['harmonized & validated','demand dataset']},
+   {ag:AG[1],dn:['Shares forecast adjustments','& quality report'],up:['forecasted data for','KPI tracking']},
+   {ag:AG[2],dn:['Monitors KPI &','performs RCA'],up:null}
+  ].forEach(function(p){
+    var ax=p.ag.x, agTop=p.ag.y-R;
+    ln(ax-8,orchBot+2,ax-8,agTop-2,T,'at');    /* down: orch → agent (teal) */
+    tx(ax-12,midY-12,p.dn,T,'end',true);
+    ln(ax+8,agTop-2,ax+8,orchBot+2,P,'ap');   /* up: agent → orch (purple) */
+    if(p.up) tx(ax+12,midY+8,p.up,P,'start',true);
   });
 
-  // Orchestrator
-  nodesHtml += '<div class="ald-node ald-orch" style="left:' + d.orchestrator.x + '%;top:' + d.orchestrator.y + '%;">' +
-    d.orchestrator.label.split('\n').map(function(l) { return '<div>' + esc(l) + '</div>'; }).join('') +
-    '</div>';
+  /* ── a3 → a4 Exception Handler (horizontal-then-down elbow) ─── */
+  elbHV(AG[2].x+R+2,AG[2].y,AG[3].x,AG[3].y-R-2,G,'ag');
+  tx((AG[2].x+AG[3].x)/2,AG[2].y-18,['passes deviations requiring','corrective action'],G,'middle',true);
 
-  // Demand Planner
-  nodesHtml += '<div class="ald-node ald-planner" style="left:' + d.demandPlanner.x + '%;top:' + d.demandPlanner.y + '%;">' +
-    d.demandPlanner.label.split('\n').map(function(l) { return '<div>' + esc(l) + '</div>'; }).join('') +
-    '</div>';
+  /* ── a4 → Demand Planner (right then up then right, clears orch bar) */
+  seg4(AG[3].x,AG[3].y-R-2,735,75,DPX-2,75,B,'ab');
+  tx(AG[3].x+45,(AG[3].y+DPCY)/2-6,['Reviews exceptions &','prioritize actions'],B,'start',true);
 
-  // SVG arrows
-  var colorToMarker = { '#A100FF': 'arr-purple', '#0F9D8C': 'arr-teal', '#2563EB': 'arr-blue', '#6B7280': 'arr-gray', '#9ca3af': 'arr-gray2' };
-  var markerDefs = [
-    ['arr-purple', '#A100FF'], ['arr-teal', '#0F9D8C'],
-    ['arr-blue',   '#2563EB'], ['arr-gray',  '#6B7280'], ['arr-gray2', '#9ca3af']
-  ].map(function(m) {
-    return '<marker id="' + m[0] + '" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">' +
-      '<path d="M0,0 L0,6 L8,3 z" fill="' + m[1] + '"/>' +
-      '</marker>';
-  }).join('');
+  /* ── a5 → Demand Planner (straight vertical up) ──────────────── */
+  ln(AG[4].x,AG[4].y-R-2,AG[4].x,DPY+DPH-2,B,'ab');
+  tx(AG[4].x+4,(AG[4].y+DPCY)/2,['history adjustments &','SKU mapping updates'],B,'start',true);
 
-  var svgContent = '<defs>' + markerDefs + '</defs>';
+  /* ── Demand Planner → Orchestrator (horizontal, above both boxes) */
+  ln(DPX-2,48,OX+OW,48,T,'at');
+  tx((DPX+OX+OW)/2,40,['Sends forecast adjustments & RCA insights'],T,'middle',true);
 
-  d.arrows.forEach(function(arr) {
-    var from = coords[arr.from];
-    var to   = coords[arr.to];
-    if (!from || !to) return;
-    var markerId = colorToMarker[arr.color] || 'arr-gray';
-    var x1 = from.x, y1 = from.y, x2 = to.x, y2 = to.y;
-    // Apply perpendicular offset for bidirectional pairs
-    if (arr.offset) {
-      var dx = x2 - x1, dy = y2 - y1;
-      var len = Math.sqrt(dx * dx + dy * dy) || 1;
-      var px = -dy / len * arr.offset;
-      var py =  dx / len * arr.offset;
-      x1 += px; y1 += py; x2 += px; y2 += py;
-    }
-    // Shorten line endpoints by 8px toward center to avoid overlap with node boxes
-    var dx2 = x2 - x1, dy2 = y2 - y1, len2 = Math.sqrt(dx2*dx2+dy2*dy2) || 1;
-    var sx = dx2 / len2 * 8, sy = dy2 / len2 * 8;
-    var ax1 = x1 + sx, ay1 = y1 + sy, ax2 = x2 - sx, ay2 = y2 - sy;
-
-    if (arr.cp) {
-      // Quadratic bezier — control point bows the line away from the node cluster
-      svgContent += '<path d="M ' + ax1.toFixed(1) + ',' + ay1.toFixed(1) +
-        ' Q ' + arr.cp.x + ',' + arr.cp.y + ' ' + ax2.toFixed(1) + ',' + ay2.toFixed(1) + '"' +
-        ' fill="none" stroke="' + arr.color + '" stroke-width="1.6"' +
-        ' marker-end="url(#' + markerId + ')"/>';
-    } else {
-      svgContent += '<line x1="' + ax1.toFixed(1) + '" y1="' + ay1.toFixed(1) + '"' +
-        ' x2="' + ax2.toFixed(1) + '" y2="' + ay2.toFixed(1) + '"' +
-        ' stroke="' + arr.color + '" stroke-width="1.6"' +
-        ' marker-end="url(#' + markerId + ')"/>';
-    }
-
-    if (arr.label) {
-      // Labels float at the bezier control point — well clear of node boxes and other lines
-      var lx = arr.cp ? arr.cp.x : (ax1 + ax2) / 2;
-      var ly = arr.cp ? arr.cp.y : (ay1 + ay2) / 2;
-      var labelLines = arr.label.split('\n');
-      var tspans = labelLines.map(function(l, i) {
-        return '<tspan x="' + lx.toFixed(0) + '" dy="' + (i === 0 ? 0 : 11) + '">' + esc(l) + '</tspan>';
-      }).join('');
-      svgContent += '<text x="' + lx.toFixed(0) + '" y="' + (ly - (labelLines.length > 1 ? 6 : 0)).toFixed(0) + '"' +
-        ' class="ald-arrow-label" fill="' + arr.color + '">' + tspans + '</text>';
-    }
+  /* ── KB → agents (dashed vertical, data availability) ────────── */
+  AG.forEach(function(ag){
+    ln(ag.x,KBy-2,ag.x,ag.y+R+2,'#60a5fa','al',true);
   });
 
-  var svgLayer = '<svg class="ald-svg" viewBox="0 0 1000 560" preserveAspectRatio="none">' + svgContent + '</svg>';
-
-  return '<div class="ald-slide">' +
-    '<div class="ald-title">' + esc(d.title) + '</div>' +
-    '<div class="ald-diagram">' + nodesHtml + svgLayer + '</div>' +
+  return '<div class="ald-slide">'+
+    '<div class="ald-title">'+esc(d.title)+'</div>'+
+    '<div class="ald-diagram">'+
+    '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet"'+
+    ' style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;">'+
+    o.join('')+'</svg>'+
+    '</div>'+
     '</div>';
 }
 
