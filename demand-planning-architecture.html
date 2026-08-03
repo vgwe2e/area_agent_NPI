@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1400">
+<title>Agent-Led Demand Planning — NPI Architecture</title>
+<style>
+/* =====================================================
+   AGENT-LED DEMAND PLANNING — NPI ARCHITECTURE
+   Accenture consulting light theme · poster layout
+   ===================================================== */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #FFFFFF;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Arial, sans-serif;
+  color: #111827;
+  padding: 48px 56px;
+  min-width: 1300px;
+}
+
+/* ── HEADER ───────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.accenture-mark {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #A100FF;
+}
+
+.client-mark {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6B7280;
+  letter-spacing: 1px;
+}
+
+h1 {
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  color: #111827;
+  margin-bottom: 4px;
+  line-height: 1.1;
+}
+
+.page-sub {
+  font-size: 15px;
+  color: #6B7280;
+  font-weight: 500;
+  margin-bottom: 40px;
+}
+
+/* ── LAYER TAG ────────────────────────────────────── */
+.layer-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  opacity: 0.85;
+}
+
+/* ═══════════════════════════════════════════════════
+   ROW 1: [INPUTS] → [ORCHESTRATOR] ↔ [HUMAN]
+   ═══════════════════════════════════════════════════ */
+.top-row {
+  display: grid;
+  grid-template-columns: 210px 56px 1fr 88px 240px;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 0;
+}
+
+/* Inputs */
+.inputs-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #9CA3AF;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.input-box {
+  background: #F9FAFB;
+  border: 2px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 18px 14px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #374151;
+  text-align: center;
+  line-height: 1.35;
+}
+
+/* → arrow */
+.arrow-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  color: #9CA3AF;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+/* Orchestrator box — teal */
+.orchestrator {
+  background: #F0FDF9;
+  border: 4px solid #0F9D8C;
+  border-radius: 8px;
+  padding: 28px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.orchestrator .layer-tag { color: #0F9D8C; }
+
+.orchestrator .box-name {
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #064e3b;
+  margin-bottom: 10px;
+}
+
+.orchestrator .box-sub {
+  font-size: 16px;
+  font-weight: 600;
+  color: #065F46;
+  line-height: 1.7;
+}
+
+/* ↔ connector */
+.orch-human {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 6px;
+}
+
+.orch-human .arrows {
+  font-size: 28px;
+  color: #EA580C;
+  line-height: 1;
+}
+
+.orch-human .conn-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Human planner — warm orange */
+.human {
+  background: #FFF7ED;
+  border: 4px solid #EA580C;
+  border-radius: 8px;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.human .layer-tag { color: #C2410C; }
+
+.human .box-name {
+  font-size: 26px;
+  font-weight: 900;
+  color: #7C2D12;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.human .duties {
+  font-size: 14px;
+  font-weight: 600;
+  color: #9A3412;
+  line-height: 1.9;
+  text-align: left;
+}
+
+/* ═══════════════════════════════════════════════════
+   DISPATCH ARROW
+   ═══════════════════════════════════════════════════ */
+.dispatch-arrow {
+  text-align: center;
+  padding: 14px 0 10px;
+}
+
+.dispatch-arrow .big-arrow {
+  font-size: 52px;
+  color: #0F9D8C;
+  line-height: 1;
+}
+
+.dispatch-arrow .label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #6B7280;
+  margin-top: 2px;
+  letter-spacing: .01em;
+}
+
+/* ═══════════════════════════════════════════════════
+   ROW 2: 5 SPECIALIST AGENTS — Accenture purple
+   ═══════════════════════════════════════════════════ */
+.agents-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.agent-card {
+  background: #FAF5FF;
+  border: 3px solid #A100FF;
+  border-radius: 8px;
+  padding: 24px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 180px;
+  justify-content: center;
+}
+
+.agent-num {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #A100FF;
+  border: none;
+  font-size: 26px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #FFFFFF;
+}
+
+.agent-name {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+  color: #4C1D95;
+}
+
+.agent-role {
+  font-size: 12px;
+  font-weight: 500;
+  color: #7C3AED;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════
+   5-COLUMN DOWN ARROWS
+   ═══════════════════════════════════════════════════ */
+.five-arrows {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.five-arrows .cell {
+  text-align: center;
+  font-size: 36px;
+  line-height: 1;
+  padding: 4px 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   ROW 3: KNOWLEDGE LAYER — blue
+   ═══════════════════════════════════════════════════ */
+.knowledge {
+  background: #EFF6FF;
+  border: 4px solid #2563EB;
+  border-radius: 8px;
+  padding: 26px 32px;
+  text-align: center;
+}
+
+.knowledge .layer-tag { color: #2563EB; }
+
+.knowledge .box-name {
+  font-size: 38px;
+  font-weight: 900;
+  color: #1E3A8A;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+
+.knowledge .box-sub {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1D4ED8;
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════════════
+   ROW 4: DATA SOURCE SYSTEMS — light blue
+   ═══════════════════════════════════════════════════ */
+.sources-header {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #9CA3AF;
+  text-align: center;
+  margin: 4px 0 10px;
+}
+
+.sources-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.source-box {
+  background: #F0F9FF;
+  border: 2px solid #0284C7;
+  border-radius: 8px;
+  padding: 18px 12px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0C4A6E;
+  line-height: 1.35;
+}
+
+/* ═══════════════════════════════════════════════════
+   LEGEND
+   ═══════════════════════════════════════════════════ */
+.legend {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <span class="accenture-mark">&gt; Accenture</span>
+  <span class="client-mark">Hershey's (HSY) · NPI Decision Flow</span>
+</div>
+<h1>Agent-Led Demand Planning</h1>
+<p class="page-sub">How the NPI Orchestrator coordinates five specialist agents to compress 25+ planner touchpoints to 3 structured approvals</p>
+
+<!-- ═══════════════════════════════════════════════════
+     ROW 1 — INPUTS  →  ORCHESTRATOR  ↔  HUMAN
+     ═══════════════════════════════════════════════════ -->
+<div class="top-row">
+
+  <!-- INPUTS -->
+  <div class="inputs-col">
+    <div class="section-label">Signals In</div>
+    <div class="input-box">External Events &amp; Market Signals</div>
+    <div class="input-box">Business Unit Demand &amp; NPI Triggers</div>
+  </div>
+
+  <!-- → -->
+  <div class="arrow-col">→</div>
+
+  <!-- ORCHESTRATOR -->
+  <div class="orchestrator">
+    <div class="layer-tag">Central Coordinator</div>
+    <div class="box-name">DP Orchestrator Agent</div>
+    <div class="box-sub">
+      Routes NPI tasks &nbsp;·&nbsp; Monitors forecast quality<br>
+      Triggers data extraction &nbsp;·&nbsp; Escalates exceptions
+    </div>
+  </div>
+
+  <!-- ↔ Connector -->
+  <div class="orch-human">
+    <div class="arrows">↔</div>
+    <div class="conn-text">Forecast<br>adjustments<br>&amp; exception<br>alerts</div>
+  </div>
+
+  <!-- DEMAND PLANNER -->
+  <div class="human">
+    <div class="layer-tag">Human · Final Say</div>
+    <div class="box-name">Demand Planner</div>
+    <div class="duties">
+      ▶ Reviews exception alerts<br>
+      ▶ Approves new SKU curves<br>
+      ▶ Sends history adjustments<br>
+      ▶ Signs off on consensus
+    </div>
+  </div>
+
+</div><!-- /top-row -->
+
+<!-- ═══════════════════════════════════════════════════
+     ↓  DISPATCH ARROW
+     ═══════════════════════════════════════════════════ -->
+<div class="dispatch-arrow">
+  <div class="big-arrow">↓</div>
+  <div class="label">Orchestrator dispatches work to specialist agents</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ROW 2 — 5 SPECIALIST AGENTS
+     ═══════════════════════════════════════════════════ -->
+<div class="agents-row">
+  <div class="agent-card">
+    <div class="agent-num">1</div>
+    <div class="agent-name">Data Integration &amp; Correction</div>
+    <div class="agent-role">Ingests EDI/POS, harmonizes signals, auto-corrects dirty data</div>
+  </div>
+  <div class="agent-card">
+    <div class="agent-num">2</div>
+    <div class="agent-name">Model Calibration &amp; Monitoring</div>
+    <div class="agent-role">Recalibrates weights, tracks MAPE drift, updates analogue library</div>
+  </div>
+  <div class="agent-card">
+    <div class="agent-num">3</div>
+    <div class="agent-name">Forecast Performance</div>
+    <div class="agent-role">Generates NPI demand curves, builds consensus plan, quantifies confidence</div>
+  </div>
+  <div class="agent-card">
+    <div class="agent-num">4</div>
+    <div class="agent-name">Exception Handler</div>
+    <div class="agent-role">Detects plan deviations, resolves autonomously or escalates to planner</div>
+  </div>
+  <div class="agent-card">
+    <div class="agent-num">5</div>
+    <div class="agent-name">Lifecycle Management</div>
+    <div class="agent-role">Manages SKU ramp-up/exit curves, maps analogues, updates product master</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ↓  5-COLUMN ARROWS TO KNOWLEDGE LAYER
+     ═══════════════════════════════════════════════════ -->
+<div class="five-arrows">
+  <div class="cell" style="color:#6B7280;">↓</div>
+  <div class="cell" style="color:#6B7280;">↓</div>
+  <div class="cell" style="color:#6B7280;">↓</div>
+  <div class="cell" style="color:#6B7280;">↓</div>
+  <div class="cell" style="color:#6B7280;">↓</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ROW 3 — KNOWLEDGE LAYER
+     ═══════════════════════════════════════════════════ -->
+<div class="knowledge">
+  <div class="layer-tag">Shared Intelligence</div>
+  <div class="box-name">Knowledge Layer</div>
+  <div class="box-sub">
+    HSY demand history &nbsp;·&nbsp; NPI analogue library &nbsp;·&nbsp; Calibrated forecast models &nbsp;·&nbsp; SKU lifecycle curves &nbsp;·&nbsp; Exception rules
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ↓  5-COLUMN ARROWS TO DATA SOURCES
+     ═══════════════════════════════════════════════════ -->
+<div class="five-arrows">
+  <div class="cell" style="color:#9CA3AF;">↓</div>
+  <div class="cell" style="color:#9CA3AF;">↓</div>
+  <div class="cell" style="color:#9CA3AF;">↓</div>
+  <div class="cell" style="color:#9CA3AF;">↓</div>
+  <div class="cell" style="color:#9CA3AF;">↓</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ROW 4 — DATA SOURCE SYSTEMS
+     ═══════════════════════════════════════════════════ -->
+<div class="sources-header">Data Source Systems</div>
+<div class="sources-row">
+  <div class="source-box">External Data<br><span style="font-size:13px;font-weight:600;color:#0369A1;">Weather · Promo · Market</span></div>
+  <div class="source-box">SAP / APO<br><span style="font-size:13px;font-weight:600;color:#0369A1;">ERP demand history</span></div>
+  <div class="source-box">GCP Data Lake<br><span style="font-size:13px;font-weight:600;color:#0369A1;">Harmonized demand data</span></div>
+  <div class="source-box">Blue Yonder APS<br><span style="font-size:13px;font-weight:600;color:#0369A1;">Advanced planning</span></div>
+  <div class="source-box">Product Master / MDM<br><span style="font-size:13px;font-weight:600;color:#0369A1;">SKU attributes &amp; hierarchy</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     LEGEND
+     ═══════════════════════════════════════════════════ -->
+<div class="legend">
+  <div class="legend-item">
+    <div class="swatch" style="background:#F0FDF9; border:3px solid #0F9D8C;"></div>
+    Orchestrator — controls the loop
+  </div>
+  <div class="legend-item">
+    <div class="swatch" style="background:#FAF5FF; border:3px solid #A100FF;"></div>
+    Specialist Agents — do the work
+  </div>
+  <div class="legend-item">
+    <div class="swatch" style="background:#EFF6FF; border:3px solid #2563EB;"></div>
+    Knowledge Layer — shared brain
+  </div>
+  <div class="legend-item">
+    <div class="swatch" style="background:#F0F9FF; border:2px solid #0284C7;"></div>
+    Data Source Systems — raw inputs
+  </div>
+  <div class="legend-item">
+    <div class="swatch" style="background:#FFF7ED; border:3px solid #EA580C;"></div>
+    Demand Planner — human, final say
+  </div>
+</div>
+
+</body>
+</html>
