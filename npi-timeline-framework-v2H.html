@@ -1564,7 +1564,6 @@ const JOURNEY = {
       humanApproval: "Planner reviews the demand curve, the key assumptions, and any uncertainty flags — then approves the forecast that flows into inventory planning.",
       aeraInputs: [
         { skill: "Demand Sensing", role: "signal", note: "Demand Sensing runs continuously — pulling POS scans, retailer EDI, and digital signals and computing the deviation from the current plan. Agent 2 reads that deviation signal and makes the reasoning call: is this drift large enough to revise the demand curve? Does the revision cross a threshold that should re-trigger Agent 3 on inventory? The skill produces the observation; the agent decides what it means and what to do next." },
-        { skill: "Demand Plan Reconciliation", role: "baseline", note: "Before Agent 2 can reason about the demand curve, the commercial promotional plan (PlanX) and the Kinaxis statistical demand plan need to be reconciled — resolving the SKU-by-channel variance between what sales committed to retailers and what the supply model says demand will be. Agent 2 uses the reconciled output as its working baseline. Where the two plans still diverge materially after reconciliation, Agent 2 flags those lines for planner review rather than passing a false-confident number into inventory planning." },
       ],
       descriptionSections: [
         { heading: "Traditional approach", body: "Kinaxis demand planning is built for established SKUs with history. New launches have none." },
